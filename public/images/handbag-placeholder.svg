@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-labelledby="title desc">
+  <title id="title">EEsome handbag</title>
+  <desc id="desc">A decorative handbag placeholder in the EEsome brand colours.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fafafa"/><stop offset="1" stop-color="#f3f4f6"/></linearGradient>
+    <linearGradient id="bag" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d1d5db"/><stop offset="1" stop-color="#9ca3af"/></linearGradient>
+  </defs>
+  <rect width="900" height="900" fill="url(#bg)"/>
+  <circle cx="450" cy="450" r="310" fill="#fff" opacity=".32"/>
+  <path d="M305 390c12-111 65-177 145-177s133 66 145 177" fill="none" stroke="#9ca3af" stroke-width="42" stroke-linecap="round"/>
+  <path d="M220 365h460l62 335c8 43-25 83-69 83H227c-44 0-77-40-69-83z" fill="url(#bag)"/>
+  <path d="M252 430h396" stroke="#fbcfe8" stroke-width="8" opacity=".65"/>
+  <circle cx="450" cy="430" r="20" fill="#e5e7eb"/>
+  <text x="450" y="610" text-anchor="middle" fill="#fff" font-family="Georgia,serif" font-size="70" font-weight="700">EEsome</text>
+  <text x="450" y="660" text-anchor="middle" fill="#f3f4f6" font-family="Arial,sans-serif" font-size="24" letter-spacing="6">IMAGE COMING SOON</text>
+</svg>

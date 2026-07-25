@@ -1,0 +1,17 @@
+@extends('layouts.app')
+@section('title', 'About Us')
+@section('meta_description', 'Discover the story behind EEsome and read what customers say about our curated women’s handbags.')
+@push('styles')
+<style>
+.about-hero{padding:clamp(4rem,9vw,7rem) 0;text-align:center;background:radial-gradient(circle at 50% 0,rgba(244,114,182,.18),transparent 45%),linear-gradient(135deg,#fff,var(--brand-50))}.about-hero h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(2.6rem,6vw,5rem);font-weight:500;margin:0 0 1rem}.about-hero p{max-width:720px;margin:0 auto;color:#4b5563;font-size:1.1rem;line-height:1.8}.about-story{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center}.about-story h2,.testimonials h2{font-family:Georgia,'Times New Roman',serif;font-size:clamp(2rem,4vw,3.2rem);font-weight:500;margin:0 0 1rem}.about-story p{color:#4b5563;line-height:1.8}.about-mark{min-height:360px;border-radius:28px;background:linear-gradient(135deg,var(--brand-100),var(--brand-400));display:grid;place-items:center;color:#fff;font-family:Georgia,serif;font-size:clamp(2.5rem,7vw,5rem);box-shadow:0 24px 60px rgba(131,24,67,.18)}.testimonials{background:var(--surface-alt);padding:5rem 0}.testimonials-head{text-align:center;margin-bottom:2.5rem}.testimonials-head p{color:#4b5563}.testi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.5rem;max-width:1100px;margin:0 auto}.testi-card{background:#fff;border-radius:20px;padding:1.5rem;border:1px solid var(--brand-100);box-shadow:0 8px 24px rgba(131,24,67,.06)}.testi-stars{color:#f59e0b;font-size:1.05rem;margin-bottom:.75rem}.testi-text{font-size:1rem;color:#2d2d2d;line-height:1.7;margin:0 0 1rem}.testi-name{font-weight:700;color:var(--brand-900)}@media(max-width:760px){.about-story,.testi-grid{grid-template-columns:1fr}.about-mark{min-height:260px}}
+</style>
+@endpush
+@section('content')
+<section class="about-hero"><div class="container"><h1>Designed for your story</h1><p>EEsome brings together expressive, practical handbags chosen for everyday confidence—from polished workdays to memorable celebrations.</p></div></section>
+<section class="container section-gap"><div class="about-story"><div><span style="color:var(--brand-700);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:.75rem">Our story</span><h2>Style that feels personal</h2><p>We believe the right bag does more than complete an outfit. It carries the small essentials, supports busy days, and becomes part of the moments you remember.</p><p>Every EEsome piece is selected with attention to silhouette, material, useful details, and the way it fits into modern life.</p><a class="nav-btn nav-btn-fill" href="{{ route('products.index') }}">Explore the collection</a></div><div class="about-mark" aria-label="EEsome">EEsome</div></div></section>
+@if($testimonials->count())
+<section class="testimonials"><div class="container"><div class="testimonials-head"><span style="color:var(--brand-700);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:.75rem">Reviews</span><h2>What Our Customers Say</h2><p>Thoughtful feedback from the people who carry EEsome.</p></div><div class="testi-grid">
+@foreach($testimonials as $testimonial)<article class="testi-card"><div class="testi-stars">{{ str_repeat('★',$testimonial->rating) }}{{ str_repeat('☆',5-$testimonial->rating) }}</div><p class="testi-text">“{{ $testimonial->content }}”</p><div class="testi-name">{{ $testimonial->name }}</div></article>@endforeach
+</div></div></section>
+@endif
+@endsection
