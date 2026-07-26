@@ -90,6 +90,15 @@
 .testi-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--brand-100); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--brand-700); flex-shrink: 0; }
 .testi-name { font-weight: 600; font-size: .88rem; }
 
+.infinite-status { min-height: 70px; display: flex; align-items: center; justify-content: center; margin-top: 1.25rem; color: var(--text-muted); font-size: .9rem; }
+.infinite-status.loading::before { content: ''; width: 22px; height: 22px; margin-right: .65rem; border: 3px solid var(--brand-100); border-top-color: var(--brand-600); border-radius: 50%; animation: productSpin .7s linear infinite; }
+@keyframes productSpin { to { transform: rotate(360deg); } }
+.whatsapp-cta { margin: 1.5rem auto 0; max-width: 760px; padding: clamp(2rem, 5vw, 3.5rem); border-radius: 24px; text-align: center; background: linear-gradient(135deg, #f0fdf4, #ffffff); border: 1px solid #bbf7d0; }
+.whatsapp-cta h2 { margin: 0 0 .65rem; font-size: clamp(1.55rem, 3vw, 2.25rem); }
+.whatsapp-cta p { max-width: 520px; margin: 0 auto 1.4rem; color: var(--text-muted); line-height: 1.65; }
+.whatsapp-cta__button { display: inline-flex; align-items: center; gap: .55rem; padding: .85rem 1.35rem; border-radius: 999px; background: #25d366; color: #fff; text-decoration: none; font-weight: 800; box-shadow: 0 0 0 0 rgba(37,211,102,.55); animation: whatsappGlow 2s infinite; }
+@keyframes whatsappGlow { 70% { box-shadow: 0 0 0 14px rgba(37,211,102,0); } 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0); } }
+
 /* ── Pagination ── */
 .pagination-wrap { margin-top: 2.5rem; display: flex; justify-content: center; }
 .pagination-wrap nav { display: flex; gap: .5rem; }
@@ -211,7 +220,7 @@
             <h2>Our Collection</h2>
             <p>Explore our full range of premium handbags</p>
         </div>
-        <div class="product-grid">
+        <div id="product-grid" class="product-grid">
             @foreach($allProducts as $product)
                 @php $badge = $product->badge_info; @endphp
                 <div class="product-card">
@@ -262,11 +271,59 @@
             @endif
         </div>
 
-        {{-- Pagination --}}
-        <div class="pagination-wrap">
-            {{ $allProducts->links() }}
+        <div id="infinite-status" class="infinite-status" data-next-page="{{ $allProducts->nextPageUrl() }}" aria-live="polite">
+            @if($allProducts->hasMorePages()) Scroll for more products @else You have reached the end of the collection. @endif
         </div>
+</div>
+</section>
+
+@php
+    $homeSettings = app(\App\Services\SiteSettingsRepository::class);
+    $homeWhatsApp = $homeSettings->get('contact_whatsapp', $homeSettings->get('whatsapp_number', $homeSettings->get('contact_phone', '')));
+@endphp
+@if(!empty($homeWhatsApp))
+<section class="container section-gap" style="padding-top:0">
+    <div class="whatsapp-cta">
+        <h2>Need help finding your perfect bag?</h2>
+        <p>Chat with our team for product guidance, availability, and quick answers before you order.</p>
+        <a class="whatsapp-cta__button" href="https://wa.me/{{ preg_replace('/\D/', '', $homeWhatsApp) }}?text={{ urlencode('Hi, I would like help choosing a handbag.') }}" target="_blank" rel="noopener noreferrer">
+            <span aria-hidden="true">WhatsApp</span><span>Chat with us</span>
+        </a>
     </div>
 </section>
+@endif
+
+@push('scripts')
+<script>
+(() => {
+    const grid = document.getElementById('product-grid');
+    const status = document.getElementById('infinite-status');
+    if (!grid || !status || !status.dataset.nextPage) return;
+
+    let loading = false;
+    const observer = new IntersectionObserver(async (entries) => {
+        if (!entries[0].isIntersecting || loading || !status.dataset.nextPage) return;
+        loading = true;
+        status.classList.add('loading');
+        status.textContent = 'Loading 12 more products…';
+        try {
+            const response = await fetch(status.dataset.nextPage, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+            if (!response.ok) throw new Error('Unable to load products');
+            const nextPage = new DOMParser().parseFromString(await response.text(), 'text/html');
+            nextPage.querySelectorAll('#product-grid .product-card').forEach((card) => grid.appendChild(card));
+            const nextStatus = nextPage.getElementById('infinite-status');
+            status.dataset.nextPage = nextStatus?.dataset.nextPage || '';
+            status.textContent = status.dataset.nextPage ? 'Scroll for more products' : 'You have reached the end of the collection.';
+        } catch (error) {
+            status.textContent = 'Products could not be loaded. Scroll away and back to retry.';
+        } finally {
+            status.classList.remove('loading');
+            loading = false;
+        }
+    }, { rootMargin: '500px 0px' });
+    observer.observe(status);
+})();
+</script>
+@endpush
 
 @endsection

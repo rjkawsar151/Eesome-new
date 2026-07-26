@@ -25,7 +25,7 @@
         }
         * { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { font-family: 'Outfit', sans-serif; background: var(--surface); color: var(--text-primary); margin: 0; -webkit-font-smoothing: antialiased; }
+        body { font-family: 'Outfit', sans-serif; background: var(--surface); color: var(--text-primary); margin: 0; padding-bottom: calc(88px + env(safe-area-inset-bottom)); -webkit-font-smoothing: antialiased; }
         ::selection { background: var(--brand-100); color: var(--brand-900); }
         :focus-visible { outline: 3px solid var(--brand-400); outline-offset: 3px; }
 
@@ -52,7 +52,7 @@
         .nav-cart-badge { position: absolute; top: -8px; right: -8px; background: var(--brand-600); color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 
         /* ── WhatsApp Button ── */
-        .whatsapp-btn { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 200; background: #25d366; color: #fff; border-radius: 50%; width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 4px 20px rgba(37,211,102,0.4); transition: transform .2s, box-shadow .2s; }
+        .whatsapp-btn { position: fixed; bottom: calc(1rem + env(safe-area-inset-bottom)); right: 1rem; z-index: 200; background: #25d366; color: #fff; border-radius: 50%; width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 4px 20px rgba(37,211,102,0.4); transition: transform .2s, box-shadow .2s; }
         .whatsapp-btn:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(37,211,102,0.5); }
         .whatsapp-btn::before { content: 'Chat with us'; position: absolute; right: calc(100% + .65rem); padding: .45rem .7rem; border-radius: 8px; background: #17121a; color: #fff; font-size: .75rem; font-weight: 600; white-space: nowrap; opacity: 0; transform: translateX(6px); pointer-events: none; transition: opacity .2s, transform .2s; }
         .whatsapp-btn:hover::before, .whatsapp-btn:focus-visible::before { opacity: 1; transform: translateX(0); }
@@ -77,6 +77,12 @@
             footer .footer-grid { grid-template-columns: 1fr 1fr; }
             .nav-links { display: none; }
             .nav-search { display: none; }
+            .nav-inner { height: 62px; padding: 0 1rem; }
+            .nav-logo { font-size: 1.55rem; }
+            .nav-actions { gap: .6rem; }
+            .nav-btn { padding: .45rem .8rem; }
+            .nav-login { display: none; }
+            .whatsapp-btn { width: 52px; height: 52px; }
         }
     </style>
     @stack('styles')
@@ -97,10 +103,10 @@
             <button type="submit" aria-label="Submit search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
         </form>
         <div class="nav-actions">
-            <a href="{{ route('cart.index') }}" class="nav-cart">
+            <a href="{{ route('cart.index') }}" class="nav-cart" aria-label="Shopping cart">
                 <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
                 @php $cartCount = app(\App\Services\CartService::class)->cartCount(); @endphp
-                @if($cartCount > 0)<span class="nav-cart-badge">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>@endif
+                @if($cartCount > 0)<span class="nav-cart-badge" aria-hidden="true">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>@endif
             </a>
             @auth
                 <a href="{{ route('profile.edit') }}" class="nav-btn nav-btn-ghost">Account</a>
