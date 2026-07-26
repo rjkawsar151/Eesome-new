@@ -29,6 +29,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        app(\App\Services\CartService::class)->mergeSessionCartIntoDb(auth()->id());
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 

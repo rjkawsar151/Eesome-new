@@ -22,8 +22,8 @@ class DashboardController extends Controller
         $lowStockCount  = Product::where('is_active', true)->where('stock', '<=', 5)->where('is_preorder', false)->count();
 
         // User stats
-        $totalCustomers    = User::where('role', 'customer')->count();
-        $totalAdmins       = User::whereIn('role', ['admin', 'manager', 'super admin'])->count();
+        $totalCustomers    = User::where('role', 'user')->count();
+        $totalAdmins       = User::where('role', 'admin')->count();
         $newUsersThisMonth = User::whereMonth('created_at', now()->month)->count();
 
         // Page visiting analytics - daily views (last 14 days)
@@ -51,7 +51,7 @@ class DashboardController extends Controller
             ->get();
 
         // All users for user management section
-        $users = User::orderByRaw("FIELD(role, 'super admin', 'admin', 'manager', 'customer')")
+        $users = User::orderByRaw("FIELD(role, 'admin', 'user')")
             ->orderBy('name')
             ->paginate(20);
 

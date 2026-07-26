@@ -50,6 +50,29 @@ class OrderStatusService
                 'changed_by_user_id'  => Auth::id(),
                 'note'                => $note,
             ]);
+
+            if ($toStatus === 'Cancelled') {
+                $order->load('items');
+                foreach ($order->items as $item) {
+                    $product = \App\Models\Product::find($item->product_id);
+                    if ($product && !$product->available_for_preorder) {
+                        $stockBefore = $product->stock;
+                        $product->increment('stock', $item->quantity);
+                        $product->refresh();
+
+                        \App\Models\InventoryMovement::create([
+                            'product_id'     => $product->id,
+                            'order_id'       => $order->id,
+                            'type'           => 'cancel_return',
+                            'quantity_delta' => $item->quantity,
+                            'stock_before'   => $stockBefore,
+                            'stock_after'    => $product->stock,
+                            'reference'      => $order->order_number,
+                            'created_by_user_id' => Auth::id(),
+                        ]);
+                    }
+                }
+            }
         });
 
         // Dispatch notification AFTER commit

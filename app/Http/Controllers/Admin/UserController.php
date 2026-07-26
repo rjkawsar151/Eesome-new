@@ -39,7 +39,7 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'phone'    => 'nullable|string|max:30',
-            'role'     => 'required|in:customer,admin,manager,super admin',
+            'role'     => 'required|in:user,admin',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -65,15 +65,15 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'phone'    => 'nullable|string|max:30',
-            'role'     => 'required|in:customer,admin,manager,super admin',
+            'role'     => 'required|in:user,admin',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 
-        // Prevent self-demotion of the only super admin
-        if ($user->role === 'super admin' && $data['role'] !== 'super admin') {
-            $superAdminCount = User::where('role', 'super admin')->count();
-            if ($superAdminCount <= 1) {
-                return back()->withErrors(['role' => 'Cannot demote the only Super Admin.']);
+        // Prevent self-demotion of the only admin
+        if ($user->role === 'admin' && $data['role'] !== 'admin') {
+            $adminCount = User::where('role', 'admin')->count();
+            if ($adminCount <= 1) {
+                return back()->withErrors(['role' => 'Cannot demote the only Admin.']);
             }
         }
 
@@ -99,8 +99,8 @@ class UserController extends Controller
             return back()->with('error', 'Cannot delete your own account.');
         }
 
-        if ($user->role === 'super admin' && User::where('role', 'super admin')->count() <= 1) {
-            return back()->with('error', 'Cannot delete the only Super Admin.');
+        if ($user->role === 'admin' && User::where('role', 'admin')->count() <= 1) {
+            return back()->with('error', 'Cannot delete the only Admin.');
         }
 
         $user->delete();
@@ -111,12 +111,12 @@ class UserController extends Controller
     {
         $ids = $request->validate(['ids' => 'required|array', 'ids.*' => 'integer'])['ids'];
 
-        // Safety: filter out current user and last super admin
+        // Safety: filter out current user and last admin
         $safeIds = User::whereIn('id', $ids)
             ->where('id', '!=', auth()->id())
             ->get()
             ->filter(function ($user) {
-                if ($user->role === 'super admin' && User::where('role', 'super admin')->count() <= 1) {
+                if ($user->role === 'admin' && User::where('role', 'admin')->count() <= 1) {
                     return false;
                 }
                 return true;

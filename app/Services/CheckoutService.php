@@ -26,7 +26,7 @@ class CheckoutService
     {
         $order = DB::transaction(function () use ($customerData, $cartProductIds, $couponCode) {
             // 1. Sort product IDs ascending to prevent deadlocks
-            sort($cartProductIds);
+            ksort($cartProductIds);
 
             // 2. Lock products
             $products = Product::whereIn('id', array_keys($cartProductIds))
