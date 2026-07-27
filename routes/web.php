@@ -1,17 +1,32 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\BlogController as AdminBlogController;
+use App\Http\Controllers\Admin\BrandController as AdminBrandController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\CouponController as AdminCouponController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\InventoryController as AdminInventoryController;
+use App\Http\Controllers\Admin\MediaAssetController as AdminMediaAssetController;
+use App\Http\Controllers\Admin\NavigationItemController as AdminNavigationItemController;
+use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PaymentMethodController as AdminPaymentMethodController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
+use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Admin\ShippingMethodController as AdminShippingMethodController;
+use App\Http\Controllers\Admin\TagController as AdminTagController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Storefront\HomeController;
-use App\Http\Controllers\Storefront\ProductController;
+use App\Http\Controllers\Storefront\AboutController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
+use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\LegacyProductImageController;
+use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\ProductReviewController;
 use App\Http\Controllers\Storefront\WishlistController;
-use App\Http\Controllers\Storefront\AboutController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -52,6 +67,12 @@ Route::get('/checkout/success/{orderNumber}', [CheckoutController::class, 'succe
 */
 
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        return auth()->user()->isAdmin()
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('profile.edit');
+    })->name('dashboard');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -63,13 +84,35 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'admin.activity'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/activity', [ActivityLogController::class, 'index'])->name('activity.index');
+
+    Route::resource('products', AdminProductController::class)->except('show');
+    Route::delete('/products/{product}/images/{image}', [AdminProductController::class, 'destroyImage'])->name('products.images.destroy');
+    Route::resource('categories', AdminCategoryController::class)->except('show');
+    Route::resource('brands', AdminBrandController::class)->except('show');
+    Route::resource('tags', AdminTagController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::post('/products/{product}/variants', [AdminProductVariantController::class, 'store'])->name('products.variants.store');
+    Route::put('/products/{product}/variants/{variant}', [AdminProductVariantController::class, 'update'])->name('products.variants.update');
+    Route::delete('/products/{product}/variants/{variant}', [AdminProductVariantController::class, 'destroy'])->name('products.variants.destroy');
+    Route::resource('reviews', AdminReviewController::class)->only(['index', 'update', 'destroy']);
+    Route::resource('blog', AdminBlogController::class)->except('show')->parameters(['blog' => 'blog']);
+    Route::get('/settings', [AdminSettingController::class, 'edit'])->name('settings.edit');
+    Route::put('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
+    Route::resource('shipping-methods', AdminShippingMethodController::class)->except('show');
+    Route::resource('payment-methods', AdminPaymentMethodController::class)->except('show');
+    Route::resource('coupons', AdminCouponController::class)->except('show');
+    Route::get('/inventory', [AdminInventoryController::class, 'index'])->name('inventory.index');
+    Route::post('/inventory/{product}/adjust', [AdminInventoryController::class, 'adjust'])->name('inventory.adjust');
+    Route::resource('navigation-items', AdminNavigationItemController::class)->except('show');
+    Route::resource('media', AdminMediaAssetController::class)->only(['index', 'store', 'destroy'])->parameters(['media' => 'medium']);
 
     // Orders
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    Route::post('/orders/{order}/payment', [OrderController::class, 'updatePayment'])->name('orders.updatePayment');
 
     // Users
     Route::get('/users', [UserController::class, 'index'])->name('users.index');

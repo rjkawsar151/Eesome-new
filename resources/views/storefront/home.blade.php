@@ -5,29 +5,6 @@
 @push('styles')
 <style>
 .luxury-bar { min-height: 34px; padding: .45rem 1rem; display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap; background: #17121a; color: #fce7f3; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
-/* ── Hero ── */
-.hero { min-height: 82vh; padding: clamp(3rem, 7vw, 6rem) 0; background: radial-gradient(circle at 78% 30%, rgba(190,24,93,.12), transparent 28%), linear-gradient(135deg, #fff 0%, #fdf2f8 48%, #fce7f3 100%); display: flex; align-items: center; position: relative; overflow: hidden; }
-.hero::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23db2777' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
-.hero-inner { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; width: 100%; position: relative; z-index: 1; }
-.hero-badge { display: inline-block; background: linear-gradient(90deg, var(--brand-600), var(--brand-400)); color: #fff; font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .35rem 1rem; border-radius: 999px; margin-bottom: 1.25rem; }
-.hero h1 { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2.6rem, 5.5vw, 5rem); font-weight: 500; line-height: 1.03; letter-spacing: -.035em; margin: 0 0 1.25rem; color: var(--text-primary); }
-.hero h1 span { background: linear-gradient(135deg, var(--brand-700), var(--brand-400)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.hero p { font-size: 1.1rem; color: var(--text-muted); line-height: 1.7; margin: 0 0 2rem; }
-.hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; }
-.btn-primary { display: inline-block; padding: .85rem 2rem; background: linear-gradient(135deg, var(--brand-700), var(--brand-600)); color: #fff; border-radius: 999px; font-weight: 700; text-decoration: none; font-size: .95rem; transition: all .25s; box-shadow: 0 4px 20px rgba(219,39,119,0.3); }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(219,39,119,0.4); }
-.btn-outline { display: inline-block; padding: .85rem 2rem; border: 2px solid var(--brand-600); color: var(--brand-600); border-radius: 999px; font-weight: 700; text-decoration: none; font-size: .95rem; transition: all .25s; }
-.btn-outline:hover { background: var(--brand-50); }
-.hero-img-wrap { display: flex; justify-content: center; align-items: center; }
-.hero-img-blob { width: 500px; max-width: 100%; aspect-ratio: 1; border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%; background: linear-gradient(135deg, var(--brand-100), var(--brand-400) 70%); display: flex; align-items: center; justify-content: center; animation: blobMorph 8s ease-in-out infinite, luxuryFloat 5s ease-in-out infinite; box-shadow: 0 30px 80px rgba(131,24,67,.2); overflow: hidden; border: 8px solid rgba(255,255,255,.55); }
-@keyframes blobMorph { 0%,100% { border-radius: 60% 40% 70% 30%/50% 60% 40% 50%; } 50% { border-radius: 40% 60% 30% 70%/60% 40% 60% 40%; } }
-@keyframes luxuryFloat { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-12px) rotate(1deg); } }
-.hero-img-blob img { width: 100%; height: 100%; object-fit: cover; }
-.hero-stats { display: flex; gap: 2rem; margin-top: 2.5rem; flex-wrap: wrap; }
-.stat { text-align: center; }
-.stat strong { display: block; font-size: 1.5rem; font-weight: 800; color: var(--brand-700); }
-.stat span { font-size: .78rem; color: var(--text-muted); font-weight: 500; }
-
 /* ── Section headers ── */
 .section-header { text-align: center; margin-bottom: 2.5rem; }
 .section-header h2 { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2rem, 3.5vw, 3.2rem); font-weight: 500; letter-spacing: -.025em; color: var(--text-primary); margin: 0 0 .5rem; }
@@ -35,11 +12,14 @@
 .section-tag { display: inline-block; background: var(--brand-50); color: var(--brand-700); border: 1px solid var(--brand-100); font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .25rem .85rem; border-radius: 999px; margin-bottom: .75rem; }
 
 /* ── Category Grid ── */
-.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.25rem; }
-.cat-card { background: var(--surface-alt); border-radius: 20px; overflow: hidden; text-decoration: none; color: var(--text-primary); transition: transform .25s, box-shadow .25s; border: 1px solid var(--brand-100); text-align: center; padding: 1.5rem 1rem; }
-.cat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(219,39,119,0.1); }
-.cat-card img { width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin: 0 auto .75rem; display: block; border: 3px solid var(--brand-100); }
-.cat-card-name { font-weight: 600; font-size: .9rem; }
+.cat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(.75rem, 2vw, 1.5rem); }
+.cat-card { position: relative; display: block; aspect-ratio: 4 / 5; background: var(--surface-alt); border-radius: 20px; overflow: hidden; text-decoration: none; transition: transform .25s, box-shadow .25s; border: 1px solid var(--brand-100); }
+.cat-card:hover { transform: translateY(-5px); box-shadow: 0 16px 36px rgba(219,39,119,0.16); }
+.cat-card:focus-visible { outline: 3px solid var(--brand-500); outline-offset: 3px; }
+.cat-card img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.cat-card:hover img { transform: scale(1.035); }
+@media (min-width: 640px) { .cat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .cat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
 /* ── Featured Marquee ── */
 .featured-section { background: linear-gradient(135deg, var(--brand-50), #fff0f9); padding: 3rem 0; }
@@ -126,35 +106,7 @@
 </div>
 
 {{-- ── HERO ── --}}
-<section class="hero">
-    <div class="hero-inner">
-        <div>
-            <div class="hero-badge">The Signature Collection</div>
-            <h1>The finishing touch to <span>every story</span></h1>
-            <p>Discover refined women’s handbags selected for modern life—timeless silhouettes, thoughtful details, and effortless elegance.</p>
-            <div class="hero-cta">
-                <a href="{{ route('products.index') }}" class="btn-primary">Shop Now</a>
-                <a href="#featured" class="btn-outline">View Featured</a>
-            </div>
-            <div class="hero-stats">
-                <div class="stat"><strong>Curated</strong><span>Premium designs</span></div>
-                <div class="stat"><strong>Secure</strong><span>Trusted checkout</span></div>
-                <div class="stat"><strong>7 Days</strong><span>Easy exchange</span></div>
-            </div>
-        </div>
-        <div class="hero-img-wrap">
-            <div class="hero-img-blob">
-                @php
-                    $heroProduct = $featuredProducts->first();
-                @endphp
-                <img src="{{ app(\App\Services\ProductImageResolver::class)->resolve($heroProduct?->images?->first()?->image_path ?? $heroProduct?->image) }}"
-                     onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'"
-                     alt="EEsome premium women’s handbag">
-            </div>
-        </div>
-    </div>
-</section>
-
+<x-product-showcase-carousel :products="$featuredProducts" />
 {{-- ── CATEGORIES ── --}}
 @if($categories->count())
 <section class="section-gap">
@@ -166,14 +118,18 @@
         </div>
         <div class="cat-grid">
             @foreach($categories as $cat)
-            <a href="{{ route('products.index') }}?category={{ $cat->id }}" class="cat-card">
-                @if($cat->image)
-                    <img src="{{ app(\App\Services\ProductImageResolver::class)->resolve($cat->image) }}"
-                         alt="{{ $cat->name }}" loading="lazy">
-                @else
-                    <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--brand-100),var(--brand-400));margin:0 auto .75rem;display:flex;align-items:center;justify-content:center;font-size:2rem;">👜</div>
-                @endif
-                <div class="cat-card-name">{{ $cat->name }}</div>
+            @php
+                $categoryPng = 'images/categories/' . $cat->slug . '.png';
+                $categoryImage = is_file(public_path($categoryPng))
+                    ? asset($categoryPng)
+                    : app(\App\Services\ProductImageResolver::class)->resolve($cat->image);
+            @endphp
+            <a href="{{ route('products.index', ['category' => $cat->id]) }}"
+               class="cat-card"
+               aria-label="Shop {{ $cat->name }}">
+                <img src="{{ $categoryImage }}"
+                     onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'"
+                     alt="{{ $cat->name }} collection" loading="lazy">
             </a>
             @endforeach
         </div>

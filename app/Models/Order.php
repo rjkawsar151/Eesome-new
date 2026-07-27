@@ -10,7 +10,9 @@ class Order extends Model
     use HasFactory;
 
     protected $table = 'orders';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -20,6 +22,7 @@ class Order extends Model
         'email',
         'phone',
         'shipping_address',
+        'shipping_method',
         'total_amount',
         'subtotal_amount',
         'shipping_charge',
@@ -34,6 +37,12 @@ class Order extends Model
         'notes',
         'status_changed_at',
         'placed_from',
+        'shipping_provider',
+        'tracking_number',
+        'tracking_url',
+        'shipped_at',
+        'estimated_delivery_at',
+        'delivered_at',
     ];
 
     protected $casts = [
@@ -43,6 +52,9 @@ class Order extends Model
         'payment_fee' => 'string',
         'discount_amount' => 'string',
         'status_changed_at' => 'datetime',
+        'shipped_at' => 'datetime',
+        'estimated_delivery_at' => 'datetime',
+        'delivered_at' => 'datetime',
     ];
 
     public function user()

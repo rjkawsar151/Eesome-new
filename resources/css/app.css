@@ -1,3 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+.product-showcase{@apply relative isolate overflow-hidden bg-white outline-none;min-height:min(780px,calc(100svh - 72px));background:radial-gradient(ellipse at 50% 42%,rgba(252,231,243,.48),transparent 43%),#fff}
+.product-showcase__inner{@apply relative mx-auto flex w-full max-w-screen-xl flex-col items-center px-4 pb-12 pt-8 sm:px-6 sm:pb-16 lg:px-8 lg:pt-10}
+.product-showcase__eyebrow{@apply relative z-20 text-center text-xs font-semibold uppercase text-pink-700;letter-spacing:.22em}
+.product-showcase__stage{@apply relative mt-2 w-full touch-pan-y select-none;height:clamp(350px,53vw,550px)}
+.product-showcase__slide{@apply absolute left-1/2 top-1/2 m-0 block border-0 bg-transparent p-0 outline-none;width:clamp(260px,42vw,520px);aspect-ratio:1;transform-origin:center;transition:transform 700ms cubic-bezier(.22,1,.36,1),opacity 500ms ease,filter 500ms ease;will-change:transform,opacity,filter}
+.product-showcase__slide[data-position=active]{z-index:20;opacity:1;filter:blur(0);transform:translate3d(-50%,-50%,0) scale(1)}
+.product-showcase__slide[data-position=previous]{z-index:10;cursor:pointer;opacity:.46;filter:blur(3px);transform:translate3d(-155%,-50%,0) scale(.7)}
+.product-showcase__slide[data-position=next]{z-index:10;cursor:pointer;opacity:.46;filter:blur(3px);transform:translate3d(55%,-50%,0) scale(.7)}
+.product-showcase__slide[data-position=hidden]{z-index:0;pointer-events:none;opacity:0;filter:blur(6px);transform:translate3d(-50%,-50%,0) scale(.55)}
+.product-showcase__image{@apply h-full w-full object-contain;pointer-events:none;filter:drop-shadow(0 24px 28px rgba(45,27,38,.12))}
+.product-showcase__shadow{@apply absolute bottom-[7%] left-1/2 block rounded-full bg-slate-900/15;width:58%;height:5%;filter:blur(13px);transform:translateX(-50%)}
+.product-showcase__slide:not([data-position=active]) .product-showcase__shadow{opacity:.25}
+.product-showcase__content{@apply relative z-30 grid w-full max-w-2xl text-center;min-height:156px}
+.product-showcase__details{@apply invisible col-start-1 row-start-1 flex flex-col items-center opacity-0;transform:translateY(12px);transition:opacity 350ms ease,transform 450ms cubic-bezier(.22,1,.36,1),visibility 0s linear 450ms}
+.product-showcase__details[data-active=true]{@apply visible opacity-100;transform:translateY(0);transition-delay:120ms}
+.product-showcase__category{@apply mb-1 mt-0 text-xs font-semibold uppercase tracking-[.18em] text-slate-500}
+.product-showcase__title{@apply m-0 font-serif text-3xl font-medium leading-tight tracking-tight text-slate-950 sm:text-4xl lg:text-5xl}
+.product-showcase__price{@apply mb-4 mt-2 text-base font-semibold text-slate-600}
+.product-showcase__cta{@apply inline-flex min-h-12 items-center justify-center rounded-full bg-slate-950 px-7 py-3 text-sm font-semibold text-white no-underline shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-pink-700}
+.product-showcase__controls{@apply relative z-30 mt-5 flex items-center justify-center gap-4}
+.product-showcase__control{@apply grid h-12 w-12 cursor-pointer place-items-center rounded-full border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-pink-200 hover:bg-pink-50 hover:text-pink-700}
+.product-showcase__control svg{@apply h-5 w-5 fill-none stroke-current stroke-2}
+.product-showcase__status{@apply m-0 min-w-12 text-center text-xs font-semibold tracking-[.15em] text-slate-500}
+@media(max-width:767px){.product-showcase{min-height:670px}.product-showcase__stage{height:390px}.product-showcase__slide{width:min(76vw,380px)}.product-showcase__slide[data-position=previous]{opacity:.34;filter:blur(1.5px);transform:translate3d(-146%,-50%,0) scale(.68)}.product-showcase__slide[data-position=next]{opacity:.34;filter:blur(1.5px);transform:translate3d(46%,-50%,0) scale(.68)}.product-showcase__content{min-height:145px}}
+@media(prefers-reduced-motion:reduce){.product-showcase__slide,.product-showcase__details,.product-showcase__cta{transition-duration:1ms!important;transition-delay:0ms!important}}
+}

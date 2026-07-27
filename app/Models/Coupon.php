@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 class Coupon extends Model
 {
     use HasFactory;
 
     protected $table = 'coupons';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -36,7 +38,7 @@ class Coupon extends Model
 
     public function isValidForSubtotal(float $subtotal): bool
     {
-        if (!$this->status) {
+        if (! $this->status) {
             return false;
         }
 
@@ -44,11 +46,11 @@ class Coupon extends Model
             return false;
         }
 
-        if (!is_null($this->usage_limit) && $this->used_count >= $this->usage_limit) {
+        if (! is_null($this->usage_limit) && $this->used_count >= $this->usage_limit) {
             return false;
         }
 
-        if ($subtotal < (float)$this->min_order_amount) {
+        if ($subtotal < (float) $this->min_order_amount) {
             return false;
         }
 
@@ -57,16 +59,17 @@ class Coupon extends Model
 
     public function calculateDiscount(float $subtotal): float
     {
-        if (!$this->isValidForSubtotal($subtotal)) {
+        if (! $this->isValidForSubtotal($subtotal)) {
             return 0.0;
         }
 
         if ($this->discount_type === 'percentage') {
-            $discount = ($subtotal * (float)$this->discount_value) / 100.0;
+            $discount = ($subtotal * (float) $this->discount_value) / 100.0;
+
             return min($discount, $subtotal);
         }
 
         // Fixed discount
-        return min((float)$this->discount_value, $subtotal);
+        return min((float) $this->discount_value, $subtotal);
     }
 }

@@ -15,6 +15,9 @@ class User extends Authenticatable
      * Primary key auto-incrementing integer.
      */
     public $incrementing = true;
+
+    public $timestamps = false;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -36,6 +39,8 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'password' => 'hashed',
         'is_verified' => 'boolean',
     ];
@@ -43,7 +48,7 @@ class User extends Authenticatable
     // Role helpers
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['admin', 'super admin', 'manager']);
+        return in_array($this->role, ['admin', 'super admin', 'manager', 'content editor']);
     }
 
     public function isSuperAdmin(): bool

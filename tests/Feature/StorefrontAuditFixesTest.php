@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\CartItem;
 use App\Models\Category;
-use App\Models\Product;
-use App\Models\User;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\CartItem;
+use App\Models\Product;
+use App\Models\User;
 use App\Services\CheckoutService;
 use App\Services\OrderStatusService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -71,9 +71,9 @@ class StorefrontAuditFixesTest extends TestCase
         $order = $checkoutService->placeOrder($customerData, $cartProductIds);
 
         $this->assertNotNull($order);
-        $this->assertEquals('Pending', $order->order_status);
+        $this->assertEquals('awaiting', $order->order_status);
         $this->assertEquals(2, $order->items->count());
-        
+
         $p1->refresh();
         $p2->refresh();
         $this->assertEquals(8, $p1->stock);
@@ -97,7 +97,7 @@ class StorefrontAuditFixesTest extends TestCase
             'total_amount' => '100',
             'payment_method' => 'COD',
             'payment_status' => 'Pending',
-            'order_status' => 'Pending',
+            'order_status' => 'awaiting',
         ]);
 
         OrderItem::create([
@@ -113,7 +113,7 @@ class StorefrontAuditFixesTest extends TestCase
         $this->assertEquals(8, $p->stock);
 
         $statusService = app(OrderStatusService::class);
-        $statusService->transition($order, 'Cancelled', 'Customer requested cancellation.');
+        $statusService->transition($order, 'cancelled', 'Customer requested cancellation.');
 
         $p->refresh();
         $this->assertEquals(10, $p->stock);
@@ -139,7 +139,7 @@ class StorefrontAuditFixesTest extends TestCase
 
         // Put item in session guest cart
         session()->put('guest_cart', [
-            $p->id => ['quantity' => 3]
+            $p->id => ['quantity' => 3],
         ]);
 
         $response = $this->post('/login', [
@@ -148,7 +148,7 @@ class StorefrontAuditFixesTest extends TestCase
         ]);
 
         $response->assertRedirect();
-        
+
         // Assert guest cart is merged to user cart in DB
         $cartItem = CartItem::where('user_id', $user->id)->where('product_id', $p->id)->first();
         $this->assertNotNull($cartItem);

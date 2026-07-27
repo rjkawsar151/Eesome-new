@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'EEsome') | EEsome – Women's Handbags</title>
+    <title>@yield('title', 'EEsome') | EEsome ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ Women's Handbags</title>
     <meta name="description" content="@yield('meta_description', 'Shop premium women\'s handbags at EEsome. Discover featured collections, new arrivals, and exclusive designs.')">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,12 +29,12 @@
         ::selection { background: var(--brand-100); color: var(--brand-900); }
         :focus-visible { outline: 3px solid var(--brand-400); outline-offset: 3px; }
 
-        /* ── Navigation ── */
+        /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Navigation ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
         .nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.9); backdrop-filter: blur(18px); border-bottom: 1px solid #f3e6f0; }
-        .nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 72px; }
+        .nav-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 72px; }
         .nav-logo { font-family: Georgia, 'Times New Roman', serif; font-size: 1.85rem; font-weight: 700; letter-spacing: -.04em; background: linear-gradient(135deg, var(--brand-900), var(--brand-400)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
-        .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; margin: 0; padding: 0; }
-        .nav-links a { text-decoration: none; color: var(--text-primary); font-weight: 500; font-size: 0.9rem; transition: color .2s; }
+        .nav-links { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2rem; list-style: none; margin: 0; padding: 0; }
+        .nav-links a { text-decoration: none; color: var(--text-primary); font-weight: 700; font-size: 0.9rem; transition: color .2s; }
         .nav-links a:hover { color: var(--brand-600); }
         .nav-actions { display: flex; gap: 1rem; align-items: center; }
         .nav-search { display: flex; align-items: center; position: relative; margin-left: auto; }
@@ -51,22 +51,22 @@
         .nav-login:hover { color: var(--brand-600); }
         .nav-cart-badge { position: absolute; top: -8px; right: -8px; background: var(--brand-600); color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 
-        /* ── WhatsApp Button ── */
+        /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ WhatsApp Button ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
         .whatsapp-btn { position: fixed; bottom: calc(1rem + env(safe-area-inset-bottom)); right: 1rem; z-index: 200; background: #25d366; color: #fff; border-radius: 50%; width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 4px 20px rgba(37,211,102,0.4); transition: transform .2s, box-shadow .2s; }
         .whatsapp-btn:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(37,211,102,0.5); }
         .whatsapp-btn::before { content: 'Chat with us'; position: absolute; right: calc(100% + .65rem); padding: .45rem .7rem; border-radius: 8px; background: #17121a; color: #fff; font-size: .75rem; font-weight: 600; white-space: nowrap; opacity: 0; transform: translateX(6px); pointer-events: none; transition: opacity .2s, transform .2s; }
         .whatsapp-btn:hover::before, .whatsapp-btn:focus-visible::before { opacity: 1; transform: translateX(0); }
 
-        /* ── Alerts ── */
+        /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Alerts ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
         .alert { padding: .75rem 1.25rem; border-radius: 10px; margin-bottom: 1rem; font-size: .9rem; }
         .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
         .alert-error   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 
-        /* ── Container ── */
+        /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Container ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
         .container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
         .section-gap { padding: 4rem 0; }
 
-        /* ── Footer ── */
+        /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Footer ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
         footer { background: #17121a; color: #d1d5db; padding: 4rem 0 1.5rem; margin-top: 5rem; }
         footer h4 { color: #fff; margin: 0 0 1rem; font-size: 1rem; }
         footer a { color: #9ca3af; text-decoration: none; }
@@ -92,14 +92,14 @@
 <nav class="nav">
     <div class="nav-inner">
         <a href="{{ route('home') }}" class="nav-logo">EEsome</a>
+        @php
+            $headerLinks = app(\App\Services\NavigationRepository::class)->for('header');
+        @endphp
         <ul class="nav-links">
-            <li><a href="{{ route('home') }}">Home</a></li>
-            <li><a href="{{ route('products.index') }}">Shop</a></li>
-            <li><a href="#">Blog</a></li>
-            <li><a href="{{ route('about') }}">About</a></li>
+            @foreach($headerLinks as $link)<li><a href="{{ $link->url }}" @if($link->open_in_new_tab) target="_blank" rel="noopener noreferrer" @endif>{{ $link->label }}</a></li>@endforeach
         </ul>
         <form class="nav-search" method="GET" action="{{ route('products.index') }}" role="search">
-            <input type="search" name="search" value="{{ request()->routeIs('products.index') ? request('search') : '' }}" placeholder="Search bags, colors…" aria-label="Search products">
+            <input type="search" name="search" value="{{ request()->routeIs('products.index') ? request('search') : '' }}" placeholder="Search bags, colorsÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦" aria-label="Search products">
             <button type="submit" aria-label="Submit search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
         </form>
         <div class="nav-actions">
@@ -153,14 +153,12 @@
         <div class="footer-grid">
             <div>
                 <div style="font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.75rem;">EEsome</div>
-                <p style="font-size:.85rem;line-height:1.7;color:#9ca3af">Premium Women's Handbags — crafted for every occasion.</p>
+                <p style="font-size:.85rem;line-height:1.7;color:#9ca3af">Premium Women's Handbags ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â crafted for every occasion.</p>
             </div>
             <div>
-                <h4>Shop</h4>
+                <h4>Explore</h4>
                 <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.5rem;font-size:.875rem">
-                    <li><a href="{{ route('products.index') }}">All Products</a></li>
-                    <li><a href="{{ route('products.index', ['new' => 1]) }}">New Arrivals</a></li>
-                    <li><a href="{{ route('products.index', ['featured' => 1]) }}">Featured</a></li>
+                    @foreach(app(\App\Services\NavigationRepository::class)->for('footer') as $link)<li><a href="{{ $link->url }}" @if($link->open_in_new_tab) target="_blank" rel="noopener noreferrer" @endif>{{ $link->label }}</a></li>@endforeach
                 </ul>
             </div>
             <div>
@@ -178,7 +176,7 @@
             <div>
                 <h4>Contact</h4>
                 @if(!empty($waNumber))
-                    <p style="font-size:.875rem">📱 {{ $waNumber }}</p>
+                    <p style="font-size:.875rem">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â± {{ $waNumber }}</p>
                 @endif
             </div>
         </div>

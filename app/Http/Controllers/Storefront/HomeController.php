@@ -23,7 +23,7 @@ class HomeController extends Controller
             ->where('is_featured', true)
             ->where('is_active', true)
             ->orderBy('sort_order')
-            ->get(['id', 'name', 'slug', 'price', 'discount_price', 'image',
+            ->get(['id', 'category_id', 'name', 'slug', 'price', 'discount_price', 'image',
                    'is_new', 'is_sold_out', 'is_preorder', 'badge_text', 'stock', 'is_featured', 'is_active']);
 
         $allProducts = Product::with('images')

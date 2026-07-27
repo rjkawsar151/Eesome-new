@@ -14,12 +14,10 @@ use Illuminate\Support\Str;
 
 class CheckoutService
 {
-    private const SHIPPING_FREE_THRESHOLD = 999.00;
-    private const SHIPPING_CHARGE = 80.00;
-
-    public function calculateShipping(float $subtotal): float
+    public function calculateShipping(float $subtotal, ?string $shippingMethod = null): float
     {
-        return $subtotal >= self::SHIPPING_FREE_THRESHOLD ? 0.0 : self::SHIPPING_CHARGE;
+        return app(ShippingCalculator::class)->calculate($subtotal, $shippingMethod);
+
     }
 
     public function placeOrder(array $customerData, array $cartProductIds, ?string $couponCode = null): Order
@@ -40,24 +38,24 @@ class CheckoutService
             $subtotal = 0.0;
 
             foreach ($cartProductIds as $productId => $requestedQty) {
-                if (!isset($products[$productId])) {
+                if (! isset($products[$productId])) {
                     throw new \RuntimeException("Product #{$productId} is no longer available.");
                 }
 
                 $product = $products[$productId];
-                $qty = (int)$requestedQty;
+                $qty = (int) $requestedQty;
 
-                if (!$product->available_for_preorder && $product->stock < $qty) {
+                if (! $product->available_for_preorder && $product->stock < $qty) {
                     throw new \RuntimeException("'{$product->name}' has insufficient stock.");
                 }
 
-                $unitPrice = (float)$product->effective_price;
+                $unitPrice = (float) $product->effective_price;
                 $lineTotal = round($unitPrice * $qty, 2);
                 $subtotal += $lineTotal;
 
                 $orderLines[] = [
-                    'product'    => $product,
-                    'qty'        => $qty,
+                    'product' => $product,
+                    'qty' => $qty,
                     'unit_price' => $unitPrice,
                     'line_total' => $lineTotal,
                 ];
@@ -71,67 +69,68 @@ class CheckoutService
                     ->lockForUpdate()
                     ->first();
 
-                if (!$coupon || !$coupon->isValidForSubtotal($subtotal)) {
+                if (! $coupon || ! $coupon->isValidForSubtotal($subtotal)) {
                     throw new \RuntimeException("Coupon '{$couponCode}' is invalid or expired.");
                 }
                 $discount = round($coupon->calculateDiscount($subtotal), 2);
             }
 
             // 5. Shipping
-            $shipping = $this->calculateShipping($subtotal);
+            $shipping = $this->calculateShipping($subtotal, $customerData['shipping_method'] ?? null);
             $total = round($subtotal - $discount + $shipping, 2);
 
             // 6. Create order
-            $orderNumber = 'EES-' . strtoupper(Str::random(8));
+            $orderNumber = 'EES-'.strtoupper(Str::random(8));
             $order = Order::create([
-                'order_number'   => $orderNumber,
-                'user_id'        => $customerData['user_id'] ?? null,
-                'customer_name'  => $customerData['name'],
-                'email'          => $customerData['email'],
-                'phone'          => $customerData['phone'],
+                'order_number' => $orderNumber,
+                'user_id' => $customerData['user_id'] ?? null,
+                'customer_name' => $customerData['name'],
+                'email' => $customerData['email'],
+                'phone' => $customerData['phone'],
                 'shipping_address' => $customerData['address'],
-                'subtotal_amount'  => (string)$subtotal,
-                'discount_amount'  => (string)$discount,
-                'shipping_charge'  => (string)$shipping,
-                'payment_fee'      => '0',
-                'total_amount'     => (string)$total,
-                'coupon_code'      => $coupon ? $coupon->code : null,
-                'coupon_id'        => $coupon ? $coupon->id : null,
-                'payment_method'   => $customerData['payment_method'] ?? 'COD',
-                'payment_status'   => 'Pending',
-                'order_status'     => 'Pending',
-                'placed_from'      => 'web',
+                'shipping_method' => $customerData['shipping_method'] ?? null,
+                'subtotal_amount' => (string) $subtotal,
+                'discount_amount' => (string) $discount,
+                'shipping_charge' => (string) $shipping,
+                'payment_fee' => '0',
+                'total_amount' => (string) $total,
+                'coupon_code' => $coupon ? $coupon->code : null,
+                'coupon_id' => $coupon ? $coupon->id : null,
+                'payment_method' => $customerData['payment_method'] ?? 'COD',
+                'payment_status' => 'pending',
+                'order_status' => 'awaiting',
+                'placed_from' => 'web',
             ]);
 
             // 7. Create order items (snapshots)
             foreach ($orderLines as $line) {
                 $p = $line['product'];
                 OrderItem::create([
-                    'order_id'      => $order->id,
-                    'product_id'    => $p->id,
-                    'product_name'  => $p->name,
-                    'product_sku'   => $p->sku ?? 'LEGACY-' . $p->id,
+                    'order_id' => $order->id,
+                    'product_id' => $p->id,
+                    'product_name' => $p->name,
+                    'product_sku' => $p->sku ?? 'LEGACY-'.$p->id,
                     'product_image' => $p->image,
-                    'price'         => (string)$line['unit_price'],
-                    'quantity'      => $line['qty'],
-                    'line_total'    => (string)$line['line_total'],
+                    'price' => (string) $line['unit_price'],
+                    'quantity' => $line['qty'],
+                    'line_total' => (string) $line['line_total'],
                     'discount_amount' => '0',
                 ]);
 
                 // 8. Decrement stock
-                if (!$p->available_for_preorder) {
+                if (! $p->available_for_preorder) {
                     $stockBefore = $p->stock;
                     $p->decrement('stock', $line['qty']);
                     $p->refresh();
 
                     InventoryMovement::create([
-                        'product_id'     => $p->id,
-                        'order_id'       => $order->id,
-                        'type'           => 'sale',
+                        'product_id' => $p->id,
+                        'order_id' => $order->id,
+                        'type' => 'sale',
                         'quantity_delta' => -$line['qty'],
-                        'stock_before'   => $stockBefore,
-                        'stock_after'    => $p->stock,
-                        'reference'      => $order->order_number,
+                        'stock_before' => $stockBefore,
+                        'stock_after' => $p->stock,
+                        'reference' => $order->order_number,
                     ]);
                 }
             }
@@ -143,18 +142,36 @@ class CheckoutService
 
             // 10. Initial status history
             OrderStatusHistory::create([
-                'order_id'    => $order->id,
+                'order_id' => $order->id,
                 'from_status' => null,
-                'to_status'   => 'Pending',
-                'note'        => 'Order placed via web.',
+                'to_status' => 'awaiting',
+                'note' => 'Order placed via web.',
             ]);
 
             return $order;
+
         });
 
         // 11. Post-commit: clear cart
-        if (!empty($customerData['user_id'])) {
+        if (! empty($customerData['user_id'])) {
             CartItem::where('user_id', $customerData['user_id'])->delete();
+        }
+
+        if (filter_var($order->email, FILTER_VALIDATE_EMAIL)) {
+            try {
+                \Illuminate\Support\Facades\Notification::route('mail', $order->email)
+                    ->notify(new \App\Notifications\OrderStatusUpdated($order->id));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Order confirmation could not be queued', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+            }
+        }
+        foreach (config('order_alerts.emails', []) as $email) {
+            try {
+                \Illuminate\Support\Facades\Notification::route('mail', $email)
+                    ->notify(new \App\Notifications\NewOrderAdminAlert($order->id));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Admin order alert could not be queued', ['order_id' => $order->id, 'email' => $email]);
+            }
         }
 
         return $order;

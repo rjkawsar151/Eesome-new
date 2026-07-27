@@ -10,11 +10,14 @@ class Product extends Model
     use HasFactory;
 
     protected $table = 'products';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'category_id',
+        'brand_id',
         'sku',
         'slug',
         'name',
@@ -49,15 +52,16 @@ class Product extends Model
     // Effective price calculation
     public function getEffectivePriceAttribute(): string
     {
-        if (!is_null($this->discount_price) && (float)$this->discount_price > 0 && (float)$this->discount_price < (float)$this->price) {
-            return (string)$this->discount_price;
+        if (! is_null($this->discount_price) && (float) $this->discount_price > 0 && (float) $this->discount_price < (float) $this->price) {
+            return (string) $this->discount_price;
         }
-        return (string)$this->price;
+
+        return (string) $this->price;
     }
 
     public function getHasDiscountAttribute(): bool
     {
-        return !is_null($this->discount_price) && (float)$this->discount_price > 0 && (float)$this->discount_price < (float)$this->price;
+        return ! is_null($this->discount_price) && (float) $this->discount_price > 0 && (float) $this->discount_price < (float) $this->price;
     }
 
     public function getAvailableForPreorderAttribute(): bool
@@ -83,28 +87,45 @@ class Product extends Model
     // Badge priority helper
     public function getBadgeInfoAttribute(): ?array
     {
-        if ($this->stock <= 0 && !$this->available_for_preorder) {
+        if ($this->stock <= 0 && ! $this->available_for_preorder) {
             return ['text' => 'SOLD OUT', 'type' => 'danger'];
         }
         if ($this->available_for_preorder) {
             return ['text' => 'PREORDER', 'type' => 'warning'];
         }
         if ($this->has_discount) {
-            $pct = round((( (float)$this->price - (float)$this->discount_price ) / (float)$this->price) * 100);
+            $pct = round((((float) $this->price - (float) $this->discount_price) / (float) $this->price) * 100);
+
             return ['text' => "-{$pct}%", 'type' => 'sale'];
         }
-        if (!empty($this->badge_text)) {
+        if (! empty($this->badge_text)) {
             return ['text' => strtoupper($this->badge_text), 'type' => 'custom'];
         }
         if ($this->is_new) {
             return ['text' => 'NEW', 'type' => 'info'];
         }
+
         return null;
     }
 
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class);
+    }
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class)->orderBy('sort_order');
     }
 
     public function images()
