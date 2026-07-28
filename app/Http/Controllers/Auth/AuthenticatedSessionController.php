@@ -31,7 +31,10 @@ class AuthenticatedSessionController extends Controller
 
         app(\App\Services\CartService::class)->mergeSessionCartIntoDb(auth()->id());
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+        $request->session()->forget('registration_verification_required');
+
+        return redirect(RouteServiceProvider::HOME);
+
     }
 
     /**

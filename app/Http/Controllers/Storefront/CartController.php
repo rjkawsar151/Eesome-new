@@ -28,6 +28,7 @@ class CartController extends Controller
         $data = $request->validate([
             'product_id' => 'required|integer|exists:products,id',
             'quantity'   => 'sometimes|integer|min:1|max:100',
+            'buy_now'    => 'sometimes|boolean',
         ]);
 
         $qty = $data['quantity'] ?? 1;
@@ -38,7 +39,11 @@ class CartController extends Controller
             $this->cart->addToSessionCart($data['product_id'], $qty);
         }
 
-        return redirect()->route('cart.index')->with('success', 'Item added to cart!');
+        if ($request->boolean('buy_now')) {
+            return redirect()->route('checkout.show');
+        }
+
+        return back()->with('success', 'Successfully added to cart.');
     }
 
     public function update(Request $request, int $productId)

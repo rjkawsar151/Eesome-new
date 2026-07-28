@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
+use App\Services\OptimizedImageStorage;
 use App\Services\SafeHtml;
 use Illuminate\Http\Request;
 
@@ -42,6 +43,7 @@ class BlogController extends Controller
 
     public function destroy(BlogPost $blog)
     {
+        app(OptimizedImageStorage::class)->delete($blog->image);
         $blog->delete();
 
         return back()->with('success', 'Post deleted.');
@@ -60,7 +62,9 @@ class BlogController extends Controller
     private function image(Request $r, BlogPost $p)
     {
         if ($f = $r->file('image_upload')) {
-            $p->update(['image' => $f->store('blog', 'public')]);
+            $old = $p->image;
+            $p->update(['image' => app(OptimizedImageStorage::class)->store($f, 'blog', 1600)]);
+            app(OptimizedImageStorage::class)->delete($old);
         }
     }
 }

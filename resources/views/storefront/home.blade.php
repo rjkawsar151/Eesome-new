@@ -4,7 +4,17 @@
 
 @push('styles')
 <style>
-.luxury-bar { min-height: 34px; padding: .45rem 1rem; display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap; background: #17121a; color: #fce7f3; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+.luxury-bar { min-height: 34px; overflow: hidden; padding: .45rem 0; background: #17121a; color: #fce7f3; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+.luxury-bar__track { display: flex; width: max-content; animation: luxuryBarMarquee 20s linear infinite; will-change: transform; }
+.luxury-bar__group { display: flex; flex-shrink: 0; align-items: center; gap: 1.5rem; padding-right: 1.5rem; white-space: nowrap; }
+.luxury-bar__group span::after { content: '•'; margin-left: 1.5rem; color: var(--brand-400); }
+.luxury-bar:hover .luxury-bar__track { animation-play-state: paused; }
+@keyframes luxuryBarMarquee { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+    .luxury-bar { overflow-x: auto; }
+    .luxury-bar__track { animation: none; }
+    .luxury-bar__group[aria-hidden="true"] { display: none; }
+}
 /* ── Section headers ── */
 .section-header { text-align: center; margin-bottom: 2.5rem; }
 .section-header h2 { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2rem, 3.5vw, 3.2rem); font-weight: 500; letter-spacing: -.025em; color: var(--text-primary); margin: 0 0 .5rem; }
@@ -18,17 +28,29 @@
 .cat-card:focus-visible { outline: 3px solid var(--brand-500); outline-offset: 3px; }
 .cat-card img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
 .cat-card:hover img { transform: scale(1.035); }
+.cat-card::after { content: ''; position: absolute; inset: 42% 0 0; background: linear-gradient(to bottom, transparent, rgba(23,18,26,.88)); pointer-events: none; }
+.cat-card__content { position: absolute; z-index: 1; left: 1rem; right: 1rem; bottom: 1rem; display: flex; align-items: flex-end; justify-content: space-between; gap: .75rem; color: #fff; }
+.cat-card__name { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.15rem, 2vw, 1.55rem); font-weight: 600; line-height: 1.15; text-shadow: 0 1px 8px rgba(0,0,0,.3); }
+.cat-card__explore { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: .55rem .85rem; border-radius: 999px; background: #fff; color: var(--brand-700); font-size: .75rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; box-shadow: 0 4px 14px rgba(0,0,0,.16); transition: transform .2s, background .2s, color .2s; }
+.cat-card:hover .cat-card__explore { transform: translateX(3px); background: var(--brand-600); color: #fff; }
 @media (min-width: 640px) { .cat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1024px) { .cat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
 /* ── Featured Marquee ── */
 .featured-section { background: linear-gradient(135deg, var(--brand-50), #fff0f9); padding: 3rem 0; }
-.featured-marquee { overflow-x: auto; scrollbar-width: thin; padding: .5rem 1.5rem 1.25rem; }
-.featured-marquee__track { display: flex; width: max-content; gap: 1.25rem; margin: 0 auto; }
-.featured-marquee__group { display: contents; }
+.featured-marquee { overflow: hidden; padding: .5rem 0 1.25rem; }
+.featured-marquee__track { display: flex; width: max-content; gap: 1.25rem; animation: featuredMarquee 28s linear infinite; will-change: transform; }
+.featured-marquee__group { display: flex; flex-shrink: 0; gap: 1.25rem; }
+.featured-marquee:hover .featured-marquee__track { animation-play-state: paused; }
+@keyframes featuredMarquee { to { transform: translateX(calc(-50% - .625rem)); } }
+@media (prefers-reduced-motion: reduce) {
+    .featured-marquee { overflow-x: auto; }
+    .featured-marquee__track { animation: none; }
+    .featured-marquee__group[aria-hidden="true"] { display: none; }
+}
 .featured-card { width: 200px; flex-shrink: 0; background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid var(--brand-100); transition: transform .25s, box-shadow .25s; text-decoration: none; color: var(--text-primary); display: block; }
 .featured-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(219,39,119,0.12); }
-.featured-card img { width: 100%; height: 160px; object-fit: cover; }
+.featured-card img { width: 100%; height: 160px; object-fit: contain; object-position: center; display: block; padding: .4rem; background: var(--surface-alt); }
 .featured-card-body { padding: .75rem; }
 .featured-card-name { font-size: .82rem; font-weight: 600; margin-bottom: .25rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .featured-card-price { font-size: .85rem; color: var(--brand-700); font-weight: 700; }
@@ -86,7 +108,7 @@
 .catalog-empty strong { display: block; margin-bottom: .4rem; color: var(--text-primary); font-size: 1.1rem; }
 
 @media (max-width: 768px) {
-    .luxury-bar span:nth-child(n+3) { display: none; }
+    .cat-card__content { flex-direction: column; align-items: flex-start; }
     .hero-inner { grid-template-columns: 1fr; text-align: center; }
     .hero-img-wrap { order: -1; }
     .hero-img-blob { width: 280px; }
@@ -99,13 +121,22 @@
 
 @section('content')
 
-<div class="luxury-bar">
-    <span>Complimentary delivery over ৳8,000</span><span>•</span>
-    <span>Curated women’s handbags</span><span>•</span>
-    <span>Easy 7-day exchange</span>
+<div class="luxury-bar" role="region" aria-label="Store announcements">
+    <div class="luxury-bar__track">
+        <div class="luxury-bar__group">
+            <span>Complimentary delivery over 8,000</span>
+            <span>Curated women's handbags</span>
+            <span>Easy 7-day exchange</span>
+        </div>
+        <div class="luxury-bar__group" aria-hidden="true">
+            <span>Complimentary delivery over 8,000</span>
+            <span>Curated women's handbags</span>
+            <span>Easy 7-day exchange</span>
+        </div>
+    </div>
 </div>
 
-{{-- ── HERO ── --}}
+{{-- HERO ── --}}
 <x-product-showcase-carousel :products="$featuredProducts" />
 {{-- ── CATEGORIES ── --}}
 @if($categories->count())
@@ -130,6 +161,7 @@
                 <img src="{{ $categoryImage }}"
                      onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'"
                      alt="{{ $cat->name }} collection" loading="lazy">
+                <div class="cat-card__content"><h3 class="cat-card__name">{{ $cat->name }}</h3><span class="cat-card__explore">Explore &rarr;</span></div>
             </a>
             @endforeach
         </div>
@@ -156,6 +188,20 @@
                     <img src="{{ app(\App\Services\ProductImageResolver::class)->resolve($img?->image_path ?? $fp->image) }}"
                          onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'"
                          alt="{{ $fp->name }}" loading="lazy">
+                    <div class="featured-card-body">
+                        <div class="featured-card-name">{{ $fp->name }}</div>
+                        <div class="featured-card-price">৳{{ number_format($fp->effective_price, 0) }}</div>
+                    </div>
+                </a>
+                @endforeach
+            </div>
+            <div class="featured-marquee__group" aria-hidden="true">
+                @foreach($featuredProducts as $fp)
+                <a href="{{ route('products.show', $fp->slug ?? $fp->id) }}" class="featured-card">
+                    @php $img = $fp->images->first(); @endphp
+                    <img src="{{ app(\App\Services\ProductImageResolver::class)->resolve($img?->image_path ?? $fp->image) }}"
+                         onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'"
+                         alt="{{ $fp->name }}" loading="lazy" tabindex="-1">
                     <div class="featured-card-body">
                         <div class="featured-card-name">{{ $fp->name }}</div>
                         <div class="featured-card-price">৳{{ number_format($fp->effective_price, 0) }}</div>
@@ -211,7 +257,7 @@
                                     <input type="hidden" name="quantity" value="1">
                                     <button type="submit" class="btn-cart" style="width:100%">Add to Cart</button>
                                 </form>
-                                <a href="{{ route('products.show', $product->slug ?? $product->id) }}" class="btn-buy">Buy Now</a>
+                                <form method="POST" action="{{ route('cart.store') }}" style="flex:1">@csrf<input type="hidden" name="product_id" value="{{ $product->id }}"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="btn-buy" style="width:100%;height:100%">Buy Now</button></form>
                             @else
                                 <button class="btn-cart btn-disabled" style="flex:1">Sold Out</button>
                             @endif
@@ -232,22 +278,6 @@
         </div>
 </div>
 </section>
-
-@php
-    $homeSettings = app(\App\Services\SiteSettingsRepository::class);
-    $homeWhatsApp = $homeSettings->get('contact_whatsapp', $homeSettings->get('whatsapp_number', $homeSettings->get('contact_phone', '')));
-@endphp
-@if(!empty($homeWhatsApp))
-<section class="container section-gap" style="padding-top:0">
-    <div class="whatsapp-cta">
-        <h2>Need help finding your perfect bag?</h2>
-        <p>Chat with our team for product guidance, availability, and quick answers before you order.</p>
-        <a class="whatsapp-cta__button" href="https://wa.me/{{ preg_replace('/\D/', '', $homeWhatsApp) }}?text={{ urlencode('Hi, I would like help choosing a handbag.') }}" target="_blank" rel="noopener noreferrer">
-            <span aria-hidden="true">WhatsApp</span><span>Chat with us</span>
-        </a>
-    </div>
-</section>
-@endif
 
 @push('scripts')
 <script>

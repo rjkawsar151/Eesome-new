@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Keep Laravel's application, configuration, and storage files outside
+    # the public URL space when the web root points at this project folder.
+    RewriteRule ^$ public/ [L]
+    RewriteCond %{REQUEST_URI} !/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+# Prevent accidental access to environment, dependency, build, and database
+# files if rewriting is unavailable or misconfigured.
+<FilesMatch "(^\.|composer\.(json|lock)$|package(-lock)?\.json$|phpunit\.xml$|artisan$|.*\.(env|log|sql|sqlite|bak|zip)$)">
+    Require all denied
+</FilesMatch>

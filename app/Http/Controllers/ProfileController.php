@@ -16,8 +16,20 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $user = $request->user();
+        $activeStatuses = ['awaiting', 'processing', 'shipped', 'in_transit'];
+        $activeOrders = $user->orders()->with('items')->whereIn('order_status', $activeStatuses)->latest()->get();
+        $recentOrders = $user->orders()->with('items')->latest()->limit(10)->get();
+
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
+            'activeOrders' => $activeOrders,
+            'recentOrders' => $recentOrders,
+            'orderStats' => [
+                'total' => $user->orders()->count(),
+                'active' => $activeOrders->count(),
+                'delivered' => $user->orders()->where('order_status', 'delivered')->count(),
+            ],
         ]);
     }
 

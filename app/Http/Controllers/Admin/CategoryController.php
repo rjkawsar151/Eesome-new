@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Services\OptimizedImageStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
@@ -45,13 +47,21 @@ class CategoryController extends Controller
     {
         if ($category->products()->exists()) {
             return back()->with('error', 'Archive or move products first.');
-        }$category->delete();
+        }
+        app(OptimizedImageStorage::class)->delete($category->image);
+        $category->delete();
 
         return back()->with('success', 'Category deleted.');
     }
 
     private function data(Request $r, ?Category $c = null)
     {
+        $submittedSlug = trim((string) $r->input('slug'));
+        $slug = preg_match('/[\\/?&=]/', $submittedSlug)
+            ? Str::slug((string) $r->input('name'))
+            : Str::slug($submittedSlug);
+        $r->merge(['slug' => $slug]);
+
         $d = $r->validate(['name' => 'required|string|max:255', 'slug' => ['required', 'alpha_dash', 'max:255', Rule::unique('categories')->ignore($c?->id)], 'sort_order' => 'required|integer|min:0', 'meta_title' => 'nullable|string|max:255', 'meta_description' => 'nullable|string|max:1000', 'is_active' => 'nullable|boolean', 'image_upload' => 'nullable|image|mimes:png,webp,jpg,jpeg|max:5120']);
         $d['is_active'] = $r->boolean('is_active');
         unset($d['image_upload']);
@@ -63,9 +73,9 @@ class CategoryController extends Controller
     {
         if ($f = $r->file('image_upload')) {
             $old = $c->image;
-            $c->update(['image' => $f->store('categories', 'public')]);
+            $c->update(['image' => app(OptimizedImageStorage::class)->store($f, 'categories', 1400)]);
             if ($old && str_starts_with($old, 'categories/')) {
-                Storage::disk('public')->delete($old);
+                app(OptimizedImageStorage::class)->delete($old);
             }
         }
     }

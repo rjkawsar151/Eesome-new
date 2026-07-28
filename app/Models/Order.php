@@ -11,6 +11,8 @@ class Order extends Model
 
     protected $table = 'orders';
 
+    public $timestamps = false;
+
     public $incrementing = true;
 
     protected $keyType = 'int';
@@ -21,6 +23,10 @@ class Order extends Model
         'customer_name',
         'email',
         'phone',
+        'district',
+        'thana',
+        'post_office',
+        'post_code',
         'shipping_address',
         'shipping_method',
         'total_amount',
@@ -46,6 +52,7 @@ class Order extends Model
     ];
 
     protected $casts = [
+        'created_at' => 'datetime',
         'total_amount' => 'string',
         'subtotal_amount' => 'string',
         'shipping_charge' => 'string',

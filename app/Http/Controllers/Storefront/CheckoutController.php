@@ -34,6 +34,10 @@ class CheckoutController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255', 'email' => 'required|email|max:255', 'phone' => 'required|string|max:30',
+            'district' => 'required|string|max:100',
+            'thana' => 'required|string|max:100',
+            'post_office' => 'required|string|max:100',
+            'post_code' => 'required|string|max:20',
             'address' => 'required|string|max:500',
             'shipping_method' => ['required', 'string', Rule::exists('shipping_methods', 'code')->where('is_active', true)],
             'payment_method' => ['required', 'string', Rule::exists('payment_methods', 'code')->where('is_active', true)],
@@ -63,6 +67,9 @@ class CheckoutController extends Controller
             return redirect()->route('checkout.success', $order->order_number);
         } catch (\RuntimeException $e) {
             return back()->withInput()->withErrors(['checkout' => $e->getMessage()]);
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withInput()->withErrors(['checkout' => 'We could not place your order right now. Please try again or contact support.']);
         }
     }
 

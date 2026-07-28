@@ -82,7 +82,8 @@ class ProductController extends Controller
             ->where('category_id', $product->category_id)
             ->where('is_active', true)
             ->where('id', '!=', $product->id)
-            ->take(4)
+            ->inRandomOrder()
+            ->take(12)
             ->get();
 
         return view('storefront.products.show', compact(

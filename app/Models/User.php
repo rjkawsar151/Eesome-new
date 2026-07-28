@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -48,17 +49,17 @@ class User extends Authenticatable
     // Role helpers
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['admin', 'super admin', 'manager', 'content editor']);
+        return in_array(strtolower(trim((string) $this->role)), ['admin', 'super admin', 'manager', 'content editor'], true);
     }
 
     public function isSuperAdmin(): bool
     {
-        return $this->role === 'super admin';
+        return strtolower(trim((string) $this->role)) === 'super admin';
     }
 
     public function isManager(): bool
     {
-        return $this->role === 'manager';
+        return strtolower(trim((string) $this->role)) === 'manager';
     }
 
     public function orders()

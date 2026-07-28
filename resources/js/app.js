@@ -9,7 +9,7 @@ const initialiseProductShowcase = (root) => {
  let active=0,start=null,timer=null;
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)'),mod=n=>(n+count)%count;
  const render=n=>{active=mod(n);const prev=mod(active-1),next=mod(active+1);slides.forEach((slide,i)=>{let position='hidden';if(i===active)position='active';else if(count===2)position='next';else if(count>2&&i===prev)position='previous';else if(count>2&&i===next)position='next';slide.dataset.position=position;slide.setAttribute('aria-current',position==='active'?'true':'false');slide.setAttribute('aria-hidden',position==='hidden'?'true':'false')});details.forEach((item,i)=>item.dataset.active=i===active?'true':'false');if(current)current.textContent=String(active+1)};
- const previous=()=>render(active-1),next=()=>render(active+1),stop=()=>{clearInterval(timer);timer=null},play=()=>{stop();if(count<3||reduced.matches||document.hidden||root.matches(':hover,:focus-within'))return;timer=setInterval(next,6000)};
+ const previous=()=>render(active-1),next=()=>render(active+1),stop=()=>{clearInterval(timer);timer=null},play=()=>{stop();if(count<3||reduced.matches||document.hidden||root.matches(':hover,:focus-within'))return;timer=setInterval(next,3000)};
  root.querySelector('[data-carousel-previous]')?.addEventListener('click',previous);root.querySelector('[data-carousel-next]')?.addEventListener('click',next);
  slides.forEach((slide,i)=>slide.addEventListener('click',()=>{if(i!==active)render(i)}));
  root.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){e.preventDefault();previous()}if(e.key==='ArrowRight'){e.preventDefault();next()}});

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'EEsome') | EEsome ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ Women's Handbags</title>
+    <title>@yield('title', 'EEsome') | EEsome — Women's Handbags</title>
     <meta name="description" content="@yield('meta_description', 'Shop premium women\'s handbags at EEsome. Discover featured collections, new arrivals, and exclusive designs.')">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,31 +25,33 @@
         }
         * { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { font-family: 'Outfit', sans-serif; background: var(--surface); color: var(--text-primary); margin: 0; padding-bottom: calc(88px + env(safe-area-inset-bottom)); -webkit-font-smoothing: antialiased; }
+        body { min-height: 100vh; display: flex; flex-direction: column; font-family: 'Outfit', sans-serif; background: var(--surface); color: var(--text-primary); margin: 0; padding-bottom: 0; -webkit-font-smoothing: antialiased; }
         ::selection { background: var(--brand-100); color: var(--brand-900); }
         :focus-visible { outline: 3px solid var(--brand-400); outline-offset: 3px; }
 
         /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Navigation ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
-        .nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.9); backdrop-filter: blur(18px); border-bottom: 1px solid #f3e6f0; }
+        .nav { position: sticky; top: 0; z-index: 100; background: rgba(35,24,34,.82); -webkit-backdrop-filter: blur(22px) saturate(145%); backdrop-filter: blur(22px) saturate(145%); border-bottom: 1px solid rgba(255,255,255,.14); box-shadow: 0 8px 28px rgba(23,18,26,.18); }
         .nav-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 72px; }
+        .nav-logo img { display: block; width: auto; max-width: 180px; height: 50px; object-fit: contain; }
         .nav-logo { font-family: Georgia, 'Times New Roman', serif; font-size: 1.85rem; font-weight: 700; letter-spacing: -.04em; background: linear-gradient(135deg, var(--brand-900), var(--brand-400)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
         .nav-links { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2rem; list-style: none; margin: 0; padding: 0; }
-        .nav-links a { text-decoration: none; color: var(--text-primary); font-weight: 700; font-size: 0.9rem; transition: color .2s; }
-        .nav-links a:hover { color: var(--brand-600); }
+        .nav-links a { text-decoration: none; color: #f9eaf3; font-weight: 700; font-size: 0.9rem; transition: color .2s; }
+        .nav-links a:hover { color: var(--brand-400); }
         .nav-actions { display: flex; gap: 1rem; align-items: center; }
         .nav-search { display: flex; align-items: center; position: relative; margin-left: auto; }
-        .nav-search input { width: min(18vw, 220px); height: 40px; padding: 0 2.35rem 0 .85rem; border: 1px solid #eadde6; border-radius: 999px; background: #fff; font: inherit; font-size: .85rem; }
-        .nav-search input:focus { border-color: var(--brand-400); outline: 3px solid var(--brand-100); }
-        .nav-search button { position: absolute; right: .35rem; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--brand-700); cursor: pointer; display: grid; place-items: center; }
+        .nav-search input { width: min(18vw, 220px); height: 40px; padding: 0 2.35rem 0 .85rem; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; font: inherit; font-size: .85rem; }
+        .nav-search input::placeholder { color: rgba(255,255,255,.68); }
+        .nav-search button { position: absolute; right: .35rem; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #f9a8d4; cursor: pointer; display: grid; place-items: center; }
         .nav-btn { padding: 0.5rem 1.25rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; }
-        .nav-btn-ghost { border: 1.5px solid var(--brand-600); color: var(--brand-600); background: transparent; }
+        .nav-btn-ghost { border: 1.5px solid rgba(249,168,212,.8); color: #fce7f3; background: rgba(255,255,255,.06); }
         .nav-btn-ghost:hover { background: var(--brand-600); color: #fff; }
         .nav-btn-fill { background: var(--brand-600); color: #fff; border: none; }
         .nav-btn-fill:hover { background: var(--brand-700); }
-        .nav-cart { position: relative; display: flex; align-items: center; margin-right: .5rem; color: var(--text-primary); }
-        .nav-login { color: var(--text-primary); text-decoration: none; font-size: .9rem; font-weight: 600; padding: .5rem .25rem; }
-        .nav-login:hover { color: var(--brand-600); }
+        .nav-cart { position: relative; display: flex; align-items: center; margin-right: .5rem; color: #fff; }
+        .nav-login { color: #f9eaf3; text-decoration: none; font-size: .9rem; font-weight: 600; padding: .5rem .25rem; }
+        .nav-login:hover { color: var(--brand-400); }
         .nav-cart-badge { position: absolute; top: -8px; right: -8px; background: var(--brand-600); color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .mobile-bottom-nav { display: none; }
 
         /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ WhatsApp Button ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
         .whatsapp-btn { position: fixed; bottom: calc(1rem + env(safe-area-inset-bottom)); right: 1rem; z-index: 200; background: #25d366; color: #fff; border-radius: 50%; width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 4px 20px rgba(37,211,102,0.4); transition: transform .2s, box-shadow .2s; }
@@ -61,37 +63,68 @@
         .alert { padding: .75rem 1.25rem; border-radius: 10px; margin-bottom: 1rem; font-size: .9rem; }
         .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
         .alert-error   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .toast-success { position: fixed; z-index: 500; top: 88px; right: 1.25rem; display: flex; align-items: center; gap: .75rem; max-width: min(390px, calc(100vw - 2rem)); padding: .9rem 1rem; border: 1px solid rgba(255,255,255,.32); border-radius: 14px; background: rgba(22,101,52,.94); color: #fff; box-shadow: 0 14px 35px rgba(0,0,0,.24); backdrop-filter: blur(14px); transition: opacity .25s, transform .25s; }
+        .toast-success.is-leaving { opacity: 0; transform: translateY(-10px); }
+        .toast-success button { margin-left: auto; border: 0; background: transparent; color: #fff; font-size: 1.15rem; cursor: pointer; }
 
         /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Container ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
         .container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
         .section-gap { padding: 4rem 0; }
 
         /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Footer ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
-        footer { background: #17121a; color: #d1d5db; padding: 4rem 0 1.5rem; margin-top: 5rem; }
+        .site-help { width: 100%; padding: 4rem 1.5rem; margin-top: 5rem; background: radial-gradient(circle at top right, rgba(219,39,119,.28), transparent 42%), linear-gradient(135deg, #241921, #17121a); color: #fff; border-top: 1px solid rgba(249,168,212,.2); }
+        .site-help__inner { max-width: 820px; margin: 0 auto; text-align: center; }
+        .site-help__eyebrow { display: inline-block; margin-bottom: .8rem; color: #f9a8d4; font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+        .site-help h2 { margin: 0 0 .75rem; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 500; }
+        .site-help p { max-width: 620px; margin: 0 auto 1.5rem; color: #d1c4cd; line-height: 1.7; }
+        .site-help__button { display: inline-flex; align-items: center; gap: .65rem; padding: .85rem 1.35rem; border-radius: 999px; background: #25d366; color: #fff; text-decoration: none; font-weight: 800; box-shadow: 0 10px 30px rgba(37,211,102,.24); transition: transform .2s, box-shadow .2s; }
+        .site-help__button:hover { color: #fff; transform: translateY(-2px); box-shadow: 0 14px 34px rgba(37,211,102,.36); }
+        footer { background: #17121a; color: #d1d5db; padding: 4rem 0 1.5rem; margin-top: auto; }
         footer h4 { color: #fff; margin: 0 0 1rem; font-size: 1rem; }
         footer a { color: #9ca3af; text-decoration: none; }
         footer a:hover { color: var(--brand-400); }
         footer .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2rem; }
         footer .footer-bottom { border-top: 1px solid #374151; padding-top: 1.5rem; margin-top: 2rem; text-align: center; font-size: .8rem; color: #6b7280; }
+        footer .footer-credit-link { color: var(--brand-400); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+        footer .footer-credit-link:hover { color: #fff; }
         @media (max-width: 768px) {
+            body { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
             footer .footer-grid { grid-template-columns: 1fr 1fr; }
             .nav-links { display: none; }
-            .nav-search { display: none; }
-            .nav-inner { height: 62px; padding: 0 1rem; }
+            .nav { animation: mobileHeaderEnter .3s cubic-bezier(.22,1,.36,1) both; }
+            .nav-inner { height: 62px; padding: 0 .85rem; gap: .75rem; }
             .nav-logo { font-size: 1.55rem; }
-            .nav-actions { gap: .6rem; }
-            .nav-btn { padding: .45rem .8rem; }
-            .nav-login { display: none; }
-            .whatsapp-btn { width: 52px; height: 52px; }
+            .nav-logo img { max-width: clamp(88px,28vw,120px); height: 42px; }
+            .nav-search { display: flex; flex: 1 1 auto; min-width: 0; margin-left: 0; }
+            .nav-search input { width: 100%; min-width: 0; height: 40px; padding-left: .8rem; background: rgba(255,255,255,.11); }
+            .nav-search input:focus { border-color: rgba(244,114,182,.9); outline: 2px solid rgba(244,114,182,.3); outline-offset: 1px; }
+            .nav-actions { display: none; }
+            .whatsapp-btn { bottom: calc(92px + env(safe-area-inset-bottom)); width: 52px; height: 52px; }
+            .mobile-bottom-nav { position: fixed; z-index: 1000; right: 1rem; bottom: calc(.75rem + env(safe-area-inset-bottom)); left: 1rem; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); max-width: 420px; min-height: 64px; margin-inline: auto; padding: .4rem; border: 1px solid rgba(255,255,255,.12); border-radius: 20px; background: rgba(35,24,34,.82); box-shadow: 0 10px 32px rgba(23,18,26,.28); -webkit-backdrop-filter: blur(16px) saturate(135%); backdrop-filter: blur(16px) saturate(135%); animation: mobileBottomNavEnter .36s cubic-bezier(.22,1,.36,1) both; }
+            .mobile-bottom-nav__item { position: relative; display: grid; width: 100%; min-width: 44px; min-height: 52px; place-items: center; border-radius: 15px; color: rgba(249,234,243,.7); text-decoration: none; transition: color .2s ease,background-color .2s ease,transform .2s ease; }
+            .mobile-bottom-nav__item svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+            .mobile-bottom-nav__item[aria-current=page] { background: rgba(255,255,255,.1); color: var(--brand-400); }
+            .mobile-bottom-nav__item:active { transform: scale(.94); }
+            .mobile-bottom-nav__badge { position: absolute; top: 5px; left: calc(50% + 7px); display: grid; min-width: 17px; height: 17px; padding: 0 4px; place-items: center; border: 2px solid rgba(35,24,34,.92); border-radius: 999px; background: var(--brand-600); color: #fff; font-size: 9px; font-weight: 800; line-height: 1; }
+            @keyframes mobileHeaderEnter { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes mobileBottomNavEnter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
         }
+        @media (hover:hover) and (max-width:768px) { .mobile-bottom-nav__item:hover { color: #fff; background: rgba(255,255,255,.08); transform: translateY(-2px) scale(1.03); } }
+        @supports not ((backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px))) { .mobile-bottom-nav { background: rgba(35,24,34,.96); } }
+        @media (prefers-reduced-motion: reduce) { .nav, .mobile-bottom-nav { animation: none; } .mobile-bottom-nav__item { transition: none; } .mobile-bottom-nav__item:active { transform: none; } }
     </style>
     @stack('styles')
 </head>
 <body>
 {{-- Navigation --}}
+@php
+    $settings = app(\App\Services\SiteSettingsRepository::class);
+    $storeName = $settings->get('store_name', 'EEsome');
+    $logoPath = $settings->get('logo_path');
+@endphp
 <nav class="nav">
     <div class="nav-inner">
-        <a href="{{ route('home') }}" class="nav-logo">EEsome</a>
+        <a href="{{ route('home') }}" class="nav-logo" aria-label="{{ $storeName }} home">@if($logoPath)<img src="{{ asset('storage/'.$logoPath) }}" alt="{{ $storeName }}">@else{{ $storeName }}@endif</a>
         @php
             $headerLinks = app(\App\Services\NavigationRepository::class)->for('header');
         @endphp
@@ -99,7 +132,7 @@
             @foreach($headerLinks as $link)<li><a href="{{ $link->url }}" @if($link->open_in_new_tab) target="_blank" rel="noopener noreferrer" @endif>{{ $link->label }}</a></li>@endforeach
         </ul>
         <form class="nav-search" method="GET" action="{{ route('products.index') }}" role="search">
-            <input type="search" name="search" value="{{ request()->routeIs('products.index') ? request('search') : '' }}" placeholder="Search bags, colorsÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦" aria-label="Search products">
+            <input type="search" name="search" value="{{ request()->routeIs('products.index') ? request('search') : '' }}" placeholder="Search products" aria-label="Search products">
             <button type="submit" aria-label="Submit search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
         </form>
         <div class="nav-actions">
@@ -109,7 +142,7 @@
                 @if($cartCount > 0)<span class="nav-cart-badge" aria-hidden="true">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>@endif
             </a>
             @auth
-                <a href="{{ route('profile.edit') }}" class="nav-btn nav-btn-ghost">Account</a>
+                <a href="{{ route('dashboard') }}" class="nav-btn nav-btn-ghost">Account</a>
                 <form method="POST" action="{{ route('logout') }}" style="display:inline">
                     @csrf
                     <button type="submit" class="nav-btn nav-btn-fill">Logout</button>
@@ -122,10 +155,29 @@
     </div>
 </nav>
 
+<nav class='mobile-bottom-nav' aria-label='Mobile navigation'>
+    <a href='{{ route('products.index') }}' class='mobile-bottom-nav__item' aria-label='Shop' @if(request()->routeIs('products.*')) aria-current='page' @endif>
+        <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M3 10h18'/><path d='M5 10v10h14V10'/><path d='m4 10 2-6h12l2 6'/><path d='M9 20v-6h6v6'/></svg>
+    </a>
+    <a href='{{ route('cart.index') }}' class='mobile-bottom-nav__item' aria-label='View cart' @if(request()->routeIs('cart.*')) aria-current='page' @endif>
+        <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z'/><path d='M3 6h18'/><path d='M16 10a4 4 0 0 1-8 0'/></svg>
+        @if($cartCount > 0)<span class='mobile-bottom-nav__badge' aria-label='{{ $cartCount }} items in cart'>{{ $cartCount > 99 ? '99+' : $cartCount }}</span>@endif
+    </a>
+    @auth
+        <a href='{{ route('dashboard') }}' class='mobile-bottom-nav__item' aria-label='Open profile' @if(request()->routeIs('dashboard', 'profile.*')) aria-current='page' @endif>
+            <svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='8' r='4'/><path d='M4 21a8 8 0 0 1 16 0'/></svg>
+        </a>
+    @else
+        <a href='{{ route('login') }}' class='mobile-bottom-nav__item' aria-label='Log in' @if(request()->routeIs('login', 'register', 'password.*')) aria-current='page' @endif>
+            <svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='8' r='4'/><path d='M4 21a8 8 0 0 1 16 0'/></svg>
+        </a>
+    @endauth
+</nav>
+
 {{-- Flash messages --}}
 <div class="container" style="margin-top:1rem">
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div id="success-toast" class="toast-success" role="status" aria-live="polite"><span>✓</span><span>{{ session('success') }}</span><button type="button" aria-label="Dismiss notification">×</button></div>
     @endif
     @if(session('error'))
         <div class="alert alert-error">{{ session('error') }}</div>
@@ -147,13 +199,26 @@
 </a>
 @endif
 
+@if(!empty($waNumber))
+<section class="site-help" aria-labelledby="site-help-title">
+    <div class="site-help__inner">
+        <span class="site-help__eyebrow">Personal shopping assistance</span>
+        <h2 id="site-help-title">Need help finding your perfect bag?</h2>
+        <p>Chat with our team for product guidance, availability, and quick answers before you order.</p>
+        <a class="site-help__button" href="https://wa.me/{{ preg_replace('/\D/', '', $waNumber) }}?text={{ urlencode('Hi, I would like help choosing a handbag.') }}" target="_blank" rel="noopener noreferrer">
+            <span aria-hidden="true">WhatsApp</span><span>Chat with us</span>
+        </a>
+    </div>
+</section>
+@endif
+
 {{-- Footer --}}
 <footer>
     <div class="container">
         <div class="footer-grid">
             <div>
-                <div style="font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.75rem;">EEsome</div>
-                <p style="font-size:.85rem;line-height:1.7;color:#9ca3af">Premium Women's Handbags ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â crafted for every occasion.</p>
+                <div style="margin-bottom:.75rem;">@if($logoPath)<img src="{{ asset('storage/'.$logoPath) }}" alt="{{ $storeName }}" style="display:block;max-width:200px;max-height:90px;object-fit:contain">@else<span style="font-size:1.5rem;font-weight:800;color:#fff">{{ $storeName }}</span>@endif</div>
+                <p style="font-size:.85rem;line-height:1.7;color:#9ca3af">Premium women's handbags — crafted for every occasion.</p>
             </div>
             <div>
                 <h4>Explore</h4>
@@ -165,7 +230,7 @@
                 <h4>Account</h4>
                 <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.5rem;font-size:.875rem">
                     @auth
-                        <li><a href="{{ route('profile.edit') }}">My Profile</a></li>
+                        <li><a href="{{ route('dashboard') }}">{{ auth()->user()->isAdmin() ? 'Admin Dashboard' : 'My Profile' }}</a></li>
                     @else
                         <li><a href="{{ route('login') }}">Login</a></li>
                         <li><a href="{{ route('register') }}">Register</a></li>
@@ -176,16 +241,25 @@
             <div>
                 <h4>Contact</h4>
                 @if(!empty($waNumber))
-                    <p style="font-size:.875rem">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â± {{ $waNumber }}</p>
+                    <p style="font-size:.875rem">Phone: {{ $waNumber }}</p>
                 @endif
             </div>
         </div>
         <div class="footer-bottom">
-            &copy; {{ date('Y') }} EEsome. All rights reserved.
+            &copy; {{ date('Y') }} EESOME. Copyright protected. Crafted with care by <a class="footer-credit-link" href="https://www.linkedin.com/in/kawsar202/" target="_blank" rel="noopener noreferrer">KAWSAR</a>.
         </div>
     </div>
 </footer>
 
+<script>
+(() => {
+    const toast = document.getElementById('success-toast');
+    if (!toast) return;
+    const close = () => { toast.classList.add('is-leaving'); setTimeout(() => toast.remove(), 260); };
+    toast.querySelector('button')?.addEventListener('click', close);
+    setTimeout(close, 3500);
+})();
+</script>
 @stack('scripts')
 </body>
 </html>

@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Tag;
+use App\Services\OptimizedImageStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -30,6 +31,43 @@ class ProductController extends Controller
         return view('admin.products.index', ['products' => $q->paginate(20)->withQueryString(), 'categories' => Category::orderBy('name')->get()]);
     }
 
+    public function hero()
+    {
+        $products = Product::with(['category', 'images'])
+            ->where('is_active', true)
+            ->orderByDesc('is_featured')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.hero-products.edit', compact('products'));
+    }
+
+    public function updateHero(Request $request)
+    {
+        $data = $request->validate([
+            'featured' => ['nullable', 'array'],
+            'featured.*' => ['integer', 'exists:products,id'],
+            'sort_order' => ['nullable', 'array'],
+            'sort_order.*' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $featuredIds = collect($data['featured'] ?? [])->map(fn ($id) => (int) $id);
+        $sortOrders = $data['sort_order'] ?? [];
+
+        DB::transaction(function () use ($featuredIds, $sortOrders) {
+            Product::where('is_featured', true)->update(['is_featured' => false]);
+            Product::where('is_active', true)->get()->each(function (Product $product) use ($featuredIds, $sortOrders) {
+                $updates = ['is_featured' => $featuredIds->contains($product->id)];
+                if (array_key_exists($product->id, $sortOrders) && $sortOrders[$product->id] !== null) {
+                    $updates['sort_order'] = (int) $sortOrders[$product->id];
+                }
+                $product->update($updates);
+            });
+        });
+
+        return back()->with('success', 'Homepage hero products updated.');
+    }
     public function create()
     {
         return view('admin.products.form', ['product' => new Product, 'categories' => Category::orderBy('name')->get(), 'brands' => Brand::where('is_active', true)->orderBy('name')->get(), 'tags' => Tag::orderBy('name')->get()]);
@@ -70,7 +108,7 @@ class ProductController extends Controller
     public function destroyImage(Product $product, ProductImage $image)
     {
         abort_unless($image->product_id === $product->id, 404);
-        Storage::disk('public')->delete($image->image_path);
+        app(OptimizedImageStorage::class)->delete($image->image_path);
         $image->delete();
 
         return back()->with('success', 'Image removed.');
@@ -90,7 +128,7 @@ class ProductController extends Controller
     {
         $r->validate(['images.*' => 'image|mimes:png,webp,jpg,jpeg|max:5120']);
         foreach ($r->file('images', []) as $i => $file) {
-            $path = $file->store('products', 'public');
+            $path = app(OptimizedImageStorage::class)->store($file, 'products');
             ProductImage::create(['product_id' => $p->id, 'image_path' => $path, 'alt_text' => $p->name, 'sort_order' => $p->images()->max('sort_order') + 1 + $i, 'is_primary' => $p->images()->doesntExist()]);
             if (! $p->image) {
                 $p->update(['image' => $path]);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Services\OptimizedImageStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -16,7 +17,7 @@ class ProductVariantController extends Controller
         $data = $this->data($request);
         $data['product_id'] = $product->id;
         if ($file = $request->file('variant_image')) {
-            $data['image'] = $file->store('variants', 'public');
+            $data['image'] = app(OptimizedImageStorage::class)->store($file, 'variants', 1400);
         }
         ProductVariant::create($data);
 
@@ -29,9 +30,9 @@ class ProductVariantController extends Controller
         $data = $this->data($request, $variant);
         if ($file = $request->file('variant_image')) {
             if ($variant->image) {
-                Storage::disk('public')->delete($variant->image);
+                app(OptimizedImageStorage::class)->delete($variant->image);
             }
-            $data['image'] = $file->store('variants', 'public');
+            $data['image'] = app(OptimizedImageStorage::class)->store($file, 'variants', 1400);
         }
         $variant->update($data);
 
@@ -42,7 +43,7 @@ class ProductVariantController extends Controller
     {
         abort_unless($variant->product_id === $product->id, 404);
         if ($variant->image) {
-            Storage::disk('public')->delete($variant->image);
+            app(OptimizedImageStorage::class)->delete($variant->image);
         }
         $variant->delete();
 

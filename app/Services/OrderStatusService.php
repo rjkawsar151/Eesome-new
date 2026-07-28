@@ -55,6 +55,7 @@ class OrderStatusService
                 Log::warning('Order status email could not be queued', ['order_id' => $order->id, 'error' => $e->getMessage()]);
             }
         }
+        app(AdminOrderNotificationService::class)->notify($order->fresh(), 'status');
     }
 
     private function restoreStock(Order $order): void

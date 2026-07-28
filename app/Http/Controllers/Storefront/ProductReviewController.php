@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefront;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductReview;
+use App\Services\OptimizedImageStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -18,7 +19,12 @@ class ProductReviewController extends Controller
             'email' => [Rule::requiredIf(! $request->user()), 'nullable', 'email', 'max:255'],
             'rating' => ['required', 'integer', 'between:1,5'],
             'review_text' => ['required', 'string', 'min:10', 'max:2000'],
+            'review_image' => ['nullable', 'image', 'mimes:png,webp,jpg,jpeg', 'max:3072'],
         ]);
+
+        $imagePath = isset($validated['review_image'])
+            ? app(OptimizedImageStorage::class)->store($validated['review_image'], 'reviews', 1200, 70)
+            : null;
 
         ProductReview::create([
             'product_id' => $product->id,
@@ -27,6 +33,7 @@ class ProductReviewController extends Controller
             'email' => $request->user()?->email ?? $validated['email'],
             'rating' => $validated['rating'],
             'review_text' => $validated['review_text'],
+            'image_path' => $imagePath,
             'status' => 'Pending',
         ]);
 

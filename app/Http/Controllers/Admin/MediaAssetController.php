@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MediaAsset;
+use App\Services\OptimizedImageStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -20,8 +21,8 @@ class MediaAssetController extends Controller
     {
         $data = $request->validate(['file' => 'required|image|mimes:png,webp,jpg,jpeg,gif|max:5120', 'alt_text' => 'nullable|string|max:255']);
         $file = $data['file'];
-        $path = $file->store('media', 'public');
-        MediaAsset::create(['disk' => 'public', 'path' => $path, 'original_name' => $file->getClientOriginalName(), 'mime_type' => $file->getMimeType(), 'size' => $file->getSize(), 'alt_text' => $data['alt_text'] ?? null, 'uploaded_by' => auth()->id()]);
+        $path = app(OptimizedImageStorage::class)->store($file, 'media');
+        MediaAsset::create(['disk' => 'public', 'path' => $path, 'original_name' => $file->getClientOriginalName(), 'mime_type' => 'image/webp', 'size' => Storage::disk('public')->size($path), 'alt_text' => $data['alt_text'] ?? null, 'uploaded_by' => auth()->id()]);
 
         return back()->with('success', 'Media uploaded.');
     }
@@ -32,7 +33,7 @@ class MediaAssetController extends Controller
         if ($inUse) {
             return back()->with('error', 'This file is currently in use and cannot be deleted.');
         }
-        Storage::disk($medium->disk)->delete($medium->path);
+        app(OptimizedImageStorage::class)->delete($medium->path);
         $medium->delete();
 
         return back()->with('success', 'Media deleted.');

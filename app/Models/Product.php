@@ -11,6 +11,8 @@ class Product extends Model
 
     protected $table = 'products';
 
+    public $timestamps = false;
+
     public $incrementing = true;
 
     protected $keyType = 'int';

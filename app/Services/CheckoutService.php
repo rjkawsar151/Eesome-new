@@ -87,6 +87,10 @@ class CheckoutService
                 'customer_name' => $customerData['name'],
                 'email' => $customerData['email'],
                 'phone' => $customerData['phone'],
+                'district' => $customerData['district'] ?? null,
+                'thana' => $customerData['thana'] ?? null,
+                'post_office' => $customerData['post_office'] ?? null,
+                'post_code' => $customerData['post_code'] ?? null,
                 'shipping_address' => $customerData['address'],
                 'shipping_method' => $customerData['shipping_method'] ?? null,
                 'subtotal_amount' => (string) $subtotal,
@@ -165,14 +169,7 @@ class CheckoutService
                 \Illuminate\Support\Facades\Log::warning('Order confirmation could not be queued', ['order_id' => $order->id, 'error' => $e->getMessage()]);
             }
         }
-        foreach (config('order_alerts.emails', []) as $email) {
-            try {
-                \Illuminate\Support\Facades\Notification::route('mail', $email)
-                    ->notify(new \App\Notifications\NewOrderAdminAlert($order->id));
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Admin order alert could not be queued', ['order_id' => $order->id, 'email' => $email]);
-            }
-        }
+        app(AdminOrderNotificationService::class)->notify($order, 'new');
 
         return $order;
     }

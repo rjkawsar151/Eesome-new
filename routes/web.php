@@ -26,6 +26,7 @@ use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\LegacyProductImageController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\ProductReviewController;
+use App\Http\Controllers\Storefront\PublicStorageImageController;
 use App\Http\Controllers\Storefront\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -40,6 +41,11 @@ Route::get('/about', AboutController::class)->name('about');
 Route::get('/uploads/products/{filename}', LegacyProductImageController::class)
     ->where('filename', '[A-Za-z0-9._-]+\.(?:jpe?g|png|webp|gif)')
     ->name('legacy-product-images.show');
+// Fallback for shared hosts where public/storage cannot be symlinked.
+// When the symlink exists, the web server serves these files directly.
+Route::get('/storage/{path}', PublicStorageImageController::class)
+    ->where('path', '(?:blog|branding|categories|media|products|reviews|variants)/[A-Za-z0-9._/-]+')
+    ->name('public-storage-images.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::post('/products/{product}/reviews', [ProductReviewController::class, 'store'])
     ->middleware('throttle:5,1')
@@ -68,6 +74,10 @@ Route::get('/checkout/success/{orderNumber}', [CheckoutController::class, 'succe
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
+        if (session('registration_verification_required') && ! auth()->user()->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
+
         return auth()->user()->isAdmin()
             ? redirect()->route('admin.dashboard')
             : redirect()->route('profile.edit');
@@ -87,6 +97,9 @@ Route::middleware('auth')->group(function () {
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'admin.activity'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/activity', [ActivityLogController::class, 'index'])->name('activity.index');
+
+    Route::get('/hero-products', [AdminProductController::class, 'hero'])->name('hero-products.edit');
+    Route::put('/hero-products', [AdminProductController::class, 'updateHero'])->name('hero-products.update');
 
     Route::resource('products', AdminProductController::class)->except('show');
     Route::delete('/products/{product}/images/{image}', [AdminProductController::class, 'destroyImage'])->name('products.images.destroy');

@@ -42,12 +42,16 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        event(new Registered($user));
-
         Auth::login($user);
-
+        $request->session()->put('registration_verification_required', true);
         app(\App\Services\CartService::class)->mergeSessionCartIntoDb($user->id);
 
-        return redirect(RouteServiceProvider::HOME);
+        try {
+            app(\App\Services\EmailVerificationCodeService::class)->send($user);
+            return redirect(RouteServiceProvider::HOME);
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('verification.notice')->withErrors(['email' => 'Your account was created, but the verification code could not be sent. Please use Resend code.']);
+        }
     }
 }

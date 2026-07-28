@@ -10,6 +10,8 @@ class OrderItem extends Model
     use HasFactory;
 
     protected $table = 'order_items';
+
+    public $timestamps = false;
     public $incrementing = true;
     protected $keyType = 'int';
 

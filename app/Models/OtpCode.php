@@ -10,6 +10,8 @@ class OtpCode extends Model
     use HasFactory;
 
     protected $table = 'otp_codes';
+
+    public $timestamps = false;
     public $incrementing = true;
     protected $keyType = 'int';
 
