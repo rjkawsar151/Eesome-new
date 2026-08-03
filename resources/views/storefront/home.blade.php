@@ -250,14 +250,28 @@
                     </a>
                     <div style="padding:0 .85rem .85rem">
                         <div class="product-card__actions">
-                            @if($product->stock > 0 || $product->available_for_preorder)
-                                <form method="POST" action="{{ route('cart.store') }}" style="flex:1">
+                            @php
+                                $usesVariants = $product->has_variants && $product->activeVariants->isNotEmpty();
+                                $canPurchase = $usesVariants
+                                    ? $product->activeVariants->contains(fn ($variant) => $variant->stock > 0)
+                                    : ($product->stock > 0 || $product->available_for_preorder);
+                            @endphp
+                            @if($canPurchase)
+                                <form class="js-card-purchase" method="POST" action="{{ route('cart.store') }}" data-product-name="{{ $product->name }}" style="display:flex;flex:1;gap:.5rem">
                                     @csrf
                                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                                     <input type="hidden" name="quantity" value="1">
-                                    <button type="submit" class="btn-cart" style="width:100%">Add to Cart</button>
+                                    @if($usesVariants)
+                                        <select class="js-card-variant" name="variant_id" hidden aria-label="Selected color">
+                                            <option value="">Choose a color</option>
+                                            @foreach($product->activeVariants as $variant)
+                                                <option value="{{ $variant->id }}" @disabled($variant->stock < 1)>{{ $variant->color_name }} / SKU {{ $variant->sku }} / &#2547;{{ number_format((float)$variant->effective_price, 0) }}</option>
+                                            @endforeach
+                                        </select>
+                                    @endif
+                                    <button type="submit" class="btn-cart" style="flex:1">Add to Cart</button>
+                                    <button type="submit" name="buy_now" value="1" class="btn-buy" style="flex:1">Buy Now</button>
                                 </form>
-                                <form method="POST" action="{{ route('cart.store') }}" style="flex:1">@csrf<input type="hidden" name="product_id" value="{{ $product->id }}"><input type="hidden" name="quantity" value="1"><input type="hidden" name="buy_now" value="1"><button type="submit" class="btn-buy" style="width:100%;height:100%">Buy Now</button></form>
                             @else
                                 <button class="btn-cart btn-disabled" style="flex:1">Sold Out</button>
                             @endif
@@ -279,7 +293,86 @@
 </div>
 </section>
 
+
+<dialog id="landing-variant-dialog" class="landing-variant-dialog" aria-labelledby="landing-variant-title">
+    <button type="button" class="landing-variant-close" aria-label="Close color selector">&times;</button>
+    <p class="section-tag">Choose your color</p>
+    <h2 id="landing-variant-title">Select a color</h2>
+    <p id="landing-variant-product" class="landing-variant-product"></p>
+    <label for="landing-variant-select">Available colors</label>
+    <select id="landing-variant-select" class="landing-variant-select"></select>
+    <p id="landing-variant-feedback" class="landing-variant-feedback">Select an available color to continue.</p>
+    <button id="landing-variant-confirm" class="landing-variant-confirm" type="button">Continue</button>
+</dialog>
+
+@push('styles')
+<style>
+@keyframes landing-variant-in{from{opacity:0;transform:translateY(16px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes landing-backdrop-in{from{background:rgba(23,18,26,0)}to{background:rgba(23,18,26,.55)}}
+.landing-variant-dialog{width:min(92vw,480px);padding:1.6rem;border:0;border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(25,15,22,.3)}
+.landing-variant-dialog[open]{animation:landing-variant-in 280ms cubic-bezier(.22,1,.36,1) both}
+.landing-variant-dialog[open]::backdrop{animation:landing-backdrop-in 240ms ease-out both}
+.landing-variant-dialog::backdrop{background:rgba(23,18,26,.55);backdrop-filter:blur(3px)}
+.landing-variant-close{position:absolute;right:.8rem;top:.8rem;width:40px;height:40px;border:0;border-radius:50%;background:var(--brand-50);font-size:1.35rem;cursor:pointer}
+.landing-variant-dialog h2{margin:.3rem 0}.landing-variant-product{color:var(--text-muted)}
+.landing-variant-select{width:100%;min-height:48px;margin:.5rem 0;padding:.75rem;border:1px solid var(--brand-100);border-radius:11px;background:#fff}
+.landing-variant-feedback{min-height:1.25rem;color:var(--text-muted);font-size:.85rem}
+.landing-variant-confirm{width:100%;min-height:48px;border:0;border-radius:11px;background:var(--brand-600);color:#fff;font-weight:800;cursor:pointer}
+@media(max-width:600px){@keyframes landing-variant-in{from{opacity:0;transform:translateY(42px)}to{opacity:1;transform:translateY(0)}}.landing-variant-dialog{width:100%;max-width:none;margin:auto 0 0;border-radius:22px 22px 0 0}}
+@media(prefers-reduced-motion:reduce){.landing-variant-dialog[open],.landing-variant-dialog[open]::backdrop{animation:none}}
+</style>
+@endpush
+
 @push('scripts')
+<script>
+(() => {
+    const dialog = document.getElementById('landing-variant-dialog');
+    const modalSelect = document.getElementById('landing-variant-select');
+    const productLabel = document.getElementById('landing-variant-product');
+    const feedback = document.getElementById('landing-variant-feedback');
+    let pendingForm = null;
+    let pendingButton = null;
+    let sourceSelect = null;
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target.closest('.js-card-purchase');
+        if (!form) return;
+        const variant = form.querySelector('.js-card-variant');
+        if (!variant || variant.value) return;
+
+        event.preventDefault();
+        pendingForm = form;
+        pendingButton = event.submitter;
+        sourceSelect = variant;
+        modalSelect.replaceChildren(...[...variant.options].map((option) => option.cloneNode(true)));
+        modalSelect.value = '';
+        productLabel.textContent = form.dataset.productName || '';
+        feedback.textContent = 'Select an available color to continue.';
+        dialog.showModal();
+        document.body.style.overflow = 'hidden';
+        modalSelect.focus();
+    });
+
+    document.getElementById('landing-variant-confirm').addEventListener('click', () => {
+        if (!modalSelect.value) {
+            feedback.textContent = 'Please select a color.';
+            modalSelect.focus();
+            return;
+        }
+        sourceSelect.value = modalSelect.value;
+        dialog.close();
+        pendingForm.requestSubmit(pendingButton);
+    });
+
+    dialog.querySelector('.landing-variant-close').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+    dialog.addEventListener('close', () => {
+        document.body.style.overflow = '';
+        pendingButton?.focus();
+    });
+})();
+</script>
+
 <script>
 (() => {
     const grid = document.getElementById('product-grid');

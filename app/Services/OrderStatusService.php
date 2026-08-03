@@ -7,6 +7,7 @@ use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Notifications\OrderStatusUpdated;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -65,10 +66,13 @@ class OrderStatusService
             $product = Product::find($item->product_id);
             if (! $product || $product->available_for_preorder) {
                 continue;
-            }$before = $product->stock;
-            $product->increment('stock', $item->quantity);
-            $product->refresh();
-            InventoryMovement::create(['product_id' => $product->id, 'order_id' => $order->id, 'type' => 'cancel_return', 'quantity_delta' => $item->quantity, 'stock_before' => $before, 'stock_after' => $product->stock, 'reference' => $order->order_number, 'created_by_user_id' => Auth::id()]);
+            }
+            $inventory = $item->variant_id ? ProductVariant::find($item->variant_id) : $product;
+            if (! $inventory) continue;
+            $before = $inventory->stock;
+            $inventory->increment('stock', $item->quantity);
+            $inventory->refresh();
+            InventoryMovement::create(['product_id' => $product->id, 'variant_id' => $item->variant_id, 'order_id' => $order->id, 'type' => 'cancel_return', 'quantity_delta' => $item->quantity, 'stock_before' => $before, 'stock_after' => $inventory->stock, 'reference' => $order->order_number, 'created_by_user_id' => Auth::id()]);
         }
     }
 }

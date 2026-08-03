@@ -18,8 +18,12 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
+        'variant_id',
         'product_name',
         'product_sku',
+        'selected_color_name',
+        'selected_color_code',
+        'selected_variant',
         'product_image',
         'price',
         'quantity',
@@ -42,5 +46,10 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function getDisplayColorAttribute()
+    {
+        return $this->selected_color_name ?: $this->selected_variant;
     }
 }

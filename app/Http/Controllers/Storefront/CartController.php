@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
 use App\Services\CartService;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,15 +29,21 @@ class CartController extends Controller
         $data = $request->validate([
             'product_id' => 'required|integer|exists:products,id',
             'quantity'   => 'sometimes|integer|min:1|max:100',
+            'variant_id' => 'nullable|integer|exists:product_variants,id',
             'buy_now'    => 'sometimes|boolean',
         ]);
 
         $qty = $data['quantity'] ?? 1;
+        $product = Product::with('activeVariants')->whereKey($data['product_id'])->where('is_active', true)->firstOrFail();
+        $variant = isset($data['variant_id']) ? $product->activeVariants->firstWhere('id', (int) $data['variant_id']) : null;
+        if ($product->has_variants && ! $variant) return back()->withErrors(['variant_id' => 'Please select an available color.']);
+        $stock = $variant?->stock ?? $product->stock;
+        if (! $product->available_for_preorder && $qty > $stock) return back()->withErrors(['quantity' => 'The requested quantity is not available.']);
 
         if (Auth::check()) {
-            $this->cart->addToDbCart(Auth::id(), $data['product_id'], $qty);
+            $this->cart->addToDbCart(Auth::id(), $data['product_id'], $qty, $variant?->id);
         } else {
-            $this->cart->addToSessionCart($data['product_id'], $qty);
+            $this->cart->addToSessionCart($data['product_id'], $qty, $variant?->id);
         }
 
         if ($request->boolean('buy_now')) {
@@ -46,27 +53,27 @@ class CartController extends Controller
         return back()->with('success', 'Successfully added to cart.');
     }
 
-    public function update(Request $request, int $productId)
+    public function update(Request $request, string $line)
     {
         $data = $request->validate([
             'quantity' => 'required|integer|min:0|max:100',
         ]);
 
         if (Auth::check()) {
-            $this->cart->updateDbCart(Auth::id(), $productId, $data['quantity']);
+            $this->cart->updateDbCart(Auth::id(), (int) $line, $data['quantity']);
         } else {
-            $this->cart->updateSessionCart($productId, $data['quantity']);
+            $this->cart->updateSessionCart($line, $data['quantity']);
         }
 
         return redirect()->route('cart.index')->with('success', 'Cart updated.');
     }
 
-    public function destroy(int $productId)
+    public function destroy(string $line)
     {
         if (Auth::check()) {
-            $this->cart->removeFromDbCart(Auth::id(), $productId);
+            $this->cart->removeFromDbCart(Auth::id(), (int) $line);
         } else {
-            $this->cart->removeFromSessionCart($productId);
+            $this->cart->removeFromSessionCart($line);
         }
 
         return redirect()->route('cart.index')->with('success', 'Item removed.');

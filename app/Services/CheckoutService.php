@@ -20,14 +20,17 @@ class CheckoutService
 
     }
 
-    public function placeOrder(array $customerData, array $cartProductIds, ?string $couponCode = null): Order
+    public function placeOrder(array $customerData, array $cartLines, ?string $couponCode = null): Order
     {
-        $order = DB::transaction(function () use ($customerData, $cartProductIds, $couponCode) {
+        if ($cartLines && ! isset($cartLines[0]['product_id'])) {
+            $cartLines = collect($cartLines)->map(fn ($quantity, $productId) => ['product_id' => $productId, 'variant_id' => null, 'quantity' => $quantity])->values()->all();
+        }
+        $order = DB::transaction(function () use ($customerData, $cartLines, $couponCode) {
             // 1. Sort product IDs ascending to prevent deadlocks
-            ksort($cartProductIds);
+            $productIds = array_values(array_unique(array_column($cartLines, 'product_id')));
 
             // 2. Lock products
-            $products = Product::whereIn('id', array_keys($cartProductIds))
+            $products = Product::with('variants')->whereIn('id', $productIds)
                 ->where('is_active', true)
                 ->lockForUpdate()
                 ->get()
@@ -37,24 +40,31 @@ class CheckoutService
             $orderLines = [];
             $subtotal = 0.0;
 
-            foreach ($cartProductIds as $productId => $requestedQty) {
+            foreach ($cartLines as $cartLine) {
+                $productId = (int) $cartLine['product_id'];
+                $requestedQty = (int) $cartLine['quantity'];
                 if (! isset($products[$productId])) {
                     throw new \RuntimeException("Product #{$productId} is no longer available.");
                 }
 
                 $product = $products[$productId];
                 $qty = (int) $requestedQty;
+                $variant = empty($cartLine['variant_id']) ? null : $product->variants->firstWhere('id', (int) $cartLine['variant_id']);
+                if ($product->has_variants and ! $variant) throw new \RuntimeException('A selected color is no longer available.');
+                if ($variant and ! $variant->is_active) throw new \RuntimeException('A selected color is inactive.');
+                $availableStock = $variant ? $variant->stock : $product->stock;
 
-                if (! $product->available_for_preorder && $product->stock < $qty) {
+                if (! $product->available_for_preorder and $availableStock < $qty) {
                     throw new \RuntimeException("'{$product->name}' has insufficient stock.");
                 }
 
-                $unitPrice = (float) $product->effective_price;
+                $unitPrice = (float) ($variant ? $variant->effective_price : $product->effective_price);
                 $lineTotal = round($unitPrice * $qty, 2);
                 $subtotal += $lineTotal;
 
                 $orderLines[] = [
                     'product' => $product,
+                    'variant' => $variant,
                     'qty' => $qty,
                     'unit_price' => $unitPrice,
                     'line_total' => $lineTotal,
@@ -109,12 +119,16 @@ class CheckoutService
             // 7. Create order items (snapshots)
             foreach ($orderLines as $line) {
                 $p = $line['product'];
+                $variant = $line['variant'];
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $p->id,
+                    'variant_id' => $variant?->id,
                     'product_name' => $p->name,
-                    'product_sku' => $p->sku ?? 'LEGACY-'.$p->id,
-                    'product_image' => $p->image,
+                    'product_sku' => $variant?->sku ?? $p->sku ?? 'LEGACY-'.$p->id,
+                    'selected_color_name' => $variant?->color_name ?? $variant?->color,
+                    'selected_color_code' => $variant?->color_code,
+                    'product_image' => $variant?->image ?? $p->image,
                     'price' => (string) $line['unit_price'],
                     'quantity' => $line['qty'],
                     'line_total' => (string) $line['line_total'],
@@ -123,17 +137,19 @@ class CheckoutService
 
                 // 8. Decrement stock
                 if (! $p->available_for_preorder) {
-                    $stockBefore = $p->stock;
-                    $p->decrement('stock', $line['qty']);
-                    $p->refresh();
+                    $inventory = $variant ?: $p;
+                    $stockBefore = $inventory->stock;
+                    $inventory->decrement('stock', $line['qty']);
+                    $inventory->refresh();
 
                     InventoryMovement::create([
                         'product_id' => $p->id,
+                        'variant_id' => $variant?->id,
                         'order_id' => $order->id,
                         'type' => 'sale',
                         'quantity_delta' => -$line['qty'],
                         'stock_before' => $stockBefore,
-                        'stock_after' => $p->stock,
+                        'stock_after' => $inventory->stock,
                         'reference' => $order->order_number,
                     ]);
                 }

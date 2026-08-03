@@ -19,29 +19,32 @@ class CartService
         return Session::get(self::SESSION_KEY, []);
     }
 
-    public function addToSessionCart(int $productId, int $qty = 1): void
+    private function lineKey(int $productId, ?int $variantId = null): string { return $productId.':'.($variantId ?: 0); }
+
+    public function addToSessionCart(int $productId, int $qty = 1, ?int $variantId = null): void
     {
         $cart = $this->getSessionCart();
-        $existing = $cart[$productId]['quantity'] ?? 0;
-        $cart[$productId] = ['quantity' => $existing + $qty];
+        $key = $this->lineKey($productId, $variantId);
+        $existing = $cart[$key]['quantity'] ?? 0;
+        $cart[$key] = ['product_id' => $productId, 'variant_id' => $variantId, 'quantity' => $existing + $qty];
         Session::put(self::SESSION_KEY, $cart);
     }
 
-    public function updateSessionCart(int $productId, int $qty): void
+    public function updateSessionCart(string $key, int $qty): void
     {
         $cart = $this->getSessionCart();
         if ($qty <= 0) {
-            unset($cart[$productId]);
+            unset($cart[$key]);
         } else {
-            $cart[$productId] = ['quantity' => $qty];
+            if (isset($cart[$key])) $cart[$key]['quantity'] = $qty;
         }
         Session::put(self::SESSION_KEY, $cart);
     }
 
-    public function removeFromSessionCart(int $productId): void
+    public function removeFromSessionCart(string $key): void
     {
         $cart = $this->getSessionCart();
-        unset($cart[$productId]);
+        unset($cart[$key]);
         Session::put(self::SESSION_KEY, $cart);
     }
 
@@ -56,20 +59,27 @@ class CartService
         $raw = $this->getSessionCart();
         if (empty($raw)) return [];
 
-        $products = Product::whereIn('id', array_keys($raw))
+        $productIds = collect($raw)->map(fn ($item, $key) => $item['product_id'] ?? (int) $key)->all();
+        $products = Product::with(['images','activeVariants'])->whereIn('id', $productIds)
             ->where('is_active', true)
             ->get()
             ->keyBy('id');
 
         $items = [];
-        foreach ($raw as $productId => $data) {
+        foreach ($raw as $key => $data) {
+            $productId = (int) ($data['product_id'] ?? $key);
             if (!isset($products[$productId])) continue;
             $product = $products[$productId];
+            $variant = ! empty($data['variant_id']) ? $product->activeVariants->firstWhere('id', (int) $data['variant_id']) : null;
+            if ($product->has_variants && ! $variant) continue;
             $qty = max(1, (int)$data['quantity']);
             $items[] = [
                 'product' => $product,
                 'quantity' => $qty,
-                'line_total' => bcmul($product->effective_price, (string)$qty, 2),
+                'variant' => $variant,
+                'key' => (string) $key,
+                'unit_price' => $variant?->effective_price ?? $product->effective_price,
+                'line_total' => bcmul($variant?->effective_price ?? $product->effective_price, (string)$qty, 2),
             ];
         }
         return $items;
@@ -79,15 +89,16 @@ class CartService
 
     public function getDbCart(int $userId): \Illuminate\Database\Eloquent\Collection
     {
-        return CartItem::with(['product.images'])
+        return CartItem::with(['product.images', 'productVariant'])
             ->where('user_id', $userId)
             ->get();
     }
 
-    public function addToDbCart(int $userId, int $productId, int $qty = 1): void
+    public function addToDbCart(int $userId, int $productId, int $qty = 1, ?int $variantId = null): void
     {
         $existing = CartItem::where('user_id', $userId)
             ->where('product_id', $productId)
+            ->where('variant_id', $variantId)
             ->first();
 
         if ($existing) {
@@ -96,24 +107,25 @@ class CartService
             CartItem::create([
                 'user_id' => $userId,
                 'product_id' => $productId,
+                'variant_id' => $variantId,
                 'quantity' => $qty,
             ]);
         }
     }
 
-    public function updateDbCart(int $userId, int $productId, int $qty): void
+    public function updateDbCart(int $userId, int $lineId, int $qty): void
     {
         if ($qty <= 0) {
-            CartItem::where('user_id', $userId)->where('product_id', $productId)->delete();
+            CartItem::where('user_id', $userId)->whereKey($lineId)->delete();
         } else {
-            CartItem::where('user_id', $userId)->where('product_id', $productId)
+            CartItem::where('user_id', $userId)->whereKey($lineId)
                 ->update(['quantity' => $qty]);
         }
     }
 
-    public function removeFromDbCart(int $userId, int $productId): void
+    public function removeFromDbCart(int $userId, int $lineId): void
     {
-        CartItem::where('user_id', $userId)->where('product_id', $productId)->delete();
+        CartItem::where('user_id', $userId)->whereKey($lineId)->delete();
     }
 
     public function clearDbCart(int $userId): void
@@ -129,7 +141,7 @@ class CartService
         if (empty($sessionCart)) return;
 
         DB::transaction(function () use ($userId, $sessionCart) {
-            $productIds = array_keys($sessionCart);
+            $productIds = collect($sessionCart)->map(fn ($item, $key) => $item['product_id'] ?? (int) $key)->all();
 
             $products = Product::whereIn('id', $productIds)
                 ->where('is_active', true)
@@ -137,7 +149,9 @@ class CartService
                 ->get()
                 ->keyBy('id');
 
-            foreach ($sessionCart as $productId => $data) {
+            foreach ($sessionCart as $key => $data) {
+                $productId = (int) ($data['product_id'] ?? $key);
+                $variantId = empty($data['variant_id']) ? null : (int) $data['variant_id'];
                 if (!isset($products[$productId])) continue;
 
                 $product = $products[$productId];
@@ -145,6 +159,7 @@ class CartService
 
                 $existing = CartItem::where('user_id', $userId)
                     ->where('product_id', $productId)
+                    ->where('variant_id', $variantId)
                     ->first();
 
                 $newQty = ($existing ? $existing->quantity : 0) + $requestedQty;
@@ -156,7 +171,7 @@ class CartService
 
                 if ($newQty > 0) {
                     CartItem::updateOrCreate(
-                        ['user_id' => $userId, 'product_id' => $productId],
+                        ['user_id' => $userId, 'product_id' => $productId, 'variant_id' => $variantId],
                         ['quantity' => $newQty]
                     );
                 }

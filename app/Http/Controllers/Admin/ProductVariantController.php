@@ -8,6 +8,7 @@ use App\Models\ProductVariant;
 use App\Services\OptimizedImageStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ProductVariantController extends Controller
@@ -19,7 +20,11 @@ class ProductVariantController extends Controller
         if ($file = $request->file('variant_image')) {
             $data['image'] = app(OptimizedImageStorage::class)->store($file, 'variants', 1400);
         }
-        ProductVariant::create($data);
+        DB::transaction(function () use ($data, $product) {
+            if ($data['is_default']) $product->variants()->update(['is_default' => false]);
+            ProductVariant::create($data);
+            $product->update(['has_variants' => true]);
+        });
 
         return back()->with('success', 'Variant created.');
     }
@@ -34,7 +39,10 @@ class ProductVariantController extends Controller
             }
             $data['image'] = app(OptimizedImageStorage::class)->store($file, 'variants', 1400);
         }
-        $variant->update($data);
+        DB::transaction(function () use ($data, $product, $variant) {
+            if ($data['is_default']) $product->variants()->whereKeyNot($variant->id)->update(['is_default' => false]);
+            $variant->update($data);
+        });
 
         return back()->with('success', 'Variant updated.');
     }
@@ -42,10 +50,8 @@ class ProductVariantController extends Controller
     public function destroy(Product $product, ProductVariant $variant)
     {
         abort_unless($variant->product_id === $product->id, 404);
-        if ($variant->image) {
-            app(OptimizedImageStorage::class)->delete($variant->image);
-        }
-        $variant->delete();
+        abort_if($product->variants()->where('is_active', true)->count() < 2, 409, 'A variant product must retain at least one active color.');
+        $variant->update(['is_active' => false, 'is_default' => false]);
 
         return back()->with('success', 'Variant deleted.');
     }
@@ -53,14 +59,18 @@ class ProductVariantController extends Controller
     private function data(Request $request, ?ProductVariant $variant = null): array
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255',
+            'color_name' => 'required|string|max:100',
+            'color_code' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'sku' => ['required', 'string', 'max:100', Rule::unique('product_variants')->ignore($variant?->id)],
-            'color' => 'nullable|string|max:100', 'size' => 'nullable|string|max:100', 'material' => 'nullable|string|max:100',
-            'price_adjustment' => 'required|numeric|between:-999999,999999', 'stock' => 'required|integer|min:0|max:1000000',
+            'regular_price' => 'required|numeric|min:0', 'sale_price' => 'nullable|numeric|min:0|lte:regular_price', 'stock' => 'required|integer|min:0|max:1000000',
             'sort_order' => 'required|integer|min:0', 'variant_image' => 'nullable|image|mimes:png,webp,jpg,jpeg|max:5120',
         ]);
         unset($data['variant_image']);
+        $data['name'] = $data['color_name'];
+        $data['color'] = $data['color_name'];
+        $data['price_adjustment'] = 0;
         $data['is_active'] = $request->boolean('is_active');
+        $data['is_default'] = $request->boolean('is_default');
 
         return $data;
     }

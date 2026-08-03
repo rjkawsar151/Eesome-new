@@ -49,10 +49,10 @@ class CheckoutController extends Controller
         }
         if (Auth::check()) {
             $rawItems = $this->cartService->getDbCart(Auth::id());
-            $cartMap = $rawItems->pluck('quantity', 'product_id')->toArray();
+            $cartMap = $rawItems->map(fn ($item) => ['product_id' => $item->product_id, 'variant_id' => $item->variant_id, 'quantity' => $item->quantity])->all();
         } else {
             $rawItems = $this->cartService->hydrateSessionCart();
-            $cartMap = collect($rawItems)->mapWithKeys(fn ($item) => [$item['product']->id => $item['quantity']])->toArray();
+            $cartMap = collect($rawItems)->map(fn ($item) => ['product_id' => $item['product']->id, 'variant_id' => $item['variant']?->id, 'quantity' => $item['quantity']])->all();
         }
         if (empty($cartMap)) {
             return back()->with('error', 'Cart is empty.');

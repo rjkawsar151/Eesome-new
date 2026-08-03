@@ -64,7 +64,7 @@ class ProductController extends Controller
 
     public function show(string $slug)
     {
-        $product = Product::with(['category', 'images'])
+        $product = Product::with(['category', 'images', 'activeVariants'])
             ->where('slug', $slug)
             ->where('is_active', true)
             ->firstOrFail();
@@ -78,7 +78,7 @@ class ProductController extends Controller
         $avgRating = $product->legacyReviews()->whereRaw('LOWER(status) = ?', ['approved'])->avg('rating');
         $reviewCount = $product->legacyReviews()->whereRaw('LOWER(status) = ?', ['approved'])->count();
 
-        $relatedProducts = Product::with('images')
+        $relatedProducts = Product::with(['images', 'activeVariants'])
             ->where('category_id', $product->category_id)
             ->where('is_active', true)
             ->where('id', '!=', $product->id)

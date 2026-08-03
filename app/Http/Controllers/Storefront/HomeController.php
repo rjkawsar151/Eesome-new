@@ -26,7 +26,7 @@ class HomeController extends Controller
             ->get(['id', 'category_id', 'name', 'slug', 'price', 'discount_price', 'image',
                    'is_new', 'is_sold_out', 'is_preorder', 'badge_text', 'stock', 'is_featured', 'is_active']);
 
-        $allProducts = Product::with('images')
+        $allProducts = Product::with(['images', 'activeVariants'])
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('created_at', 'desc')

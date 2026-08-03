@@ -27,6 +27,7 @@ class Product extends Model
         'price',
         'discount_price',
         'stock',
+        'has_variants',
         'image',
         'badge_text',
         'is_featured',
@@ -43,6 +44,7 @@ class Product extends Model
         'price' => 'string',
         'discount_price' => 'string',
         'stock' => 'integer',
+        'has_variants' => 'boolean',
         'is_featured' => 'boolean',
         'is_new' => 'boolean',
         'is_sold_out' => 'boolean',
@@ -128,6 +130,11 @@ class Product extends Model
     public function variants()
     {
         return $this->hasMany(ProductVariant::class)->orderBy('sort_order');
+    }
+
+    public function activeVariants()
+    {
+        return $this->hasMany(ProductVariant::class)->where('is_active', true)->orderByDesc('is_default')->orderBy('sort_order');
     }
 
     public function images()

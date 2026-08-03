@@ -31,24 +31,26 @@
 
         /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Navigation ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
         .nav { position: sticky; top: 0; z-index: 100; background: rgba(35,24,34,.82); -webkit-backdrop-filter: blur(22px) saturate(145%); backdrop-filter: blur(22px) saturate(145%); border-bottom: 1px solid rgba(255,255,255,.14); box-shadow: 0 8px 28px rgba(23,18,26,.18); }
-        .nav-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 72px; }
-        .nav-logo img { display: block; width: auto; max-width: 180px; height: 50px; object-fit: contain; }
-        .nav-logo { font-family: Georgia, 'Times New Roman', serif; font-size: 1.85rem; font-weight: 700; letter-spacing: -.04em; background: linear-gradient(135deg, var(--brand-900), var(--brand-400)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
-        .nav-links { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2rem; list-style: none; margin: 0; padding: 0; }
-        .nav-links a { text-decoration: none; color: #f9eaf3; font-weight: 700; font-size: 0.9rem; transition: color .2s; }
+        .nav-inner { position: relative; width: min(calc(100% - 40px), 1200px); min-height: 64px; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+        .nav-logo img { display: block; width: clamp(150px, 14vw, 170px); height: 44px; object-fit: contain; }
+        .nav-logo { flex-shrink: 0; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.5rem, 1.8vw, 1.65rem); font-weight: 700; letter-spacing: -.04em; background: linear-gradient(135deg, var(--brand-900), var(--brand-400)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
+        .nav-links { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: clamp(1.15rem, 1.7vw, 1.65rem); list-style: none; margin: 0; padding: 0; }
+        .nav-links a { text-decoration: none; color: #f9eaf3; font-weight: 700; font-size: clamp(.78rem, .85vw, .84rem); transition: color .2s; }
         .nav-links a:hover { color: var(--brand-400); }
-        .nav-actions { display: flex; gap: 1rem; align-items: center; }
+        .nav-actions { display: flex; gap: .75rem; align-items: center; }
         .nav-search { display: flex; align-items: center; position: relative; margin-left: auto; }
-        .nav-search input { width: min(18vw, 220px); height: 40px; padding: 0 2.35rem 0 .85rem; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; font: inherit; font-size: .85rem; }
+        .nav-search input { width: clamp(150px, 15vw, 195px); height: 36px; padding: 0 2.15rem 0 .8rem; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; font: inherit; font-size: .78rem; }
         .nav-search input::placeholder { color: rgba(255,255,255,.68); }
-        .nav-search button { position: absolute; right: .35rem; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #f9a8d4; cursor: pointer; display: grid; place-items: center; }
-        .nav-btn { padding: 0.5rem 1.25rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; }
+        .nav-search button { position: absolute; right: .3rem; width: 29px; height: 29px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #f9a8d4; cursor: pointer; display: grid; place-items: center; }
+        .nav-search button svg { width: 16px; height: 16px; }
+        .nav-btn { padding: .45rem 1rem; border-radius: 999px; font-size: .78rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .2s; }
         .nav-btn-ghost { border: 1.5px solid rgba(249,168,212,.8); color: #fce7f3; background: rgba(255,255,255,.06); }
         .nav-btn-ghost:hover { background: var(--brand-600); color: #fff; }
         .nav-btn-fill { background: var(--brand-600); color: #fff; border: none; }
         .nav-btn-fill:hover { background: var(--brand-700); }
-        .nav-cart { position: relative; display: flex; align-items: center; margin-right: .5rem; color: #fff; }
-        .nav-login { color: #f9eaf3; text-decoration: none; font-size: .9rem; font-weight: 600; padding: .5rem .25rem; }
+        .nav-cart { position: relative; display: flex; align-items: center; margin-right: .25rem; color: #fff; }
+        .nav-cart svg { width: 21px; height: 21px; }
+        .nav-login { color: #f9eaf3; text-decoration: none; font-size: .82rem; font-weight: 600; padding: .45rem .2rem; }
         .nav-login:hover { color: var(--brand-400); }
         .nav-cart-badge { position: absolute; top: -8px; right: -8px; background: var(--brand-600); color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
         .mobile-bottom-nav { display: none; }
@@ -68,7 +70,7 @@
         .toast-success button { margin-left: auto; border: 0; background: transparent; color: #fff; font-size: 1.15rem; cursor: pointer; }
 
         /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Container ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
-        .container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+        .container { width: min(calc(100% - 40px), 1200px); margin-inline: auto; }
         .section-gap { padding: 4rem 0; }
 
         /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Footer ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
@@ -92,7 +94,7 @@
             footer .footer-grid { grid-template-columns: 1fr 1fr; }
             .nav-links { display: none; }
             .nav { animation: mobileHeaderEnter .3s cubic-bezier(.22,1,.36,1) both; }
-            .nav-inner { height: 62px; padding: 0 .85rem; gap: .75rem; }
+            .nav-inner { width: min(calc(100% - 24px), 1200px); min-height: 62px; gap: .75rem; }
             .nav-logo { font-size: 1.55rem; }
             .nav-logo img { max-width: clamp(88px,28vw,120px); height: 42px; }
             .nav-search { display: flex; flex: 1 1 auto; min-width: 0; margin-left: 0; }
@@ -108,6 +110,12 @@
             .mobile-bottom-nav__badge { position: absolute; top: 5px; left: calc(50% + 7px); display: grid; min-width: 17px; height: 17px; padding: 0 4px; place-items: center; border: 2px solid rgba(35,24,34,.92); border-radius: 999px; background: var(--brand-600); color: #fff; font-size: 9px; font-weight: 800; line-height: 1; }
             @keyframes mobileHeaderEnter { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
             @keyframes mobileBottomNavEnter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        }
+        @media (min-width:769px) and (max-width:1100px) {
+            .nav-links { position: static; transform: none; margin-inline: auto; }
+            .nav-links li:nth-child(n+4) { display: none; }
+            .nav-search input { width: clamp(140px, 18vw, 175px); }
+            .nav-login { display: none; }
         }
         @media (hover:hover) and (max-width:768px) { .mobile-bottom-nav__item:hover { color: #fff; background: rgba(255,255,255,.08); transform: translateY(-2px) scale(1.03); } }
         @supports not ((backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px))) { .mobile-bottom-nav { background: rgba(35,24,34,.96); } }
@@ -157,19 +165,19 @@
 
 <nav class='mobile-bottom-nav' aria-label='Mobile navigation'>
     <a href='{{ route('products.index') }}' class='mobile-bottom-nav__item' aria-label='Shop' @if(request()->routeIs('products.*')) aria-current='page' @endif>
-        <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M3 10h18'/><path d='M5 10v10h14V10'/><path d='m4 10 2-6h12l2 6'/><path d='M9 20v-6h6v6'/></svg>
+        <svg viewBox='0 0 24 24' aria-hidden='true' focusable='false'><path d='M3 10h18'/><path d='M5 10v10h14V10'/><path d='m4 10 2-6h12l2 6'/><path d='M9 20v-6h6v6'/></svg>
     </a>
     <a href='{{ route('cart.index') }}' class='mobile-bottom-nav__item' aria-label='View cart' @if(request()->routeIs('cart.*')) aria-current='page' @endif>
-        <svg viewBox='0 0 24 24' aria-hidden='true'><path d='M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z'/><path d='M3 6h18'/><path d='M16 10a4 4 0 0 1-8 0'/></svg>
+        <svg viewBox='0 0 24 24' aria-hidden='true' focusable='false'><path d='M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z'/><path d='M3 6h18'/><path d='M16 10a4 4 0 0 1-8 0'/></svg>
         @if($cartCount > 0)<span class='mobile-bottom-nav__badge' aria-label='{{ $cartCount }} items in cart'>{{ $cartCount > 99 ? '99+' : $cartCount }}</span>@endif
     </a>
     @auth
         <a href='{{ route('dashboard') }}' class='mobile-bottom-nav__item' aria-label='Open profile' @if(request()->routeIs('dashboard', 'profile.*')) aria-current='page' @endif>
-            <svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='8' r='4'/><path d='M4 21a8 8 0 0 1 16 0'/></svg>
+            <svg viewBox='0 0 24 24' aria-hidden='true' focusable='false'><circle cx='12' cy='8' r='4'/><path d='M4 21a8 8 0 0 1 16 0'/></svg>
         </a>
     @else
         <a href='{{ route('login') }}' class='mobile-bottom-nav__item' aria-label='Log in' @if(request()->routeIs('login', 'register', 'password.*')) aria-current='page' @endif>
-            <svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='8' r='4'/><path d='M4 21a8 8 0 0 1 16 0'/></svg>
+            <svg viewBox='0 0 24 24' aria-hidden='true' focusable='false'><circle cx='12' cy='8' r='4'/><path d='M4 21a8 8 0 0 1 16 0'/></svg>
         </a>
     @endauth
 </nav>
