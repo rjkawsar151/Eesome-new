@@ -58,11 +58,11 @@
         .nav-inner { position: relative; width: min(calc(100% - 40px), 1200px); min-height: 64px; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
         .nav-logo img { display: block; width: clamp(150px, 14vw, 170px); height: 44px; object-fit: contain; }
         .nav-logo { flex-shrink: 0; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.5rem, 1.8vw, 1.65rem); font-weight: 700; letter-spacing: -.04em; background: linear-gradient(135deg, var(--brand-900), var(--brand-400)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
-        .nav-links { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: clamp(1.15rem, 1.7vw, 1.65rem); list-style: none; margin: 0; padding: 0; }
-        .nav-links a { text-decoration: none; color: #f9eaf3; font-weight: 700; font-size: clamp(.92rem, 1.05vw, 1.02rem); text-transform: uppercase; letter-spacing: .06em; transition: color .2s; }
+        .nav-links { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: clamp(1.15rem, 1.7vw, 1.65rem); list-style: none; margin: 0; padding: 0; white-space: nowrap; max-width: 100%; }
+        .nav-links a { text-decoration: none; color: #f9eaf3; font-weight: 700; font-size: clamp(.92rem, 1.05vw, 1.02rem); text-transform: uppercase; letter-spacing: .06em; transition: color .2s; line-height: 1; }
         .nav-links a:hover { color: var(--brand-400); }
-        .nav-actions { display: flex; gap: .75rem; align-items: center; }
-        .nav-search { display: flex; align-items: center; position: relative; margin-left: auto; }
+        .nav-actions { display: flex; gap: .75rem; align-items: center; flex-shrink: 0; }
+        .nav-search { display: flex; align-items: center; position: relative; margin-left: auto; flex-shrink: 0; }
         .nav-search input { width: clamp(150px, 15vw, 195px); height: 36px; padding: 0 2.15rem 0 .8rem; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; font: inherit; font-size: .78rem; }
         .nav-search input::placeholder { color: rgba(255,255,255,.68); }
         .nav-search button { position: absolute; right: .3rem; width: 29px; height: 29px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #f9a8d4; cursor: pointer; display: grid; place-items: center; }
