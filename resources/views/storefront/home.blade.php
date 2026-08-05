@@ -251,6 +251,7 @@
                     <div style="padding:0 .85rem .85rem">
                         <div class="product-card__actions">
                             @php
+                                $hasMultipleVariants = $product->has_variants && $product->activeVariants->count() > 1;
                                 $usesVariants = $product->has_variants && $product->activeVariants->isNotEmpty();
                                 $canPurchase = $usesVariants
                                     ? $product->activeVariants->contains(fn ($variant) => $variant->stock > 0)
@@ -261,13 +262,15 @@
                                     @csrf
                                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                                     <input type="hidden" name="quantity" value="1">
-                                    @if($usesVariants)
+                                    @if($hasMultipleVariants)
                                         <select class="js-card-variant" name="variant_id" hidden aria-label="Selected color">
                                             <option value="">Choose a color</option>
                                             @foreach($product->activeVariants as $variant)
                                                 <option value="{{ $variant->id }}" @disabled($variant->stock < 1)>{{ $variant->color_name }} / SKU {{ $variant->sku }} / &#2547;{{ number_format((float)$variant->effective_price, 0) }}</option>
                                             @endforeach
                                         </select>
+                                    @elseif($usesVariants)
+                                        <input type="hidden" name="variant_id" value="{{ $product->activeVariants->first()->id }}">
                                     @endif
                                     <button type="submit" class="btn-cart" style="flex:1">Add to Cart</button>
                                     <button type="submit" name="buy_now" value="1" class="btn-buy" style="flex:1">Buy Now</button>

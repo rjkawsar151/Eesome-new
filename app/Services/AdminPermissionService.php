@@ -33,6 +33,7 @@ class AdminPermissionService
             str_starts_with((string) $routeName, 'admin.navigation-items.') => 'settings.manage',
             str_starts_with((string) $routeName, 'admin.media.') => 'settings.manage',
             str_starts_with((string) $routeName, 'admin.activity.') => 'activity.view',
+            str_starts_with((string) $routeName, 'admin.visitors.') => 'visitors.view',
             default => 'admin.access',
         };
     }

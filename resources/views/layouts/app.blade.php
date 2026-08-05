@@ -30,12 +30,12 @@
         :focus-visible { outline: 3px solid var(--brand-400); outline-offset: 3px; }
 
         /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Navigation ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
-        .nav { position: sticky; top: 0; z-index: 100; background: rgba(35,24,34,.82); -webkit-backdrop-filter: blur(22px) saturate(145%); backdrop-filter: blur(22px) saturate(145%); border-bottom: 1px solid rgba(255,255,255,.14); box-shadow: 0 8px 28px rgba(23,18,26,.18); }
+        .nav { position: sticky; top: 0; z-index: 100; background: rgba(26,10,46,.88); -webkit-backdrop-filter: blur(22px) saturate(145%); backdrop-filter: blur(22px) saturate(145%); border-bottom: 1px solid rgba(167,139,250,.18); box-shadow: 0 8px 28px rgba(10,4,22,.28); }
         .nav-inner { position: relative; width: min(calc(100% - 40px), 1200px); min-height: 64px; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
         .nav-logo img { display: block; width: clamp(150px, 14vw, 170px); height: 44px; object-fit: contain; }
         .nav-logo { flex-shrink: 0; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.5rem, 1.8vw, 1.65rem); font-weight: 700; letter-spacing: -.04em; background: linear-gradient(135deg, var(--brand-900), var(--brand-400)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
         .nav-links { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: clamp(1.15rem, 1.7vw, 1.65rem); list-style: none; margin: 0; padding: 0; }
-        .nav-links a { text-decoration: none; color: #f9eaf3; font-weight: 700; font-size: clamp(.78rem, .85vw, .84rem); transition: color .2s; }
+        .nav-links a { text-decoration: none; color: #f9eaf3; font-weight: 700; font-size: clamp(.92rem, 1.05vw, 1.02rem); text-transform: uppercase; letter-spacing: .06em; transition: color .2s; }
         .nav-links a:hover { color: var(--brand-400); }
         .nav-actions { display: flex; gap: .75rem; align-items: center; }
         .nav-search { display: flex; align-items: center; position: relative; margin-left: auto; }
@@ -102,7 +102,7 @@
             .nav-search input:focus { border-color: rgba(244,114,182,.9); outline: 2px solid rgba(244,114,182,.3); outline-offset: 1px; }
             .nav-actions { display: none; }
             .whatsapp-btn { bottom: calc(92px + env(safe-area-inset-bottom)); width: 52px; height: 52px; }
-            .mobile-bottom-nav { position: fixed; z-index: 1000; right: 1rem; bottom: calc(.75rem + env(safe-area-inset-bottom)); left: 1rem; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); max-width: 420px; min-height: 64px; margin-inline: auto; padding: .4rem; border: 1px solid rgba(255,255,255,.12); border-radius: 20px; background: rgba(35,24,34,.82); box-shadow: 0 10px 32px rgba(23,18,26,.28); -webkit-backdrop-filter: blur(16px) saturate(135%); backdrop-filter: blur(16px) saturate(135%); animation: mobileBottomNavEnter .36s cubic-bezier(.22,1,.36,1) both; }
+            .mobile-bottom-nav { position: fixed; z-index: 1000; right: 1rem; bottom: calc(.75rem + env(safe-area-inset-bottom)); left: 1rem; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); max-width: 420px; min-height: 64px; margin-inline: auto; padding: .4rem; border: 1px solid rgba(167,139,250,.18); border-radius: 20px; background: rgba(26,10,46,.88); box-shadow: 0 10px 32px rgba(10,4,22,.32); -webkit-backdrop-filter: blur(16px) saturate(135%); backdrop-filter: blur(16px) saturate(135%); animation: mobileBottomNavEnter .36s cubic-bezier(.22,1,.36,1) both; }
             .mobile-bottom-nav__item { position: relative; display: grid; width: 100%; min-width: 44px; min-height: 52px; place-items: center; border-radius: 15px; color: rgba(249,234,243,.7); text-decoration: none; transition: color .2s ease,background-color .2s ease,transform .2s ease; }
             .mobile-bottom-nav__item svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
             .mobile-bottom-nav__item[aria-current=page] { background: rgba(255,255,255,.1); color: var(--brand-400); }
@@ -118,7 +118,7 @@
             .nav-login { display: none; }
         }
         @media (hover:hover) and (max-width:768px) { .mobile-bottom-nav__item:hover { color: #fff; background: rgba(255,255,255,.08); transform: translateY(-2px) scale(1.03); } }
-        @supports not ((backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px))) { .mobile-bottom-nav { background: rgba(35,24,34,.96); } }
+        @supports not ((backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px))) { .mobile-bottom-nav { background: rgba(26,10,46,.97); } }
         @media (prefers-reduced-motion: reduce) { .nav, .mobile-bottom-nav { animation: none; } .mobile-bottom-nav__item { transition: none; } .mobile-bottom-nav__item:active { transform: none; } }
     </style>
     @stack('styles')
@@ -254,7 +254,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            &copy; {{ date('Y') }} EESOME. Copyright protected. Crafted with care by <a class="footer-credit-link" href="https://www.linkedin.com/in/kawsar202/" target="_blank" rel="noopener noreferrer">KAWSAR</a>.
+            &copy; {{ date('Y') }} EESOME. Copyright protected. Crafted with care by <a href="https://www.linkedin.com/in/kawsar202/" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;font-weight:700;font-style:italic">KAWSAR</a>.
         </div>
     </div>
 </footer>
@@ -262,10 +262,136 @@
 <script>
 (() => {
     const toast = document.getElementById('success-toast');
-    if (!toast) return;
-    const close = () => { toast.classList.add('is-leaving'); setTimeout(() => toast.remove(), 260); };
-    toast.querySelector('button')?.addEventListener('click', close);
-    setTimeout(close, 3500);
+    if (toast) {
+        const close = () => { toast.classList.add('is-leaving'); setTimeout(() => toast.remove(), 260); };
+        toast.querySelector('button')?.addEventListener('click', close);
+        setTimeout(close, 3500);
+    }
+
+    window.updateCartBadge = function(count) {
+        const badgeText = count > 99 ? '99+' : count;
+
+        const navCart = document.querySelector('.nav-cart');
+        if (navCart) {
+            let badge = navCart.querySelector('.nav-cart-badge');
+            if (count > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'nav-cart-badge';
+                    badge.setAttribute('aria-hidden', 'true');
+                    navCart.appendChild(badge);
+                }
+                badge.textContent = badgeText;
+            } else if (badge) {
+                badge.remove();
+            }
+        }
+
+        const mobileCart = document.querySelector('.mobile-bottom-nav__item[aria-label="View cart"]');
+        if (mobileCart) {
+            let mBadge = mobileCart.querySelector('.mobile-bottom-nav__badge');
+            if (count > 0) {
+                if (!mBadge) {
+                    mBadge = document.createElement('span');
+                    mBadge.className = 'mobile-bottom-nav__badge';
+                    mobileCart.appendChild(mBadge);
+                }
+                mBadge.setAttribute('aria-label', count + ' items in cart');
+                mBadge.textContent = badgeText;
+            } else if (mBadge) {
+                mBadge.remove();
+            }
+        }
+    };
+
+    window.showToast = function(message, type = 'success') {
+        let toast = document.getElementById('success-toast');
+        if (!toast) {
+            const container = document.querySelector('.container') || document.body;
+            toast = document.createElement('div');
+            toast.id = 'success-toast';
+            toast.className = type === 'error' ? 'alert alert-error' : 'toast-success';
+            toast.setAttribute('role', 'status');
+            toast.setAttribute('aria-live', 'polite');
+            container.prepend(toast);
+        } else {
+            toast.classList.remove('is-leaving');
+            toast.className = type === 'error' ? 'alert alert-error' : 'toast-success';
+        }
+        toast.innerHTML = type === 'error'
+            ? `<span>${message}</span>`
+            : `<span>✓</span><span>${message}</span><button type="button" aria-label="Dismiss notification">×</button>`;
+
+        toast.querySelector('button')?.addEventListener('click', () => {
+            toast.classList.add('is-leaving');
+            setTimeout(() => toast.remove(), 260);
+        });
+        clearTimeout(window._toastTimer);
+        window._toastTimer = setTimeout(() => {
+            toast.classList.add('is-leaving');
+            setTimeout(() => toast.remove(), 260);
+        }, 3500);
+    };
+
+    document.addEventListener('submit', async (event) => {
+        if (event.defaultPrevented) return;
+
+        const form = event.target;
+        if (!form || !form.action) return;
+
+        const isCartStore = form.action.includes('/cart') && !form.action.includes('/cart/');
+        if (!isCartStore || form.method.toUpperCase() !== 'POST') return;
+
+        const submitter = event.submitter;
+        if (submitter && submitter.name === 'buy_now') return;
+
+        event.preventDefault();
+
+        const submitBtn = submitter || form.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.7';
+        }
+
+        try {
+            const formData = new FormData(form);
+            if (submitter && submitter.name) {
+                formData.append(submitter.name, submitter.value);
+            }
+
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                window.updateCartBadge(data.cart_count);
+                window.showToast(data.message || 'Successfully added to cart.');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '✓ Added!';
+                    setTimeout(() => {
+                        submitBtn.innerHTML = originalText;
+                    }, 1500);
+                }
+            } else {
+                window.showToast(data.message || 'Could not add item to cart.', 'error');
+            }
+        } catch (err) {
+            window.showToast('Something went wrong. Please try again.', 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '';
+            }
+        }
+    });
 })();
 </script>
 @stack('scripts')

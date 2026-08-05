@@ -54,6 +54,7 @@
                 <a class="{{ request()->routeIs('admin.navigation-items.*') ? 'active' : '' }}" href="{{ route('admin.navigation-items.index') }}">Navigation</a>
                 <a class="{{ request()->routeIs('admin.media.*') ? 'active' : '' }}" href="{{ route('admin.media.index') }}">Media library</a>
                 <a class="{{ request()->routeIs('admin.activity.*') ? 'active' : '' }}" href="{{ route('admin.activity.index') }}">Activity logs</a>
+                <a class="{{ request()->routeIs('admin.visitors.*') ? 'active' : '' }}" href="{{ route('admin.visitors.index') }}">Visitor stats</a>
             @endif
             <a href="{{ route('home') }}" target="_blank" rel="noopener">View storefront &rarr;</a>
         </nav>
@@ -69,5 +70,18 @@
     </main>
 </div>
 @stack('scripts')
+<script>
+(function () {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    var KEY = 'admin_scroll_pos';
+    window.addEventListener('beforeunload', function () {
+        sessionStorage.setItem(KEY, String(window.scrollY || 0));
+    });
+    var saved = sessionStorage.getItem(KEY);
+    if (saved !== null && saved !== '') {
+        window.scrollTo(0, parseInt(saved, 10) || 0);
+    }
+})();
+</script>
 </body>
 </html>

@@ -36,9 +36,22 @@ class CartController extends Controller
         $qty = $data['quantity'] ?? 1;
         $product = Product::with('activeVariants')->whereKey($data['product_id'])->where('is_active', true)->firstOrFail();
         $variant = isset($data['variant_id']) ? $product->activeVariants->firstWhere('id', (int) $data['variant_id']) : null;
-        if ($product->has_variants && ! $variant) return back()->withErrors(['variant_id' => 'Please select an available color.']);
+        if (! $variant && $product->has_variants && $product->activeVariants->count() === 1) {
+            $variant = $product->activeVariants->first();
+        }
+        if ($product->has_variants && ! $variant) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Please select an available color.'], 422);
+            }
+            return back()->withErrors(['variant_id' => 'Please select an available color.']);
+        }
         $stock = $variant?->stock ?? $product->stock;
-        if (! $product->available_for_preorder && $qty > $stock) return back()->withErrors(['quantity' => 'The requested quantity is not available.']);
+        if (! $product->available_for_preorder && $qty > $stock) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'The requested quantity is not available.'], 422);
+            }
+            return back()->withErrors(['quantity' => 'The requested quantity is not available.']);
+        }
 
         if (Auth::check()) {
             $this->cart->addToDbCart(Auth::id(), $data['product_id'], $qty, $variant?->id);
@@ -48,6 +61,14 @@ class CartController extends Controller
 
         if ($request->boolean('buy_now')) {
             return redirect()->route('checkout.show');
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success'    => true,
+                'message'    => 'Successfully added to cart.',
+                'cart_count' => $this->cart->cartCount(),
+            ]);
         }
 
         return back()->with('success', 'Successfully added to cart.');

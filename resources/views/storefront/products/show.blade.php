@@ -25,18 +25,31 @@
         <p style="color:var(--text-muted)">SKU: {{ $product->sku ?: 'N/A' }}</p>
         <div class="detail-price">৳{{ number_format((float)$product->effective_price, 0) }} @if($product->has_discount)<s>৳{{ number_format((float)$product->price, 0) }}</s>@endif</div>
         <p><span class="stock">{{ $product->available_for_preorder ? 'Available for preorder · delivery in 25–35 days' : ($product->stock > 0 ? $product->stock.' in stock' : 'Sold out') }}</span></p>
+        @php($hasActiveVariants = $product->has_variants && $product->activeVariants->isNotEmpty())
         @php($colorVariants = $product->images->filter(fn($image) => filled(trim((string)$image->color_name)))->unique(fn($image) => strtolower(trim($image->color_name))))
-        @if($colorVariants->count())
+        @if($hasActiveVariants)
+        <div class="variants">
+            <strong>Color: <span id="selected-color">{{ trim($product->activeVariants->first()->color_name ?: $product->activeVariants->first()->name) }}</span></strong>
+            <div class="variant-list">
+                @foreach($product->activeVariants as $variant)
+                    @php($varImg = $variant->image ? app(\App\Services\ProductImageResolver::class)->resolve($variant->image) : null)
+                    <button type="button" class="variant js-variant-item @if($loop->first) active @endif" data-variant-id="{{ $variant->id }}" data-color="{{ trim($variant->color_name ?: $variant->name) }}" data-price="৳{{ number_format((float)$variant->effective_price, 0) }}" data-sku="{{ $variant->sku }}" @if($varImg) data-image="{{ $varImg }}" @endif @disabled($variant->stock < 1)>
+                        {{ trim($variant->color_name ?: $variant->name) }}
+                    </button>
+                @endforeach
+            </div>
+        </div>
+        @elseif($colorVariants->count())
         <div class="variants"><strong>Color: <span id="selected-color">{{ trim($colorVariants->first()->color_name) }}</span></strong><div class="variant-list">@foreach($colorVariants as $variant)<button type="button" class="variant js-variant-image @if($loop->first) active @endif" data-image="{{ app(\App\Services\ProductImageResolver::class)->resolve($variant->image_path) }}" data-color="{{ trim($variant->color_name) }}">{{ trim($variant->color_name) }}</button>@endforeach</div></div>
         @endif
-        @if($product->has_variants)
+        @if($product->has_variants && $product->activeVariants->count() > 1)
         <dialog id="variant-dialog" class="variant-dialog" aria-labelledby="variant-dialog-title">
             <button id="variant-close" class="variant-close" type="button" aria-label="Close color selector">×</button>
             <h2 id="variant-dialog-title">Choose your color</h2>
             <img class="variant-dialog-image" src="{{ app(\App\Services\ProductImageResolver::class)->resolve($primary) }}" alt="{{ $product->name }}">
             <p>{{ $product->name }}</p>
             <label for="purchase-variant"><strong>Available colors</strong></label>
-            <select id="purchase-variant" class="variant-select" name="variant_id" form="purchase-form">
+            <select id="purchase-variant" class="variant-select">
                 <option value="">Choose a color</option>
                 @foreach($product->activeVariants as $variant)
                     <option value="{{ $variant->id }}" data-image="{{ app(\App\Services\ProductImageResolver::class)->resolve($variant->image) }}" @disabled($variant->stock < 1)>{{ $variant->color_name }} / SKU {{ $variant->sku }} / BDT {{ number_format((float)$variant->effective_price,0) }}</option>
@@ -48,7 +61,7 @@
         @endif
         <div class="description">{!! $product->clean_description !!}</div>
         @if($product->stock > 0 || $product->available_for_preorder)
-        <form id="purchase-form" class="buybox" method="POST" action="{{ route('cart.store') }}">@csrf<input type="hidden" name="product_id" value="{{ $product->id }}"><input type="number" name="quantity" value="1" min="1" max="{{ $product->available_for_preorder ? 100 : max(1,$product->stock) }}" aria-label="Quantity"><button type="submit">Add to cart</button><button type="submit" name="buy_now" value="1">Buy now</button></form>
+        <form id="purchase-form" class="buybox" method="POST" action="{{ route('cart.store') }}">@csrf<input type="hidden" name="product_id" value="{{ $product->id }}">@if($hasActiveVariants)<input type="hidden" id="selected-variant-id" name="variant_id" value="{{ $product->activeVariants->count() === 1 ? $product->activeVariants->first()->id : '' }}">@endif<input type="number" name="quantity" value="1" min="1" max="{{ $product->available_for_preorder ? 100 : max(1,$product->stock) }}" aria-label="Quantity"><button type="submit">Add to cart</button><button type="submit" name="buy_now" value="1">Buy now</button></form>
         @endif
     </div>
 </section>
@@ -96,13 +109,45 @@
                 </div></div>
             </article>
         @endforeach
-    </div>
-</section>
-@endif
+    @endif
 </main>
 @endsection
 @push('scripts')
 <script>
+document.querySelectorAll('.js-variant-item').forEach((button) => {
+    button.addEventListener('click', () => {
+        if (button.disabled) return;
+        document.querySelectorAll('.js-variant-item').forEach((v) => v.classList.remove('active'));
+        button.classList.add('active');
+
+        const colorSpan = document.getElementById('selected-color');
+        if (colorSpan && button.dataset.color) colorSpan.textContent = button.dataset.color;
+
+        const variantInput = document.getElementById('selected-variant-id');
+        if (variantInput && button.dataset.variantId) variantInput.value = button.dataset.variantId;
+
+        const select = document.getElementById('purchase-variant');
+        if (select && button.dataset.variantId) select.value = button.dataset.variantId;
+
+        if (button.dataset.image) {
+            const mainImg = document.getElementById('main-product-image');
+            if (mainImg) mainImg.src = button.dataset.image;
+        }
+
+        if (button.dataset.price) {
+            const priceEl = document.querySelector('.detail-price');
+            if (priceEl) {
+                const sTag = priceEl.querySelector('s');
+                if (sTag) {
+                    priceEl.childNodes[0].nodeValue = button.dataset.price + ' ';
+                } else {
+                    priceEl.textContent = button.dataset.price;
+                }
+            }
+        }
+    });
+});
+
 document.querySelectorAll('.js-variant-image').forEach((button) => {
     button.addEventListener('click', () => {
         document.getElementById('main-product-image').src = button.dataset.image;
@@ -115,7 +160,54 @@ document.querySelectorAll('.js-variant-image').forEach((button) => {
         }
     });
 });
-const purchaseForm=document.getElementById('purchase-form'),variantDialog=document.getElementById('variant-dialog'),variantSelect=document.getElementById('purchase-variant');let pendingSubmitter=null;
-if(purchaseForm&&variantDialog){purchaseForm.addEventListener('submit',event=>{if(!variantSelect.value){event.preventDefault();pendingSubmitter=event.submitter;variantDialog.showModal();document.body.style.overflow='hidden';variantSelect.focus()}});document.getElementById('variant-confirm').addEventListener('click',()=>{if(!variantSelect.value){document.getElementById('variant-feedback').textContent='Please select a color.';variantSelect.focus();return}variantDialog.close();document.body.style.overflow='';purchaseForm.requestSubmit(pendingSubmitter)});document.getElementById('variant-close').addEventListener('click',()=>variantDialog.close());variantDialog.addEventListener('close',()=>document.body.style.overflow='');variantDialog.addEventListener('click',event=>{if(event.target===variantDialog)variantDialog.close()});variantSelect.addEventListener('change',()=>{const option=variantSelect.selectedOptions[0];document.getElementById('variant-feedback').textContent=option.value?option.textContent:'Select an available color to continue.';if(option.dataset.image)variantDialog.querySelector('.variant-dialog-image').src=option.dataset.image})}
+
+const purchaseForm = document.getElementById('purchase-form');
+const variantDialog = document.getElementById('variant-dialog');
+const variantSelect = document.getElementById('purchase-variant');
+const variantInput = document.getElementById('selected-variant-id');
+let pendingSubmitter = null;
+
+if (purchaseForm && variantDialog && variantSelect) {
+    purchaseForm.addEventListener('submit', (event) => {
+        const selectedVal = variantInput ? variantInput.value : variantSelect.value;
+        if (!selectedVal) {
+            event.preventDefault();
+            pendingSubmitter = event.submitter;
+            variantDialog.showModal();
+            document.body.style.overflow = 'hidden';
+            variantSelect.focus();
+        }
+    });
+
+    document.getElementById('variant-confirm')?.addEventListener('click', () => {
+        if (!variantSelect.value) {
+            document.getElementById('variant-feedback').textContent = 'Please select a color.';
+            variantSelect.focus();
+            return;
+        }
+        if (variantInput) variantInput.value = variantSelect.value;
+
+        const matchingPill = document.querySelector(`.js-variant-item[data-variant-id="${variantSelect.value}"]`);
+        if (matchingPill) {
+            document.querySelectorAll('.js-variant-item').forEach((v) => v.classList.remove('active'));
+            matchingPill.classList.add('active');
+            const colorSpan = document.getElementById('selected-color');
+            if (colorSpan && matchingPill.dataset.color) colorSpan.textContent = matchingPill.dataset.color;
+        }
+
+        variantDialog.close();
+        document.body.style.overflow = '';
+        purchaseForm.requestSubmit(pendingSubmitter);
+    });
+
+    document.getElementById('variant-close')?.addEventListener('click', () => variantDialog.close());
+    variantDialog.addEventListener('close', () => document.body.style.overflow = '');
+    variantDialog.addEventListener('click', (event) => { if (event.target === variantDialog) variantDialog.close(); });
+    variantSelect.addEventListener('change', () => {
+        const option = variantSelect.selectedOptions[0];
+        document.getElementById('variant-feedback').textContent = option.value ? option.textContent : 'Select an available color to continue.';
+        if (option.dataset.image) variantDialog.querySelector('.variant-dialog-image').src = option.dataset.image;
+    });
+}
 </script>
 @endpush

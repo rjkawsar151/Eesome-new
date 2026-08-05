@@ -21,14 +21,17 @@ class OrderStatusService
         $current = OrderStatus::tryFrom(strtolower($from));
         $target = OrderStatus::tryFrom(strtolower($to));
 
-        return $current && $target && in_array($target, $current->next(), true);
+        return $current && $target && $target !== $current;
     }
 
     public function getAllowedNext(string $from): array
     {
-        $status = OrderStatus::tryFrom(strtolower($from));
+        $current = strtolower($from);
 
-        return array_map(fn ($s) => $s->value, $status?->next() ?? []);
+        return array_values(array_filter(
+            array_map(fn ($s) => $s->value, OrderStatus::cases()),
+            fn ($value) => $value !== $current,
+        ));
     }
 
     public function transition(Order $order, string $toStatus, ?string $note = null, array $shipment = []): void

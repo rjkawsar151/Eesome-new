@@ -38,10 +38,11 @@ return view('admin.orders.index', ['orders' => $q->paginate(20)->withQueryString
     public function updateStatus(Request $r, Order $order)
     {
         $values = array_column(OrderStatus::cases(), 'value');
+        if ($r->filled('tracking_url') && ! preg_match('/^[a-z][a-z0-9+.-]*:\/\//i', $r->tracking_url)) {
+            $r->merge(['tracking_url' => 'https://'.$r->tracking_url]);
+        }
         $d = $r->validate(['to_status' => ['required', Rule::in($values)], 'note' => 'nullable|string|max:500', 'shipping_provider' => 'nullable|string|max:100', 'tracking_number' => 'nullable|string|max:150', 'tracking_url' => 'nullable|url|max:500', 'estimated_delivery_at' => 'nullable|date']);
-        if (in_array($d['to_status'], ['shipped', 'in_transit'], true) && empty($d['tracking_number'])) {
-            return back()->withErrors(['tracking_number' => 'A tracking number is required for shipped orders.']);
-        }try {
+        try {
             $this->statusService->transition($order, $d['to_status'], $d['note'] ?? null, $d);
 
             return back()->with('success', 'Order status updated.');

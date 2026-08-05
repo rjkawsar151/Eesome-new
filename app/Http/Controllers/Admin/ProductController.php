@@ -121,11 +121,49 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         DB::transaction(function () use ($product) {
-            $product->update(['is_active' => false, 'is_featured' => false]);
-            $product->variants()->update(['is_active' => false]);
+            $imageStorage = app(OptimizedImageStorage::class);
+
+            foreach ($product->images as $img) {
+                $imageStorage->delete($img->image_path);
+                $img->delete();
+            }
+
+            if ($product->image) {
+                $imageStorage->delete($product->image);
+            }
+
+            foreach ($product->variants as $variant) {
+                if ($variant->image) {
+                    $imageStorage->delete($variant->image);
+                }
+                $variant->delete();
+            }
+
+            $product->tags()->detach();
+
+            foreach ($product->reviews as $review) {
+                if ($review->image_path) {
+                    $imageStorage->delete($review->image_path);
+                }
+                $review->delete();
+            }
+            foreach ($product->legacyReviews as $legacyReview) {
+                $legacyReview->delete();
+            }
+
+            $product->cartItems()->delete();
+            $product->wishlists()->delete();
+            $product->inventoryMovements()->delete();
+
+            \App\Models\OrderItem::where('product_id', $product->id)->update([
+                'product_id' => null,
+                'variant_id' => null,
+            ]);
+
+            $product->delete();
         });
 
-        return back()->with('success', 'Product archived.');
+        return back()->with('success', 'Product and all associated media files permanently deleted.');
     }
 
     public function destroyImage(Product $product, ProductImage $image)

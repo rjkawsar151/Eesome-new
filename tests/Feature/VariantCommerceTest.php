@@ -31,6 +31,22 @@ class VariantCommerceTest extends TestCase
         $this->post('/cart', ['product_id' => $product->id, 'variant_id' => $pink->id, 'quantity' => 1])->assertSessionHasNoErrors();
     }
 
+    public function test_single_variant_product_auto_selects_variant_and_hides_dialog(): void
+    {
+        $category = Category::create(['name' => 'Shoes', 'slug' => 'shoes', 'is_active' => true]);
+        $product = Product::create(['category_id' => $category->id, 'sku' => 'SHOE', 'slug' => 'single-variant-shoe', 'name' => 'Single Variant Shoe', 'price' => 1500, 'stock' => 0, 'has_variants' => true, 'is_active' => true]);
+        $red = ProductVariant::create(['product_id' => $product->id, 'name' => 'Red', 'color_name' => 'Red', 'color' => 'Red', 'sku' => 'SHOE-RED', 'regular_price' => 1500, 'stock' => 5, 'is_active' => true, 'is_default' => true]);
+
+        $this->get('/products/'.$product->slug)
+            ->assertOk()
+            ->assertDontSee('id="variant-dialog"', false);
+
+        $this->post('/cart', ['product_id' => $product->id, 'quantity' => 1])
+            ->assertSessionHasNoErrors();
+
+        $this->assertArrayHasKey($product->id.':'.$red->id, session('guest_cart'));
+    }
+
     public function test_two_colors_are_separate_guest_cart_lines(): void
     {
         ['product' => $product, 'pink' => $pink, 'black' => $black] = $this->catalog();
@@ -51,13 +67,13 @@ class VariantCommerceTest extends TestCase
         $this->assertSame(0, $product->fresh()->stock);
     }
 
-    public function test_admin_archive_preserves_product_and_disables_variants(): void
+    public function test_admin_delete_permanently_removes_product_and_images(): void
     {
         ['product' => $product] = $this->catalog();
         $admin = User::factory()->create(['role' => 'admin']);
         $this->actingAs($admin)->delete('/admin/products/'.$product->id)->assertRedirect();
-        $this->assertFalse($product->fresh()->is_active);
-        $this->assertSame(0, $product->variants()->where('is_active', true)->count());
+        $this->assertNull(Product::find($product->id));
+        $this->assertSame(0, \App\Models\ProductVariant::where('product_id', $product->id)->count());
     }
 
     public function test_variant_product_page_renders_color_selector(): void
@@ -119,6 +135,24 @@ class VariantCommerceTest extends TestCase
         ])->assertRedirect('/checkout');
 
         $this->assertArrayHasKey($product->id.':'.$pink->id, session('guest_cart'));
+    }
+
+    public function test_ajax_add_to_cart_returns_json_and_cart_count(): void
+    {
+        ['product' => $product, 'pink' => $pink] = $this->catalog();
+
+        $response = $this->postJson('/cart', [
+            'product_id' => $product->id,
+            'variant_id' => $pink->id,
+            'quantity'   => 2,
+        ]);
+
+        $response->assertOk()
+            ->assertJson([
+                'success'    => true,
+                'message'    => 'Successfully added to cart.',
+                'cart_count' => 2,
+            ]);
     }
 
 }

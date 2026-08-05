@@ -23,7 +23,7 @@ class AdminManagementTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
-        foreach (['/admin/products', '/admin/categories', '/admin/reviews', '/admin/blog', '/admin/settings'] as $url) {
+        foreach (['/admin/products', '/admin/categories', '/admin/reviews', '/admin/blog', '/admin/settings', '/admin/visitors'] as $url) {
             $this->actingAs($admin)->get($url)->assertOk();
         }
     }
@@ -55,6 +55,7 @@ class AdminManagementTest extends TestCase
         $this->actingAs($manager)->get('/admin/products')->assertOk();
         $this->actingAs($manager)->get('/admin/users')->assertForbidden();
         $this->actingAs($manager)->get('/admin/settings')->assertForbidden();
+        $this->actingAs($manager)->get('/admin/visitors')->assertForbidden();
 
         $editor = User::factory()->create(['role' => 'content editor']);
         $this->actingAs($editor)->get('/admin/blog')->assertOk();

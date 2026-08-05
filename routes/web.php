@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShippingMethodController as AdminShippingMethodController;
 use App\Http\Controllers\Admin\TagController as AdminTagController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VisitorController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Storefront\AboutController;
 use App\Http\Controllers\Storefront\CartController;
@@ -97,6 +98,7 @@ Route::middleware('auth')->group(function () {
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'admin.activity'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/activity', [ActivityLogController::class, 'index'])->name('activity.index');
+    Route::get('/visitors', [VisitorController::class, 'index'])->name('visitors.index');
 
     Route::get('/hero-products', [AdminProductController::class, 'hero'])->name('hero-products.edit');
     Route::put('/hero-products', [AdminProductController::class, 'updateHero'])->name('hero-products.update');

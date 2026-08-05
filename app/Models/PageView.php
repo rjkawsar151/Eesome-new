@@ -11,7 +11,7 @@ class PageView extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
-        'ip_address', 'url', 'user_agent', 'user_id',
+        'ip_address', 'url', 'user_agent', 'user_id', 'referrer', 'source',
     ];
 
     public function user()

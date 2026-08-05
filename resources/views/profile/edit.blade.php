@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header"><h2 class="font-semibold text-xl text-gray-800 leading-tight">My account</h2></x-slot>
     <style>
-        .account-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.account-stat,.order-card{border:1px solid #e8e1da;border-radius:1rem;background:#fff}.account-stat{padding:1.25rem}.account-stat strong{display:block;font-size:1.8rem;color:#37271e}.order-card{padding:1.25rem}.order-head,.order-meta{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}.status-pill{display:inline-flex;padding:.35rem .7rem;border-radius:999px;background:#eee7df;color:#64472f;font-size:.75rem;font-weight:700;text-transform:capitalize}.status-pill.active{background:#e8f3eb;color:#24633b}.order-progress{display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;margin:1rem 0}.order-progress span{height:.32rem;border-radius:999px;background:#e5e7eb}.order-progress span.done{background:#9a6745}.order-items{color:#6b625c;font-size:.9rem;margin-top:.75rem}.tracking-link{font-weight:700;color:#855839;text-decoration:underline}.section-title{font-size:1.25rem;font-weight:700;color:#30231c;margin-bottom:1rem}@media(max-width:700px){.account-grid{grid-template-columns:1fr}.order-head,.order-meta{align-items:flex-start}.order-card{padding:1rem}}
+        .account-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.account-stat,.order-card{border:1px solid #e8e1da;border-radius:1rem;background:#fff}.account-stat{padding:1.25rem}.account-stat strong{display:block;font-size:1.8rem;color:#37271e}.order-card{padding:1.25rem}.order-head,.order-meta{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}.status-pill{display:inline-flex;padding:.35rem .7rem;border-radius:999px;background:#eee7df;color:#64472f;font-size:.75rem;font-weight:700;text-transform:capitalize}.status-pill.active{background:#e8f3eb;color:#24633b}.order-progress{display:grid;grid-template-columns:repeat(6,1fr);gap:.35rem;margin:1rem 0}.order-progress span{height:.32rem;border-radius:999px;background:#e5e7eb}.order-progress span.done{background:#9a6745}.order-items{color:#6b625c;font-size:.9rem;margin-top:.75rem}.tracking-link{font-weight:700;color:#855839;text-decoration:underline}.section-title{font-size:1.25rem;font-weight:700;color:#30231c;margin-bottom:1rem}@media(max-width:700px){.account-grid{grid-template-columns:1fr}.order-head,.order-meta{align-items:flex-start}.order-card{padding:1rem}}
     </style>
     <div class="py-10"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-7">
         <div><h1 class="text-3xl font-bold text-gray-900">Welcome, {{ $user->name }}</h1><p class="mt-1 text-gray-600">Track orders and manage your account details.</p></div>
@@ -13,7 +13,7 @@
         <section><h2 class="section-title">Active orders</h2><div class="space-y-4">
             @forelse($activeOrders as $order)
                 @php
-                    $steps=['awaiting','processing','shipped','in_transit'];
+                    $steps=['awaiting','processing','confirmed','shipped','in_transit','delivered'];
                     $stepIndex=array_search($order->order_status,$steps,true);
                 @endphp
                 <article class="order-card">
