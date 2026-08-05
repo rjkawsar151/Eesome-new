@@ -28,6 +28,7 @@ use App\Http\Controllers\Storefront\LegacyProductImageController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\ProductReviewController;
 use App\Http\Controllers\Storefront\PublicStorageImageController;
+use App\Http\Controllers\Storefront\SitemapController;
 use App\Http\Controllers\Storefront\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/about', AboutController::class)->name('about');
 Route::get('/uploads/products/{filename}', LegacyProductImageController::class)
     ->where('filename', '[A-Za-z0-9._-]+\.(?:jpe?g|png|webp|gif)')

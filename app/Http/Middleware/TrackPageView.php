@@ -14,7 +14,7 @@ class TrackPageView
         $response = $next($request);
 
         // Only track GET requests to storefront (skip admin, api, assets)
-        if ($request->isMethod('GET') && !$request->is('admin/*') && !$request->is('api/*')) {
+        if ($request->isMethod('GET') && !$request->is('admin/*') && !$request->is('api/*') && !$request->is('sitemap.xml')) {
             $referrer = $request->headers->get('referer');
             PageView::create([
                 'ip_address' => $request->ip(),
