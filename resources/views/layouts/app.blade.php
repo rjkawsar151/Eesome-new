@@ -221,7 +221,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 
 {{-- Page content --}}
+@isset($header)
+<header style="background:#fff;border-bottom:1px solid rgba(190,24,93,.12)">
+    <div class="container" style="padding:1.5rem 0">
+        {{ $header }}
+    </div>
+</header>
+@endisset
 @yield('content')
+@isset($slot)
+    {{ $slot }}
+@endisset
 
 {{-- WhatsApp Button --}}
 @php

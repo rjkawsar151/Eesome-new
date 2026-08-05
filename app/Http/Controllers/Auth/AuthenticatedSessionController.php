@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Providers\RouteServiceProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +32,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->forget('registration_verification_required');
 
-        return redirect(RouteServiceProvider::HOME);
+        if (session('registration_verification_required') && ! auth()->user()->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
+
+        return auth()->user()->isAdmin()
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('profile.edit');
 
     }
 
