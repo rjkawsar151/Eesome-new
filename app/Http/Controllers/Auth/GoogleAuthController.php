@@ -26,6 +26,8 @@ class GoogleAuthController extends Controller
         Auth::login($user, true);
         request()->session()->regenerate();
         $cartService->mergeSessionCartIntoDb($user->id);
-        return redirect()->intended(config('services.google.after_login', '/profile'));
+        return $user->isAdmin()
+            ? redirect()->route('admin.dashboard')
+            : redirect()->intended(config('services.google.after_login', '/profile'));
     }
 }

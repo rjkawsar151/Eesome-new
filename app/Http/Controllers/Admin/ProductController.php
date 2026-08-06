@@ -13,6 +13,7 @@ use App\Services\OptimizedImageStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
@@ -118,6 +119,13 @@ class ProductController extends Controller
         return back()->with('success', 'Product updated.');
     }
 
+    public function checkSlug(Request $r)
+    {
+        $ignore = (int) $r->input('ignore', 0);
+
+        return response()->json(['slug' => $this->uniqueSlug((string) $r->input('name'), $ignore ?: null)]);
+    }
+
     public function destroy(Product $product)
     {
         DB::transaction(function () use ($product) {
@@ -177,6 +185,12 @@ class ProductController extends Controller
 
     private function data(Request $r, ?Product $p = null)
     {
+        $name = (string) $r->input('name');
+        $submittedSlug = trim((string) $r->input('slug'));
+        if ($submittedSlug === '' || $submittedSlug === Str::slug($name)) {
+            $r->merge(['slug' => $this->uniqueSlug($name, $p?->id)]);
+        }
+
         $hasVariants = $r->boolean('has_variants');
         $d = $r->validate(['category_id' => 'required|exists:categories,id', 'brand_id' => 'nullable|exists:brands,id', 'tag_ids' => 'nullable|array', 'tag_ids.*' => 'integer|exists:tags,id', 'name' => 'required|string|max:255', 'slug' => ['required', 'alpha_dash', 'max:255', Rule::unique('products')->ignore($p?->id)], 'sku' => ['nullable', 'string', 'max:100', Rule::unique('products')->ignore($p?->id)], 'description' => 'nullable|string|max:50000', 'price' => 'required|numeric|min:0', 'discount_price' => 'nullable|numeric|min:0|lte:price', 'stock' => 'required|integer|min:0', 'badge_text' => 'nullable|string|max:30', 'sort_order' => 'required|integer|min:0', 'meta_title' => 'nullable|string|max:255', 'meta_description' => 'nullable|string|max:1000', 'has_variants' => 'nullable|boolean', 'is_active' => 'nullable|boolean', 'is_featured' => 'nullable|boolean', 'is_new' => 'nullable|boolean', 'is_preorder' => 'nullable|boolean',
             'variants' => [$hasVariants ? 'required' : 'nullable', 'array', $hasVariants ? 'min:1' : 'max:0'],
@@ -192,6 +206,17 @@ class ProductController extends Controller
         unset($d['variants']);
 
         return $d;
+    }
+
+    private function uniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name) ?: 'product';
+        $slug = $base;
+        while (Product::where('slug', $slug)->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))->exists()) {
+            $slug = $base.'-'.random_int(1000, 99999);
+        }
+
+        return $slug;
     }
 
     private function images(Request $r, Product $p, array &$uploaded = [])

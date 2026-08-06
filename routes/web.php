@@ -106,6 +106,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'admin.acti
     Route::put('/hero-products', [AdminProductController::class, 'updateHero'])->name('hero-products.update');
 
     Route::resource('products', AdminProductController::class)->except('show');
+    Route::get('/products/slug-check', [AdminProductController::class, 'checkSlug'])->name('products.slug-check');
     Route::delete('/products/{product}/images/{image}', [AdminProductController::class, 'destroyImage'])->name('products.images.destroy');
     Route::resource('categories', AdminCategoryController::class)->except('show');
     Route::resource('brands', AdminBrandController::class)->except('show');
