@@ -2,7 +2,7 @@
 @section('title', 'Hero Products')
 @section('heading', 'Hero Products')
 @section('content')
-<div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+<div class="page-head">
     <div><h1 class="title">Homepage hero products</h1><p class="subtle">Choose which active products appear in the homepage hero and set their display order.</p></div>
     <a class="btn btn-soft" href="{{ route('home') }}" target="_blank" rel="noopener">Preview homepage</a>
 </div>
