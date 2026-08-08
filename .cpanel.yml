@@ -1,0 +1,16 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/balefntx/eesomebd.store
+    - /bin/mkdir -p "$DEPLOYPATH/storage/app/public" "$DEPLOYPATH/storage/framework/cache/data" "$DEPLOYPATH/storage/framework/sessions" "$DEPLOYPATH/storage/framework/views" "$DEPLOYPATH/storage/logs" "$DEPLOYPATH/bootstrap/cache"
+    - /bin/cp -R app "$DEPLOYPATH/"
+    - /bin/cp -R bootstrap "$DEPLOYPATH/"
+    - /bin/cp -R config "$DEPLOYPATH/"
+    - /bin/cp -R database "$DEPLOYPATH/"
+    - /bin/cp -R public "$DEPLOYPATH/"
+    - /bin/cp -R resources "$DEPLOYPATH/"
+    - /bin/cp -R routes "$DEPLOYPATH/"
+    - /bin/cp -R storage "$DEPLOYPATH/"
+    - /bin/cp -R vendor "$DEPLOYPATH/"
+    - /bin/cp artisan composer.json composer.lock package.json package-lock.json vite.config.js postcss.config.js tailwind.config.js "$DEPLOYPATH/"
+    - /bin/cp .htaccess .env.example "$DEPLOYPATH/"
