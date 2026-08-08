@@ -20,7 +20,7 @@ class ProductController extends Controller
 {
     public function index(Request $r)
     {
-        $q = Product::with('category')->withCount('images')->orderBy('sort_order')->latest('id');
+        $q = Product::with(['category', 'images'])->withCount('images')->orderBy('sort_order')->latest('id');
         if ($r->filled('search')) {
             $s = $r->search;
             $q->where(fn ($x) => $x->where('name', 'like', "%$s%")->orWhere('sku', 'like', "%$s%"));
