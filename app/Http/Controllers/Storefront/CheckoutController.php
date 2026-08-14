@@ -64,6 +64,12 @@ class CheckoutController extends Controller
                 $this->cartService->clearSessionCart();
             }
 
+            try {
+                app(\App\Services\MetaCapiService::class)->trackPurchase($order, $request, 'order_' . $order->order_number);
+            } catch (\Throwable $capiEx) {
+                report($capiEx);
+            }
+
             return redirect()->route('checkout.success', $order->order_number);
         } catch (\RuntimeException $e) {
             return back()->withInput()->withErrors(['checkout' => $e->getMessage()]);

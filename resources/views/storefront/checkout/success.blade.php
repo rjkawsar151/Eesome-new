@@ -25,3 +25,18 @@
     </div>
 </main>
 @endsection
+@push('scripts')
+<script>
+if (typeof window.fbq === 'function') {
+    window.fbq('track', 'Purchase', {
+        content_ids: @json($order->items->map(fn($item) => (string)($item->product_sku ?: ($item->product?->sku ?: $item->product_id)))->values()->all()),
+        content_type: 'product',
+        value: {{ (float) $order->total_amount }},
+        currency: 'BDT',
+        num_items: {{ $order->items->sum('quantity') }}
+    }, {
+        eventID: @json('order_' . $order->order_number)
+    });
+}
+</script>
+@endpush

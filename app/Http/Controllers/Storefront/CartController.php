@@ -24,13 +24,14 @@ class CartController extends Controller
         return view('storefront.cart.index', compact('items', 'isDb'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, \App\Services\MetaCapiService $metaCapi)
     {
         $data = $request->validate([
             'product_id' => 'required|integer|exists:products,id',
             'quantity'   => 'sometimes|integer|min:1|max:100',
             'variant_id' => 'nullable|integer|exists:product_variants,id',
             'buy_now'    => 'sometimes|boolean',
+            'event_id'   => 'nullable|string|max:100',
         ]);
 
         $qty = $data['quantity'] ?? 1;
@@ -59,15 +60,27 @@ class CartController extends Controller
             $this->cart->addToSessionCart($data['product_id'], $qty, $variant?->id);
         }
 
+        $eventId = $request->input('event_id') ?: (string) \Illuminate\Support\Str::uuid();
+        $unitPrice = (float) ($variant ? $variant->effective_price : $product->effective_price);
+        $totalVal = round($unitPrice * $qty, 2);
+        $contentId = $metaCapi->getCatalogueContentId($product, $variant);
+
+        $metaCapi->trackAddToCart($product, $qty, $totalVal, $request, $eventId, $variant);
+
         if ($request->boolean('buy_now')) {
             return redirect()->route('checkout.show');
         }
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
-                'success'    => true,
-                'message'    => 'Successfully added to cart.',
-                'cart_count' => $this->cart->cartCount(),
+                'success'      => true,
+                'message'      => 'Successfully added to cart.',
+                'cart_count'   => $this->cart->cartCount(),
+                'event_id'     => $eventId,
+                'content_id'   => $contentId,
+                'product_name' => $product->name,
+                'value'        => $totalVal,
+                'currency'     => 'BDT',
             ]);
         }
 

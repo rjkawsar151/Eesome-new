@@ -209,5 +209,18 @@ if (purchaseForm && variantDialog && variantSelect) {
         if (option.dataset.image) variantDialog.querySelector('.variant-dialog-image').src = option.dataset.image;
     });
 }
+
+if (typeof window.fbq === 'function') {
+    window.fbq('track', 'ViewContent', {
+        content_name: @json($product->name),
+        content_category: @json($product->category?->name ?? 'Handbags'),
+        content_ids: [@json((string)($product->sku ?: $product->id))],
+        content_type: 'product',
+        value: {{ (float) $product->effective_price }},
+        currency: 'BDT'
+    }, {
+        eventID: @json($metaEventId ?? '')
+    });
+}
 </script>
 @endpush

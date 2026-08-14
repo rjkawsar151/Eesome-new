@@ -18,11 +18,11 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1598500547854347');
+    fbq('init', '{{ config('services.meta.pixel_id', '1598500547854347') }}');
     fbq('track', 'PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=1598500547854347&ev=PageView&noscript=1"
+    src="https://www.facebook.com/tr?id={{ config('services.meta.pixel_id', '1598500547854347') }}&ev=PageView&noscript=1"
     /></noscript>
     <!-- End Meta Pixel Code -->
     <meta charset="UTF-8">
@@ -398,6 +398,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 formData.append(submitter.name, submitter.value);
             }
 
+            const clientEventId = 'atc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+            if (!formData.has('event_id')) {
+                formData.append('event_id', clientEventId);
+            }
+
             const response = await fetch(form.action, {
                 method: 'POST',
                 body: formData,
@@ -412,6 +417,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             if (response.ok && data.success) {
                 window.updateCartBadge(data.cart_count);
                 window.showToast(data.message || 'Successfully added to cart.');
+
+                if (typeof window.fbq === 'function') {
+                    window.fbq('track', 'AddToCart', {
+                        content_name: data.product_name,
+                        content_ids: data.content_id ? [String(data.content_id)] : [],
+                        content_type: 'product',
+                        value: Number(data.value || 0),
+                        currency: data.currency || 'BDT'
+                    }, {
+                        eventID: data.event_id || clientEventId
+                    });
+                }
+
                 if (submitBtn) {
                     submitBtn.innerHTML = '✓ Added!';
                     setTimeout(() => {

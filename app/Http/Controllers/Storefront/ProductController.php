@@ -62,12 +62,15 @@ class ProductController extends Controller
         return view('storefront.products.index', compact('products', 'categories', 'wishlistIds'));
     }
 
-    public function show(string $slug)
+    public function show(Request $request, string $slug, \App\Services\MetaCapiService $metaCapi)
     {
         $product = Product::with(['category', 'images', 'activeVariants'])
             ->where('slug', $slug)
             ->where('is_active', true)
             ->firstOrFail();
+
+        $metaEventId = (string) \Illuminate\Support\Str::uuid();
+        $metaCapi->trackViewContent($product, $request, $metaEventId);
 
         $reviews = $product->legacyReviews()
             ->with('user:id,name')
@@ -87,7 +90,7 @@ class ProductController extends Controller
             ->get();
 
         return view('storefront.products.show', compact(
-            'product', 'reviews', 'avgRating', 'reviewCount', 'relatedProducts'
+            'product', 'reviews', 'avgRating', 'reviewCount', 'relatedProducts', 'metaEventId'
         ));
     }
 }
