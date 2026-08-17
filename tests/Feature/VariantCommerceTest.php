@@ -155,4 +155,27 @@ class VariantCommerceTest extends TestCase
             ]);
     }
 
+    public function test_variant_product_page_resolves_image_and_data_attributes(): void
+    {
+        ['product' => $product, 'pink' => $pink, 'black' => $black] = $this->catalog();
+        $pink->update(['image' => 'variants/pink-bag.webp']);
+        \App\Models\ProductImage::create([
+            'product_id' => $product->id,
+            'image_path' => 'products/black-bag.webp',
+            'alt_text' => 'Black',
+            'sort_order' => 2,
+            'is_primary' => false,
+        ]);
+
+        $response = $this->get('/products/'.$product->slug);
+        $response->assertOk();
+        $response->assertSee('data-variant-id="'.$pink->id.'"', false);
+        $response->assertSee('data-variant-id="'.$black->id.'"', false);
+        $response->assertSee('data-color="Pink"', false);
+        $response->assertSee('data-color="Black"', false);
+        $response->assertSee('data-image=', false);
+        $response->assertSee('pink-bag.webp', false);
+        $response->assertSee('black-bag.webp', false);
+    }
 }
+
