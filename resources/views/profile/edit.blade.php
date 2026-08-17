@@ -59,6 +59,12 @@
         .order-progress span{height:.32rem;border-radius:999px;background:#e5e7eb}
         .order-progress span.done{background:linear-gradient(90deg,#db2777,#f472b6)}
         .order-items{color:#6b7280;font-size:.9rem;margin-top:.75rem}
+        .order-items-grid{display:flex;gap:.6rem;margin-top:.85rem;overflow-x:auto;padding-bottom:.35rem;flex-wrap:wrap}
+        .order-item-chip{display:flex;align-items:center;gap:.6rem;background:#fdf2f8;border:1px solid #fce7f3;border-radius:.65rem;padding:.4rem .65rem}
+        .order-item-chip img{width:42px;height:42px;min-width:42px;object-fit:contain;border-radius:.45rem;background:#fff;border:1px solid #fbcfe8}
+        .order-item-chip-info{display:flex;flex-direction:column;gap:.1rem}
+        .order-item-chip-name{font-size:.82rem;font-weight:700;color:#831843;line-height:1.2}
+        .order-item-chip-meta{font-size:.75rem;color:#9d174d}
         .tracking-link{font-weight:700;color:#be185d;text-decoration:underline}
         .acc-empty{color:#6b7280;padding:1.5rem;text-align:center;border:1px dashed #f0e9f2;border-radius:1rem}
         .addr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem}
@@ -148,7 +154,21 @@
                         <article class="order-card">
                             <div class="order-head"><div><strong>{{ $order->order_number ?: '#'.$order->id }}</strong><div class="text-sm text-gray-500" style="color:#6b7280;font-size:.8rem">Placed {{ $order->created_at ? \Illuminate\Support\Carbon::parse($order->created_at)->format('d M Y, g:i A') : '—' }}</div></div><span class="status-pill s-{{ $order->order_status }}">{{ $statusLabel($order->order_status) }}</span></div>
                             <div class="order-progress" title="Order progress">@foreach($steps as $index=>$step)<span class="{{ $stepIndex !== false && $index <= $stepIndex ? 'done' : '' }}"></span>@endforeach</div>
-                            <div class="order-items">{{ $order->items->pluck('product_name')->filter()->join(', ') }} · <strong>৳{{ number_format((float)$order->total_amount,0) }}</strong></div>
+                            <div class="order-items-grid">
+                                @foreach($order->items as $item)
+                                    <div class="order-item-chip">
+                                        <img src="{{ $item->resolved_image }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $item->product_name }}" loading="lazy">
+                                        <div class="order-item-chip-info">
+                                            <span class="order-item-chip-name">{{ $item->product_name ?: 'Product' }}</span>
+                                            <span class="order-item-chip-meta">
+                                                Qty: <strong>{{ $item->quantity }}</strong>
+                                                @if($item->display_color) · {{ $item->display_color }} @endif
+                                                · &#2547;{{ number_format((float)($item->line_total ?: $item->price * $item->quantity), 0) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
                         </article>
                     @empty
                         <div class="acc-empty">You have no orders yet. <a class="tracking-link" href="{{ route('products.index') }}">Start shopping</a></div>
@@ -174,7 +194,21 @@
                             <div class="order-progress" title="Order progress">@foreach($steps as $index=>$step)<span class="{{ $stepIndex !== false && $index <= $stepIndex ? 'done' : '' }}"></span>@endforeach</div>
                             @endif
                             <div class="order-meta"><span>{{ $order->items->sum('quantity') }} item(s) · <strong>৳{{ number_format((float)$order->total_amount,0) }}</strong></span><span>Payment: {{ \Illuminate\Support\Str::headline($order->payment_status) }} @if($order->payment_method) · {{ $order->payment_method }}@endif</span>@if($order->tracking_url)<a class="tracking-link" href="{{ $order->tracking_url }}" target="_blank" rel="noopener">Track shipment</a>@elseif($order->tracking_number)<span>Tracking: {{ $order->tracking_number }}</span>@endif</div>
-                            <div class="order-items">{{ $order->items->pluck('product_name')->filter()->join(', ') }}</div>
+                            <div class="order-items-grid">
+                                @foreach($order->items as $item)
+                                    <div class="order-item-chip">
+                                        <img src="{{ $item->resolved_image }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $item->product_name }}" loading="lazy">
+                                        <div class="order-item-chip-info">
+                                            <span class="order-item-chip-name">{{ $item->product_name ?: 'Product' }}</span>
+                                            <span class="order-item-chip-meta">
+                                                Qty: <strong>{{ $item->quantity }}</strong>
+                                                @if($item->display_color) · {{ $item->display_color }} @endif
+                                                · &#2547;{{ number_format((float)($item->line_total ?: $item->price * $item->quantity), 0) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
                         </article>
                     @empty
                         <div class="acc-empty">No orders yet. <a class="tracking-link" href="{{ route('products.index') }}">Start shopping</a></div>

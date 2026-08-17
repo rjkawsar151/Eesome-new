@@ -2,6 +2,16 @@
 <html lang="en">
 
 <head>
+    @php
+        $gtmId = null;
+        try {
+            $siteSettings = app(\App\Services\SiteSettingsRepository::class);
+            $gtmId = $siteSettings->get('google_gtm_id') ?: config('tracking.google.gtm_id');
+        } catch (\Throwable $e) {
+            $gtmId = config('tracking.google.gtm_id');
+        }
+    @endphp
+    @if($gtmId)
     <!-- Google Tag Manager -->
     <script>(function (w, d, s, l, i) {
             w[l] = w[l] || []; w[l].push({
@@ -10,8 +20,9 @@
             }); var f = d.getElementsByTagName(s)[0],
                 j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
                     'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
-        })(window, document, 'script', 'dataLayer', 'GTM-5FK7CHXW');</script>
+        })(window, document, 'script', 'dataLayer', '{{ $gtmId }}');</script>
     <!-- End Google Tag Manager -->
+    @endif
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
@@ -287,10 +298,12 @@
 </head>
 
 <body>
+    @if($gtmId)
     <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5FK7CHXW" height="0" width="0"
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $gtmId }}" height="0" width="0"
             style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
+    @endif
     @php
         $storeName = 'EEsome';
         $logoPath = null;

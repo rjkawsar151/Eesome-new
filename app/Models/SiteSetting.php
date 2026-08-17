@@ -21,7 +21,7 @@ class SiteSetting extends Model
     // Keys that must never be stored in DB or exposed via this model
     public const PROTECTED_KEYS = [
         'smtp_password', 'mail_password', 'db_password',
-        'bkash_secret', 'api_key', 'payment_secret', 'app_key',
+        'bkash_secret', 'payment_secret', 'app_key',
     ];
 
     public static function isProtectedKey(string $key): bool

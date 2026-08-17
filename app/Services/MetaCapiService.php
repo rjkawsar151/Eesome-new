@@ -25,11 +25,13 @@ class MetaCapiService
     protected ?string $accessToken;
     protected ?string $testEventCode;
 
-    public function __construct()
+    public function __construct(?SiteSettingsRepository $settings = null)
     {
-        $this->pixelId = (string) config('services.meta.pixel_id');
-        $this->accessToken = (string) config('services.meta.capi_token');
-        $this->testEventCode = config('services.meta.test_event_code') ?: null;
+        $settings = $settings ?? app(SiteSettingsRepository::class);
+
+        $this->pixelId = (string) ($settings->get('meta_pixel_id') ?: (config('tracking.meta.pixel_id') ?: config('services.meta.pixel_id')));
+        $this->accessToken = (string) ($settings->get('meta_capi_token') ?: (config('tracking.meta.capi_token') ?: config('services.meta.capi_token')));
+        $this->testEventCode = ($settings->get('meta_test_event_code') ?: (config('tracking.meta.test_event_code') ?: config('services.meta.test_event_code'))) ?: null;
 
         if ($this->accessToken) {
             Api::init(null, null, $this->accessToken);

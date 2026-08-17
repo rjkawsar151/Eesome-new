@@ -13,10 +13,14 @@ class SiteSettingsRepository
     public function all(): array
     {
         return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
-            return SiteSetting::all()
-                ->reject(fn($s) => SiteSetting::isProtectedKey($s->setting_key))
-                ->pluck('setting_value', 'setting_key')
-                ->toArray();
+            try {
+                return SiteSetting::all()
+                    ->reject(fn($s) => SiteSetting::isProtectedKey($s->setting_key))
+                    ->pluck('setting_value', 'setting_key')
+                    ->toArray();
+            } catch (\Throwable $e) {
+                return [];
+            }
         });
     }
 

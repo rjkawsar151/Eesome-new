@@ -48,8 +48,23 @@ class OrderItem extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
+    public function variant()
+    {
+        return $this->belongsTo(ProductVariant::class, 'variant_id');
+    }
+
     public function getDisplayColorAttribute()
     {
         return $this->selected_color_name ?: $this->selected_variant;
+    }
+
+    public function getResolvedImageAttribute(): string
+    {
+        $imagePath = $this->product_image
+            ?: $this->variant?->image
+            ?: $this->product?->images?->first()?->image_path
+            ?: $this->product?->image;
+
+        return app(\App\Services\ProductImageResolver::class)->resolve($imagePath);
     }
 }

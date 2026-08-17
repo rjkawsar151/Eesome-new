@@ -30,7 +30,7 @@ return view('admin.orders.index', ['orders' => $q->paginate(20)->withQueryString
 
     public function show(Order $order)
     {
-        $order->load(['items', 'statusHistories.changedBy', 'paymentTransactions', 'user']);
+        $order->load(['items.product.images', 'items.variant', 'statusHistories.changedBy', 'paymentTransactions', 'user']);
 
         return view('admin.orders.show', ['order' => $order, 'allowedNext' => $this->statusService->getAllowedNext($order->order_status)]);
     }

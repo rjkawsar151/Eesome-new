@@ -1,13 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    @php
+        $siteSettings = app(\App\Services\SiteSettingsRepository::class);
+        $gtmId = $siteSettings->get('google_gtm_id') ?: config('tracking.google.gtm_id');
+        $gaId = $siteSettings->get('google_analytics_id') ?: ($siteSettings->get('google_tag_id') ?: (config('tracking.google.analytics_id') ?: config('tracking.google.tag_id')));
+        $pixelId = $siteSettings->get('meta_pixel_id') ?: (config('tracking.meta.pixel_id') ?: config('services.meta.pixel_id'));
+    @endphp
+
+    @if($gtmId)
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-5FK7CHXW');</script>
+    })(window,document,'script','dataLayer','{{ $gtmId }}');</script>
     <!-- End Google Tag Manager -->
+    @endif
+
+    @if($gaId)
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ $gaId }}');
+    </script>
+    @endif
+
+    @if($pixelId)
     <!-- Meta Pixel Code -->
     <script>
     !function(f,b,e,v,n,t,s)
@@ -18,13 +40,18 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '{{ config('services.meta.pixel_id', '1598500547854347') }}');
+    fbq('init', '{{ $pixelId }}');
     fbq('track', 'PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id={{ config('services.meta.pixel_id', '1598500547854347') }}&ev=PageView&noscript=1"
+    src="https://www.facebook.com/tr?id={{ $pixelId }}&ev=PageView&noscript=1"
     /></noscript>
     <!-- End Meta Pixel Code -->
+    @endif
+
+    @if($headerScripts = $siteSettings->get('custom_header_scripts'))
+    {!! $headerScripts !!}
+    @endif
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -148,10 +175,12 @@
     @stack('styles')
 </head>
 <body>
+@if($gtmId = ($siteSettings->get('google_gtm_id') ?: config('tracking.google.gtm_id')))
 <!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5FK7CHXW"
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $gtmId }}"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
+@endif
 {{-- Navigation --}}
 @php
     $settings = app(\App\Services\SiteSettingsRepository::class);
@@ -447,7 +476,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
     });
 })();
-</script>
+@if($footerScripts = $siteSettings->get('custom_footer_scripts'))
+{!! $footerScripts !!}
+@endif
 @stack('scripts')
 </body>
 </html>
