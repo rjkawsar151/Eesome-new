@@ -26,7 +26,7 @@
         body{margin:0;background:#f6f7fb;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
         .admin-shell{min-height:100vh;display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr)}
         .sidebar{min-width:0;background:#172033;color:#fff;padding:1.15rem .85rem;position:sticky;top:0;height:100vh;overflow-x:hidden;overflow-y:auto}
-        .brand{font-size:1.3rem;font-weight:800;color:#fff;text-decoration:none;display:block;padding:.1rem .35rem}.brand span{color:#f9a8d4}
+        .brand{font-size:1.3rem;font-weight:800;color:#fff;text-decoration:none;display:flex;align-items:center;padding:.2rem .35rem;min-height:46px}.brand img{max-height:44px;max-width:190px;width:auto;height:auto;object-fit:contain;display:block}.brand span{color:#f9a8d4}
         .side-nav{display:grid;min-width:0;gap:.28rem;margin-top:1.1rem}
         .side-nav a{display:flex;align-items:center;gap:.55rem;width:100%;max-width:100%;min-width:0;color:#cbd5e1;text-decoration:none;padding:.58rem .7rem;border-radius:.55rem;font-size:.9rem;overflow-wrap:anywhere}
         .side-nav a svg{width:17px;height:17px;flex-shrink:0}.side-nav a span{min-width:0;overflow:hidden;text-overflow:ellipsis}
@@ -135,7 +135,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 @endif
 <div class="admin-shell">
     <aside class="sidebar">
-        <a class="brand" href="{{ route('admin.dashboard') }}">EE<span>some</span></a>
+        @php
+            $adminLogoPath = $siteSettings->get('logo_path');
+            $adminStoreName = $siteSettings->get('store_name', config('app.name', 'EEsome'));
+        @endphp
+        <a class="brand" href="{{ route('admin.dashboard') }}" aria-label="{{ $adminStoreName }} dashboard">
+            @if($adminLogoPath)
+                <img src="{{ asset('storage/'.$adminLogoPath) }}" alt="{{ $adminStoreName }}">
+            @else
+                EE<span>some</span>
+            @endif
+        </a>
         <nav class="side-nav" id="admin-nav" aria-label="Admin navigation">
             @php
                 $role = auth()->user()->role;
