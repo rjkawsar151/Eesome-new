@@ -176,6 +176,7 @@ class VariantCommerceTest extends TestCase
         $response->assertSee('data-image=', false);
         $response->assertSee('pink-bag.webp', false);
         $response->assertSee('black-bag.webp', false);
+        $response->assertSee('id="main-image-badge"', false);
     }
 }
 
