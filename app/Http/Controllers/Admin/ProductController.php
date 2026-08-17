@@ -176,7 +176,7 @@ class ProductController extends Controller
 
     public function destroyImage(Product $product, ProductImage $image)
     {
-        abort_unless($image->product_id === $product->id, 404);
+        abort_unless((int) $image->product_id === (int) $product->id, 404);
         app(OptimizedImageStorage::class)->delete($image->image_path);
         $image->delete();
 
@@ -239,7 +239,8 @@ class ProductController extends Controller
         $defaultSeen = false;
         foreach ($request->input('variants', []) as $index => $row) {
             $id = isset($row['id']) ? (int) $row['id'] : null;
-            $variant = $id ? $product->variants()->findOrFail($id) : new ProductVariant(['product_id' => $product->id]);
+            $variant = $id ? $product->variants()->findOrFail($id) : new ProductVariant;
+            $variant->product_id = $product->id;
             if (ProductVariant::where('sku', $row['sku'])->when($id, fn ($q) => $q->whereKeyNot($id))->exists()) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['variants.'.$index.'.sku' => 'This SKU is already in use.']);
             }

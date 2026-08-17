@@ -478,11 +478,7 @@
                 </a>
             </form>
 
-            <!-- Sign-up Prompt -->
-            <div class="login-signup-box">
-                Don't have an account? 
-                <a href="{{ route('register') }}" class="login-signup-link">Create an account</a>
-            </div>
+
         </div>
     </div>
 

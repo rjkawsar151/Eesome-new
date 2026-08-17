@@ -184,8 +184,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <button type="submit" class="nav-btn nav-btn-fill">Logout</button>
                 </form>
             @else
-                <a href="{{ route('login') }}" class="nav-login">Login</a>
-                <a href="{{ route('register') }}" class="nav-btn nav-btn-fill">Register</a>
+                <a href="{{ route('login') }}" class="nav-btn nav-btn-fill">Login</a>
             @endauth
         </div>
     </div>
@@ -204,7 +203,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <svg viewBox='0 0 24 24' aria-hidden='true' focusable='false'><circle cx='12' cy='8' r='4'/><path d='M4 21a8 8 0 0 1 16 0'/></svg>
         </a>
     @else
-        <a href='{{ route('login') }}' class='mobile-bottom-nav__item' aria-label='Log in' @if(request()->routeIs('login', 'register', 'password.*')) aria-current='page' @endif>
+        <a href='{{ route('login') }}' class='mobile-bottom-nav__item' aria-label='Log in' @if(request()->routeIs('login', 'password.*')) aria-current='page' @endif>
             <svg viewBox='0 0 24 24' aria-hidden='true' focusable='false'><circle cx='12' cy='8' r='4'/><path d='M4 21a8 8 0 0 1 16 0'/></svg>
         </a>
     @endauth
@@ -279,7 +278,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <li><a href="{{ route('dashboard') }}">{{ auth()->user()->isAdmin() ? 'Admin Dashboard' : 'My Profile' }}</a></li>
                     @else
                         <li><a href="{{ route('login') }}">Login</a></li>
-                        <li><a href="{{ route('register') }}">Register</a></li>
                     @endauth
                     <li><a href="{{ route('cart.index') }}">My Cart</a></li>
                 </ul>

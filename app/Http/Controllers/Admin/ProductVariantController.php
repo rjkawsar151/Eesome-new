@@ -31,7 +31,7 @@ class ProductVariantController extends Controller
 
     public function update(Request $request, Product $product, ProductVariant $variant)
     {
-        abort_unless($variant->product_id === $product->id, 404);
+        abort_unless((int) $variant->product_id === (int) $product->id, 404);
         $data = $this->data($request, $variant);
         if ($file = $request->file('variant_image')) {
             if ($variant->image) {
@@ -49,7 +49,7 @@ class ProductVariantController extends Controller
 
     public function destroy(Product $product, ProductVariant $variant)
     {
-        abort_unless($variant->product_id === $product->id, 404);
+        abort_unless((int) $variant->product_id === (int) $product->id, 404);
         abort_if($product->variants()->where('is_active', true)->count() < 2, 409, 'A variant product must retain at least one active color.');
         $variant->update(['is_active' => false, 'is_default' => false]);
 
