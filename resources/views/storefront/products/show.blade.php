@@ -240,7 +240,7 @@ document.addEventListener('click', function(e) {
         @if($product->images->count() > 1)
         <div class="thumbs">
             @foreach($product->images as $image)
-                @php($resolvedThumb = app(\App\Services\ProductImageResolver::class)->resolve($image->image_path))
+                @php $resolvedThumb = app(\App\Services\ProductImageResolver::class)->resolve($image->image_path); @endphp
                 <button type="button" class="js-variant-image @if($resolvedThumb === $initialResolvedImage || ($loop->first && !$defaultVariant)) active @endif" onclick="handleThumbClick(this, event)" data-image="{{ $resolvedThumb }}" data-color="{{ trim((string)$image->color_name) }}" title="{{ $image->color_name ?: ($image->alt_text ?: $product->name) }}">
                     <img src="{{ $resolvedThumb }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $image->color_name ?: ($image->alt_text ?: $product->name) }}" loading="lazy">
                 </button>
@@ -257,11 +257,12 @@ document.addEventListener('click', function(e) {
         
         @if($hasActiveVariants)
         <div class="variants">
-            <strong>Color: <span id="selected-color">{{ $initialColorName }}</span></strong>
+            <strong>Choose your color: <span id="selected-color">{{ $initialColorName }}</span></strong>
             <div class="variant-list">
                 @foreach($activeVariants as $index => $variant)
-                    @php($varImg = $resolveVariantImage($variant, $index))
-                    @php($isActive = $defaultVariant && $defaultVariant->id === $variant->id)
+                    @php $varImg = $resolveVariantImage($variant, $index); @endphp
+                    @php $isActive = $defaultVariant && $defaultVariant->id === $variant->id; @endphp
+
                     <button type="button" class="variant js-variant-item @if($isActive) active @endif" onclick="handleVariantClick(this, event)" data-variant-id="{{ $variant->id }}" data-color="{{ trim($variant->color_name ?: $variant->name) }}" data-price="৳{{ number_format((float)$variant->effective_price, 0) }}" data-sku="{{ $variant->sku }}" @if($varImg) data-image="{{ $varImg }}" @endif @disabled($variant->stock < 1)>
                         @if($variant->color_code)
                             <span class="color-swatch-dot" style="background-color: {{ $variant->color_code }}"></span>
@@ -292,8 +293,9 @@ document.addEventListener('click', function(e) {
                 <select id="selected-variant-id" class="js-card-variant" name="variant_id" hidden aria-label="Selected color">
                     <option value="">Choose a color</option>
                     @foreach($activeVariants as $index => $variant)
-                        @php($varImg = $resolveVariantImage($variant, $index))
+                        @php $varImg = $resolveVariantImage($variant, $index); @endphp
                         <option value="{{ $variant->id }}"
+
                             data-variant-id="{{ $variant->id }}"
                             data-color="{{ trim($variant->color_name ?: $variant->name) }}"
                             data-color-code="{{ $variant->color_code ?? '' }}"

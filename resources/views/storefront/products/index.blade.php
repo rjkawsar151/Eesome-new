@@ -27,8 +27,16 @@
                     <span style="position:absolute;top:0.65rem;left:0.65rem;z-index:3;padding:0.2rem 0.55rem;border-radius:999px;font-size:0.65rem;font-weight:800;letter-spacing:0.05em;background:{{ $badge['type']==='warning'?'#fef3c7':($badge['type']==='danger'?'#fee2e2':($badge['type']==='sale'?'#fce7f3':'#dbeafe')) }};color:{{ $badge['type']==='warning'?'#92400e':($badge['type']==='danger'?'#991b1b':($badge['type']==='sale'?'#9d174d':'#1e40af')) }}">{{ $badge['text'] }}</span>
                 @endif
                 <div class="wishlist">
-                    @auth<form method="POST" action="{{ route('products.wishlist.toggle', $product) }}">@csrf<button class="{{ $wishlisted ? 'active' : '' }}" aria-label="{{ $wishlisted ? 'Remove from' : 'Add to' }} wishlist" title="{{ $wishlisted ? 'Remove from wishlist' : 'Add to wishlist' }}"><span aria-hidden="true">{{ $wishlisted ? '♥' : '♡' }}</span></button></form>
-                    @else<a href="{{ route('login') }}" aria-label="Log in to add to wishlist" title="Log in to save">♡</a>@endauth
+                    @auth
+                        <form method="POST" action="{{ route('products.wishlist.toggle', $product) }}">
+                            @csrf
+                            <button class="{{ $wishlisted ? 'active' : '' }}" aria-label="{{ $wishlisted ? 'Remove from' : 'Add to' }} wishlist" title="{{ $wishlisted ? 'Remove from wishlist' : 'Add to wishlist' }}">
+                                <span aria-hidden="true">{{ $wishlisted ? '♥' : '♡' }}</span>
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route('login') }}" aria-label="Log in to add to wishlist" title="Log in to save">♡</a>
+                    @endauth
                 </div>
                 <a class="product-media" href="{{ route('products.show', $product->slug ?? $product->id) }}"><img class="product-img" src="{{ app(\App\Services\ProductImageResolver::class)->resolve($image) }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $product->name }}" loading="lazy"></a>
                 <div class="product-body">
@@ -38,10 +46,11 @@
                         <div style="font-size:0.75rem;color:#92400e;font-weight:600;margin-top:0.25rem">Pre-order · 25–35 days</div>
                     @endif
                     @php
-                        $hasMultipleVariants = $product->has_variants && $product->activeVariants->count() > 1;
-                        $usesVariants = $product->has_variants && $product->activeVariants->isNotEmpty();
+                        $activeVarsIndex = $product->activeVariants;
+                        $hasMultipleVariants = $product->has_variants && $activeVarsIndex->count() > 1;
+                        $usesVariants = $product->has_variants && $activeVarsIndex->isNotEmpty();
                         $canPurchase = $usesVariants
-                            ? $product->activeVariants->contains(fn ($v) => $v->stock > 0)
+                            ? $activeVarsIndex->contains(fn ($v) => (int)$v->stock > 0)
                             : ($product->stock > 0 || $product->available_for_preorder);
                     @endphp
                     <div class="actions">

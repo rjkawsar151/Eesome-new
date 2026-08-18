@@ -170,6 +170,8 @@ class VariantCommerceTest extends TestCase
         $response = $this->get('/products/'.$product->slug);
         $response->assertOk();
         $response->assertSee('data-variant-id="'.$pink->id.'"', false);
+
+
         $response->assertSee('data-variant-id="'.$black->id.'"', false);
         $response->assertSee('data-color="Pink"', false);
         $response->assertSee('data-color="Black"', false);

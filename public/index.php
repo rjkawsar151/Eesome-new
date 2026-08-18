@@ -5,6 +5,11 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+if (isset($_SERVER['SCRIPT_NAME']) && str_contains($_SERVER['SCRIPT_NAME'], '/public/index.php') && !str_contains($_SERVER['REQUEST_URI'] ?? '', '/public/')) {
+    $_SERVER['SCRIPT_NAME'] = str_replace('/public/index.php', '/index.php', $_SERVER['SCRIPT_NAME']);
+}
+
+
 /*
 |--------------------------------------------------------------------------
 | Check If The Application Is Under Maintenance
