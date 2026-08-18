@@ -265,8 +265,17 @@
                                     @if($hasMultipleVariants)
                                         <select class="js-card-variant" name="variant_id" hidden aria-label="Selected color">
                                             <option value="">Choose a color</option>
-                                            @foreach($product->activeVariants as $variant)
-                                                <option value="{{ $variant->id }}" @disabled($variant->stock < 1)>{{ $variant->color_name }} / SKU {{ $variant->sku }} / &#2547;{{ number_format((float)$variant->effective_price, 0) }}</option>
+                                            @foreach($product->activeVariants as $index => $variant)
+                                                @php($varImg = app(\App\Services\ProductImageResolver::class)->resolve($variant->image_path ?: ($product->images->first()?->image_path ?? $product->image)))
+                                                <option value="{{ $variant->id }}"
+                                                    data-color="{{ trim($variant->color_name ?: $variant->name) }}"
+                                                    data-color-code="{{ $variant->color_code ?? '' }}"
+                                                    data-image="{{ $varImg }}"
+                                                    data-price="৳{{ number_format((float)$variant->effective_price, 0) }}"
+                                                    data-sku="{{ $variant->sku }}"
+                                                    @disabled($variant->stock < 1)>
+                                                    {{ $variant->color_name ?: $variant->name }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     @elseif($usesVariants)

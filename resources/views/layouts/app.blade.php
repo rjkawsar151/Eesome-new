@@ -184,6 +184,189 @@
             .product-card__actions, .actions, form.js-card-purchase { flex-direction: column !important; grid-template-columns: 1fr !important; width: 100% !important; gap: .5rem !important; }
             .product-card__actions button, .actions button, form.js-card-purchase button, .product-card__actions a, .actions a { width: 100% !important; flex: 1 1 auto !important; }
         }
+
+        /* ── Visual Variant Selector Modal ── */
+        .variant-popup-dialog {
+            width: min(94vw, 500px);
+            max-height: 88vh;
+            padding: 1.5rem;
+            border: 0;
+            border-radius: 24px;
+            background: #ffffff;
+            box-shadow: 0 28px 80px rgba(15, 10, 20, 0.32);
+            font-family: 'Outfit', sans-serif;
+            margin: auto;
+        }
+        .variant-popup-dialog[open] {
+            animation: variantPopupIn 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .variant-popup-dialog::backdrop {
+            background: rgba(20, 14, 25, 0.65);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+        @keyframes variantPopupIn {
+            from { opacity: 0; transform: scale(0.96) translateY(14px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .variant-popup-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding-bottom: 0.85rem;
+            border-bottom: 1px solid #f3e8ee;
+            margin-bottom: 0.85rem;
+        }
+        .variant-popup-tag {
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--brand-700, #be185d);
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+        .variant-popup-title {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            line-height: 1.35;
+        }
+        .variant-popup-close {
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 50%;
+            background: #fdf2f8;
+            color: #831843;
+            font-size: 1.4rem;
+            line-height: 1;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .variant-popup-close:hover { background: #fce7f3; }
+        .variant-popup-grid {
+            display: grid;
+            gap: 0.65rem;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 0.2rem;
+            margin-bottom: 0.85rem;
+        }
+        .variant-card {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.65rem 0.85rem;
+            border: 2px solid #f1e5ed;
+            border-radius: 14px;
+            background: #fcf8fa;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            text-align: left;
+            width: 100%;
+        }
+        .variant-card:hover:not(.is-disabled) {
+            border-color: #f472b6;
+            background: #ffffff;
+            box-shadow: 0 4px 14px rgba(219, 39, 119, 0.08);
+        }
+        .variant-card.is-selected {
+            border-color: #7e22ce;
+            background: #fdf4ff;
+            box-shadow: 0 4px 18px rgba(126, 34, 206, 0.15);
+        }
+        .variant-card.is-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f9fafb;
+            border-color: #e5e7eb;
+        }
+        .variant-card__thumb {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            object-fit: cover;
+            background: #f3e8ee;
+            flex-shrink: 0;
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+        .variant-card__info { flex: 1; min-width: 0; }
+        .variant-card__name {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #1e1b4b;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            margin-bottom: 0.15rem;
+        }
+        .variant-card__color-dot {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.2);
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .variant-card__meta { font-size: 0.78rem; color: #6b7280; }
+        .variant-card__price {
+            font-size: 0.98rem;
+            font-weight: 800;
+            color: #be185d;
+            white-space: nowrap;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .variant-card__check {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #d1d5db;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            color: transparent;
+            font-size: 0.75rem;
+            font-weight: 800;
+            transition: all 0.2s;
+        }
+        .variant-card.is-selected .variant-card__check {
+            border-color: #7e22ce;
+            background: #7e22ce;
+            color: #ffffff;
+        }
+        .variant-popup-footer {
+            padding-top: 0.75rem;
+            border-top: 1px solid #f3e8ee;
+        }
+        .variant-popup-feedback {
+            margin: 0 0 0.65rem;
+            font-size: 0.82rem;
+            color: #6b7280;
+            min-height: 1.2rem;
+        }
+        .variant-popup-confirm {
+            width: 100%;
+            min-height: 48px;
+            border: 0;
+            border-radius: 12px;
+            background: #7e22ce;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+            box-shadow: 0 8px 22px rgba(126, 34, 206, 0.25);
+        }
+        .variant-popup-confirm:hover:not(:disabled) { background: #6b21a8; }
+        .variant-popup-confirm:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
         @media (min-width:769px) and (max-width:1100px) {
             .nav-links { position: static; transform: none; margin-inline: auto; }
             .nav-links li:nth-child(n+4) { display: none; }
@@ -502,27 +685,35 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 {!! $footerScripts !!}
 @endif
 
-<dialog id="global-variant-dialog" class="landing-variant-dialog" aria-labelledby="global-variant-title" style="width:min(92vw,480px);padding:1.6rem;border:0;border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(25,15,22,.3)">
-    <button type="button" class="landing-variant-close" aria-label="Close color selector" style="position:absolute;right:.8rem;top:.8rem;width:40px;height:40px;border:0;border-radius:50%;background:var(--brand-50);font-size:1.35rem;cursor:pointer">&times;</button>
-    <p class="section-tag" style="font-size:0.75rem;color:var(--brand-700);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem">Choose your color</p>
-    <h2 id="global-variant-title" style="margin:.2rem 0;font-size:1.25rem;font-weight:700">Select a color</h2>
-    <p id="global-variant-product" class="landing-variant-product" style="color:var(--text-muted);font-size:0.9rem;margin-bottom:0.75rem"></p>
-    <label for="global-variant-select" style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:0.35rem">Available colors</label>
-    <select id="global-variant-select" class="landing-variant-select" style="width:100%;min-height:46px;padding:.65rem;border:1px solid var(--brand-100);border-radius:10px;background:#fff;font-size:0.9rem"></select>
-    <p id="global-variant-feedback" class="landing-variant-feedback" style="min-height:1.25rem;color:var(--text-muted);font-size:0.82rem;margin:.5rem 0">Select an available color to continue.</p>
-    <button id="global-variant-confirm" class="landing-variant-confirm" type="button" style="width:100%;min-height:46px;border:0;border-radius:10px;background:var(--brand-600);color:#fff;font-weight:800;cursor:pointer">Continue</button>
+<dialog id="global-variant-dialog" class="variant-popup-dialog">
+    <div class="variant-popup-header">
+        <div>
+            <span class="variant-popup-tag">Choose Color</span>
+            <h3 id="global-variant-product" class="variant-popup-title">Select Color Variant</h3>
+        </div>
+        <button type="button" class="variant-popup-close" aria-label="Close selector">&times;</button>
+    </div>
+    
+    <div id="global-variant-grid" class="variant-popup-grid" role="radiogroup" aria-label="Available color variants"></div>
+    
+    <div class="variant-popup-footer">
+        <p id="global-variant-feedback" class="variant-popup-feedback">Please select a color variant to continue.</p>
+        <button id="global-variant-confirm" class="variant-popup-confirm" type="button" disabled>Confirm & Continue</button>
+    </div>
 </dialog>
 
 <script>
 (() => {
     const dialog = document.getElementById('global-variant-dialog');
     if (!dialog) return;
-    const modalSelect = document.getElementById('global-variant-select');
+    const grid = document.getElementById('global-variant-grid');
     const productLabel = document.getElementById('global-variant-product');
     const feedback = document.getElementById('global-variant-feedback');
+    const confirmBtn = document.getElementById('global-variant-confirm');
     let pendingForm = null;
     let pendingButton = null;
     let sourceSelect = null;
+    let selectedVariantId = null;
 
     document.addEventListener('submit', (event) => {
         const form = event.target.closest('.js-card-purchase');
@@ -534,29 +725,75 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         pendingForm = form;
         pendingButton = event.submitter;
         sourceSelect = variant;
-        modalSelect.replaceChildren(...[...variant.options].map((option) => option.cloneNode(true)));
-        modalSelect.value = '';
-        productLabel.textContent = form.dataset.productName || '';
-        feedback.textContent = 'Select an available color to continue.';
+        selectedVariantId = null;
+
+        productLabel.textContent = form.dataset.productName || 'Select Color Variant';
+        feedback.textContent = 'Please select a color variant to continue.';
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Confirm & Continue';
+
+        // Render Variant Cards
+        grid.innerHTML = '';
+        const options = [...variant.options].filter(opt => opt.value !== '');
+        
+        options.forEach(opt => {
+            const val = opt.value;
+            const colorName = opt.dataset.color || opt.textContent.split('/')[0].trim();
+            const colorCode = opt.dataset.colorCode || '';
+            const imgUrl = opt.dataset.image || '';
+            const price = opt.dataset.price || '';
+            const sku = opt.dataset.sku || '';
+            const isDisabled = opt.disabled;
+
+            const card = document.createElement('div');
+            card.className = 'variant-card' + (isDisabled ? ' is-disabled' : '');
+            card.dataset.value = val;
+            
+            let colorDotHtml = colorCode ? `<span class="variant-card__color-dot" style="background-color:${colorCode}"></span>` : '';
+            let thumbHtml = imgUrl ? `<img class="variant-card__thumb" src="${imgUrl}" alt="${colorName}">` : `<div class="variant-card__thumb" style="display:grid;place-items:center;font-weight:800;color:var(--brand-700);font-size:1.2rem">${colorName.charAt(0)}</div>`;
+            let metaHtml = sku ? `SKU: ${sku}` : '';
+            if (isDisabled) metaHtml += (metaHtml ? ' • ' : '') + 'Out of Stock';
+
+            card.innerHTML = `
+                ${thumbHtml}
+                <div class="variant-card__info">
+                    <div class="variant-card__name">${colorDotHtml} <span>${colorName}</span></div>
+                    <div class="variant-card__meta">${metaHtml}</div>
+                </div>
+                ${price ? `<div class="variant-card__price">${price}</div>` : ''}
+                <div class="variant-card__check">✓</div>
+            `;
+
+            if (!isDisabled) {
+                card.addEventListener('click', () => {
+                    grid.querySelectorAll('.variant-card').forEach(c => c.classList.remove('is-selected'));
+                    card.classList.add('is-selected');
+                    selectedVariantId = val;
+                    confirmBtn.disabled = false;
+                    feedback.textContent = `Selected color: ${colorName}`;
+                });
+            }
+
+            grid.appendChild(card);
+        });
+
         try { dialog.showModal(); } catch(e) {}
         document.body.style.overflow = 'hidden';
-        modalSelect.focus();
     });
 
-    document.getElementById('global-variant-confirm')?.addEventListener('click', () => {
-        if (!modalSelect.value) {
-            feedback.textContent = 'Please select a color.';
-            modalSelect.focus();
+    confirmBtn?.addEventListener('click', () => {
+        if (!selectedVariantId) {
+            feedback.textContent = 'Please select a color variant first.';
             return;
         }
-        if (sourceSelect) sourceSelect.value = modalSelect.value;
+        if (sourceSelect) sourceSelect.value = selectedVariantId;
         try { dialog.close(); } catch(e) {}
         if (pendingForm && pendingButton) {
             pendingForm.requestSubmit(pendingButton);
         }
     });
 
-    dialog.querySelector('.landing-variant-close')?.addEventListener('click', () => { try { dialog.close(); } catch(e) {} });
+    dialog.querySelector('.variant-popup-close')?.addEventListener('click', () => { try { dialog.close(); } catch(e) {} });
     dialog.addEventListener('click', (event) => { if (event.target === dialog) { try { dialog.close(); } catch(e) {} } });
     dialog.addEventListener('close', () => {
         document.body.style.overflow = '';
