@@ -284,7 +284,7 @@ document.addEventListener('click', function(e) {
         @endif
 
         @if($product->stock > 0 || $product->available_for_preorder)
-        <form id="purchase-form" class="buybox js-card-purchase" method="POST" action="{{ route('cart.store') }}" data-product-name="{{ $product->name }}">
+        <form id="purchase-form" class="buybox js-card-purchase" method="POST" action="{{ route('cart.store') }}" data-product-name="{{ $product->name }}" data-product-image="{{ $initialResolvedImage }}">
             @csrf
             <input type="hidden" name="product_id" value="{{ $product->id }}">
             @if($hasActiveVariants)

@@ -289,13 +289,14 @@
             border-color: #e5e7eb;
         }
         .variant-card__thumb {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
             object-fit: cover;
-            background: #f3e8ee;
+            background: #fdf2f8;
             flex-shrink: 0;
-            border: 1px solid rgba(0,0,0,0.08);
+            border: 1px solid rgba(190, 24, 93, 0.14);
+            padding: 2px;
         }
         .variant-card__info { flex: 1; min-width: 0; }
         .variant-card__name {
@@ -736,11 +737,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         grid.innerHTML = '';
         const options = [...variant.options].filter(opt => opt.value !== '');
         
+        const defaultPlaceholder = form.dataset.productImage || "{{ asset('images/handbag-placeholder.svg') }}";
+        
         options.forEach(opt => {
             const val = opt.value;
             const colorName = opt.dataset.color || opt.textContent.split('/')[0].trim();
             const colorCode = opt.dataset.colorCode || '';
-            const imgUrl = opt.dataset.image || '';
+            const imgUrl = opt.dataset.image || defaultPlaceholder;
             const price = opt.dataset.price || '';
             const sku = opt.dataset.sku || '';
             const isDisabled = opt.disabled;
@@ -750,7 +753,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             card.dataset.value = val;
             
             let colorDotHtml = colorCode ? `<span class="variant-card__color-dot" style="background-color:${colorCode}"></span>` : '';
-            let thumbHtml = imgUrl ? `<img class="variant-card__thumb" src="${imgUrl}" alt="${colorName}">` : `<div class="variant-card__thumb" style="display:grid;place-items:center;font-weight:800;color:var(--brand-700);font-size:1.2rem">${colorName.charAt(0)}</div>`;
+            let thumbHtml = `<img class="variant-card__thumb" src="${imgUrl}" onerror="this.onerror=null;this.src='${defaultPlaceholder}'" alt="${colorName}">`;
             let metaHtml = sku ? `SKU: ${sku}` : '';
             if (isDisabled) metaHtml += (metaHtml ? ' • ' : '') + 'Out of Stock';
 

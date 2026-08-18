@@ -46,7 +46,7 @@
                     @endphp
                     <div class="actions">
                         @if($canPurchase)
-                            <form class="js-card-purchase" method="POST" action="{{ route('cart.store') }}" data-product-name="{{ $product->name }}" style="display:flex;flex:1;gap:.5rem;width:100%">
+                            <form class="js-card-purchase" method="POST" action="{{ route('cart.store') }}" data-product-name="{{ $product->name }}" data-product-image="{{ app(\App\Services\ProductImageResolver::class)->resolve($product->images->first()?->image_path ?? $product->image) }}" style="display:flex;flex:1;gap:.5rem;width:100%">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
                                 <input type="hidden" name="quantity" value="1">
