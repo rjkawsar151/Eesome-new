@@ -24,7 +24,11 @@
 dialog:not([open]){display:none!important;pointer-events:none!important}
 @keyframes variant-dialog-in{from{opacity:0;transform:translateY(16px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes variant-backdrop-in{from{background:rgba(23,18,26,0)}to{background:rgba(23,18,26,.55)}}.variant-dialog[open]{animation:variant-dialog-in 280ms cubic-bezier(.22,1,.36,1) both;display:block!important;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999}.variant-dialog[open]::backdrop{animation:variant-backdrop-in 240ms ease-out both}.variant-dialog{width:min(92vw,480px);padding:1.5rem;border:0;border-radius:22px;box-shadow:0 24px 70px rgba(25,15,22,.28);text-align:center}.variant-dialog::backdrop{background:rgba(23,18,26,.55);backdrop-filter:blur(3px)}.variant-close{position:absolute;right:.8rem;top:.8rem;width:40px;height:40px;border:0;border-radius:50%;background:var(--brand-50);font-size:1.35rem;cursor:pointer}.variant-dialog-image{width:150px;height:150px;margin:auto;object-fit:contain}.variant-select{width:100%;margin:.75rem 0;padding:.8rem;border:1px solid var(--brand-100);border-radius:10px}.variant-feedback{color:var(--text-muted);font-size:.85rem}.variant-dialog #variant-confirm{width:100%;min-height:46px;border:0;border-radius:10px;background:var(--brand-600);color:#fff;font-weight:800;cursor:pointer}@media(max-width:600px){@keyframes variant-dialog-in{from{opacity:0;transform:translateY(42px)}to{opacity:1;transform:translateY(0)}}.variant-dialog{width:100%;max-width:none;margin:auto 0 0;border-radius:22px 22px 0 0}}@media(prefers-reduced-motion:reduce){.variant-dialog[open],.variant-dialog[open]::backdrop{animation:none}}
 </style>
+@endpush
+@push('scripts')
 <script>
+
+
 window.handleVariantClick = function(button, event) {
     if (event && event.type === 'click') {
         event.stopPropagation();
