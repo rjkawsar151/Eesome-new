@@ -284,11 +284,25 @@ document.addEventListener('click', function(e) {
         @endif
 
         @if($product->stock > 0 || $product->available_for_preorder)
-        <form id="purchase-form" class="buybox" method="POST" action="{{ route('cart.store') }}">
+        <form id="purchase-form" class="buybox js-card-purchase" method="POST" action="{{ route('cart.store') }}" data-product-name="{{ $product->name }}">
             @csrf
             <input type="hidden" name="product_id" value="{{ $product->id }}">
             @if($hasActiveVariants)
-                <input type="hidden" id="selected-variant-id" name="variant_id" value="">
+                <select id="selected-variant-id" class="js-card-variant" name="variant_id" hidden aria-label="Selected color">
+                    <option value="">Choose a color</option>
+                    @foreach($product->activeVariants as $index => $variant)
+                        @php($varImg = $resolveVariantImage($variant, $index))
+                        <option value="{{ $variant->id }}"
+                            data-color="{{ trim($variant->color_name ?: $variant->name) }}"
+                            data-color-code="{{ $variant->color_code ?? '' }}"
+                            data-image="{{ $varImg }}"
+                            data-price="৳{{ number_format((float)$variant->effective_price, 0) }}"
+                            data-sku="{{ $variant->sku }}"
+                            @disabled($variant->stock < 1)>
+                            {{ $variant->color_name ?: $variant->name }}
+                        </option>
+                    @endforeach
+                </select>
             @endif
             <input type="number" name="quantity" value="1" min="1" max="{{ ($product->stock <= 0 || $product->available_for_preorder) ? 100 : max(1, $defaultVariant?->stock ?? $product->stock) }}" aria-label="Quantity">
             <button type="submit">Cart</button>
