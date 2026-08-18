@@ -354,7 +354,7 @@ document.addEventListener('click', function(e) {
     <div class="related-header"><div><h2 style="margin:0">You may also like</h2><p style="color:var(--text-muted)">More pieces selected for you</p></div><a class="explore-all" href="{{ route('products.index') }}">Explore all products</a></div>
     <div class="related-grid">
         @foreach($relatedProducts as $related)
-            @php($img=$related->images->first()?->image_path ?? $related->image)
+            @php $img = $related->images->first()?->image_path ?? $related->image; @endphp
             <article class="related-card">
                 <a href="{{ route('products.show',$related->slug ?? $related->id) }}"><img class="related-card__image" src="{{ app(\App\Services\ProductImageResolver::class)->resolve($img) }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $related->name }}" loading="lazy"></a>
                 <div class="related-card__body"><h3 class="related-card__name">{{ $related->name }}</h3><div class="related-card__price">৳{{ number_format((float)$related->effective_price,0) }}</div><div class="related-card__actions">
@@ -371,8 +371,9 @@ document.addEventListener('click', function(e) {
                                 <select class="js-card-variant" name="variant_id" hidden aria-label="Selected color">
                                     <option value="">Choose a color</option>
                                     @foreach($related->activeVariants as $index => $rVariant)
-                                        @php($rImg = app(\App\Services\ProductImageResolver::class)->resolve($rVariant->image_path ?: $img))
+                                        @php $rImg = app(\App\Services\ProductImageResolver::class)->resolve($rVariant->image_path ?: $img); @endphp
                                         <option value="{{ $rVariant->id }}"
+
                                             data-color="{{ trim($rVariant->color_name ?: $rVariant->name) }}"
                                             data-color-code="{{ $rVariant->color_code ?? '' }}"
                                             data-image="{{ $rImg }}"

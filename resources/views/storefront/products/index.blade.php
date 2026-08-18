@@ -20,8 +20,9 @@
     @if($products->count())
         <div id="product-grid" class="product-grid">
         @foreach($products as $product)
-            @php($image = $product->images->first()?->image_path ?? $product->image)
-            @php($wishlisted = in_array($product->id, $wishlistIds, true))
+            @php $image = $product->images->first()?->image_path ?? $product->image; @endphp
+            @php $wishlisted = in_array($product->id, $wishlistIds, true); @endphp
+
             <article class="product-card">
                 @if($badge = $product->badge_info)
                     <span style="position:absolute;top:0.65rem;left:0.65rem;z-index:3;padding:0.2rem 0.55rem;border-radius:999px;font-size:0.65rem;font-weight:800;letter-spacing:0.05em;background:{{ $badge['type']==='warning'?'#fef3c7':($badge['type']==='danger'?'#fee2e2':($badge['type']==='sale'?'#fce7f3':'#dbeafe')) }};color:{{ $badge['type']==='warning'?'#92400e':($badge['type']==='danger'?'#991b1b':($badge['type']==='sale'?'#9d174d':'#1e40af')) }}">{{ $badge['text'] }}</span>
@@ -63,7 +64,7 @@
                                     <select class="js-card-variant" name="variant_id" hidden aria-label="Selected color">
                                         <option value="">Choose a color</option>
                                         @foreach($product->activeVariants as $index => $variant)
-                                            @php($varImg = app(\App\Services\ProductImageResolver::class)->resolve($variant->image_path ?: ($product->images->first()?->image_path ?? $product->image)))
+                                            @php $varImg = app(\App\Services\ProductImageResolver::class)->resolve($variant->image_path ?: ($product->images->first()?->image_path ?? $product->image)); @endphp
                                             <option value="{{ $variant->id }}"
                                                 data-color="{{ trim($variant->color_name ?: $variant->name) }}"
                                                 data-color-code="{{ $variant->color_code ?? '' }}"
