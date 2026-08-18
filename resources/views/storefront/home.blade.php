@@ -272,8 +272,8 @@
                                     @elseif($usesVariants)
                                         <input type="hidden" name="variant_id" value="{{ $product->activeVariants->first()->id }}">
                                     @endif
-                                    <button type="submit" class="btn-cart" style="flex:1">Add to Cart</button>
-                                    <button type="submit" name="buy_now" value="1" class="btn-buy" style="flex:1">{{ ($product->stock <= 0 || $product->available_for_preorder) ? 'Pre-order Now' : 'Buy Now' }}</button>
+                                    <button type="submit" class="btn-cart" style="flex:1">Cart</button>
+                                    <button type="submit" name="buy_now" value="1" class="btn-buy" style="flex:1">{{ ($product->stock <= 0 || $product->available_for_preorder) ? 'Pre-order' : 'Buy' }}</button>
                                 </form>
                             @else
                                 <button class="btn-cart btn-disabled" style="flex:1">Sold Out</button>

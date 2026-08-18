@@ -180,6 +180,10 @@
             @keyframes mobileHeaderEnter { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
             @keyframes mobileBottomNavEnter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
         }
+        @media (max-width: 640px) {
+            .product-card__actions, .actions, form.js-card-purchase { flex-direction: column !important; grid-template-columns: 1fr !important; width: 100% !important; gap: .5rem !important; }
+            .product-card__actions button, .actions button, form.js-card-purchase button, .product-card__actions a, .actions a { width: 100% !important; flex: 1 1 auto !important; }
+        }
         @media (min-width:769px) and (max-width:1100px) {
             .nav-links { position: static; transform: none; margin-inline: auto; }
             .nav-links li:nth-child(n+4) { display: none; }
@@ -497,6 +501,69 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 @if($footerScripts = $siteSettings->get('custom_footer_scripts'))
 {!! $footerScripts !!}
 @endif
+
+<dialog id="global-variant-dialog" class="landing-variant-dialog" aria-labelledby="global-variant-title" style="width:min(92vw,480px);padding:1.6rem;border:0;border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(25,15,22,.3)">
+    <button type="button" class="landing-variant-close" aria-label="Close color selector" style="position:absolute;right:.8rem;top:.8rem;width:40px;height:40px;border:0;border-radius:50%;background:var(--brand-50);font-size:1.35rem;cursor:pointer">&times;</button>
+    <p class="section-tag" style="font-size:0.75rem;color:var(--brand-700);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem">Choose your color</p>
+    <h2 id="global-variant-title" style="margin:.2rem 0;font-size:1.25rem;font-weight:700">Select a color</h2>
+    <p id="global-variant-product" class="landing-variant-product" style="color:var(--text-muted);font-size:0.9rem;margin-bottom:0.75rem"></p>
+    <label for="global-variant-select" style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:0.35rem">Available colors</label>
+    <select id="global-variant-select" class="landing-variant-select" style="width:100%;min-height:46px;padding:.65rem;border:1px solid var(--brand-100);border-radius:10px;background:#fff;font-size:0.9rem"></select>
+    <p id="global-variant-feedback" class="landing-variant-feedback" style="min-height:1.25rem;color:var(--text-muted);font-size:0.82rem;margin:.5rem 0">Select an available color to continue.</p>
+    <button id="global-variant-confirm" class="landing-variant-confirm" type="button" style="width:100%;min-height:46px;border:0;border-radius:10px;background:var(--brand-600);color:#fff;font-weight:800;cursor:pointer">Continue</button>
+</dialog>
+
+<script>
+(() => {
+    const dialog = document.getElementById('global-variant-dialog');
+    if (!dialog) return;
+    const modalSelect = document.getElementById('global-variant-select');
+    const productLabel = document.getElementById('global-variant-product');
+    const feedback = document.getElementById('global-variant-feedback');
+    let pendingForm = null;
+    let pendingButton = null;
+    let sourceSelect = null;
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target.closest('.js-card-purchase');
+        if (!form) return;
+        const variant = form.querySelector('.js-card-variant');
+        if (!variant || variant.value) return;
+
+        event.preventDefault();
+        pendingForm = form;
+        pendingButton = event.submitter;
+        sourceSelect = variant;
+        modalSelect.replaceChildren(...[...variant.options].map((option) => option.cloneNode(true)));
+        modalSelect.value = '';
+        productLabel.textContent = form.dataset.productName || '';
+        feedback.textContent = 'Select an available color to continue.';
+        try { dialog.showModal(); } catch(e) {}
+        document.body.style.overflow = 'hidden';
+        modalSelect.focus();
+    });
+
+    document.getElementById('global-variant-confirm')?.addEventListener('click', () => {
+        if (!modalSelect.value) {
+            feedback.textContent = 'Please select a color.';
+            modalSelect.focus();
+            return;
+        }
+        if (sourceSelect) sourceSelect.value = modalSelect.value;
+        try { dialog.close(); } catch(e) {}
+        if (pendingForm && pendingButton) {
+            pendingForm.requestSubmit(pendingButton);
+        }
+    });
+
+    dialog.querySelector('.landing-variant-close')?.addEventListener('click', () => { try { dialog.close(); } catch(e) {} });
+    dialog.addEventListener('click', (event) => { if (event.target === dialog) { try { dialog.close(); } catch(e) {} } });
+    dialog.addEventListener('close', () => {
+        document.body.style.overflow = '';
+        pendingButton?.focus();
+    });
+})();
+</script>
 @stack('scripts')
 </body>
 </html>
