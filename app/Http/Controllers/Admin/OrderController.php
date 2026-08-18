@@ -53,9 +53,40 @@ return view('admin.orders.index', ['orders' => $q->paginate(20)->withQueryString
 
     public function updatePayment(Request $r, Order $order)
     {
-        $d = $r->validate(['payment_status' => 'required|in:unpaid,pending,paid,partially_paid,failed,refunded,partially_refunded', 'transaction_id' => 'nullable|string|max:150']);
-        $order->update($d);
+        $d = $r->validate([
+            'payment_status' => 'required|in:unpaid,pending,paid,partially_paid,failed,refunded,partially_refunded',
+            'transaction_id' => 'nullable|string|max:150',
+        ]);
 
-        return back()->with('success', 'Payment status updated.');
+        try {
+            $oldPaymentStatus = $order->payment_status;
+            $oldTrx = $order->transaction_id;
+
+            $order->update($d);
+
+            if ($oldPaymentStatus !== $order->payment_status || $oldTrx !== $order->transaction_id) {
+                \App\Models\OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'from_status' => $order->order_status,
+                    'to_status' => $order->order_status,
+                    'changed_by_user_id' => \Illuminate\Support\Facades\Auth::id(),
+                    'note' => sprintf(
+                        'Payment updated: %s → %s%s',
+                        \Illuminate\Support\Str::headline($oldPaymentStatus),
+                        \Illuminate\Support\Str::headline($order->payment_status),
+                        $order->transaction_id ? " (Trx ID: {$order->transaction_id})" : ''
+                    ),
+                ]);
+            }
+
+            return back()->with('success', 'Payment status updated successfully.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Order payment update failed', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors(['payment_status' => 'Failed to update payment: ' . $e->getMessage()]);
+        }
     }
 }

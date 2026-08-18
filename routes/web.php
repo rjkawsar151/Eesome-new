@@ -26,6 +26,7 @@ use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\FacebookFeedController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\LegacyProductImageController;
+use App\Http\Controllers\Storefront\OrderTrackerController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\ProductReviewController;
 use App\Http\Controllers\Storefront\PublicStorageImageController;
@@ -59,6 +60,10 @@ Route::post('/products/{product}/wishlist', [WishlistController::class, 'toggle'
     ->middleware('auth')
     ->name('products.wishlist.toggle');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
+
+// Order Tracking routes
+Route::get('/track-order', [OrderTrackerController::class, 'index'])->name('orders.track');
+Route::post('/track-order', [OrderTrackerController::class, 'search'])->middleware('throttle:10,1')->name('orders.track.search');
 
 // Cart routes (guest + auth)
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');

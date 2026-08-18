@@ -401,6 +401,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         @endphp
         <ul class="nav-links">
             @foreach($headerLinks as $link)<li><a href="{{ $link->url }}" @if($link->open_in_new_tab) target="_blank" rel="noopener noreferrer" @endif>{{ $link->label }}</a></li>@endforeach
+            <li><a href="{{ route('orders.track') }}">Track Order</a></li>
         </ul>
         <form class="nav-search" method="GET" action="{{ route('products.index') }}" role="search">
             <input type="search" name="search" value="{{ request()->routeIs('products.index') ? request('search') : '' }}" placeholder="Search products" aria-label="Search products">
@@ -504,6 +505,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <h4>Explore</h4>
                 <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.5rem;font-size:.875rem">
                     @foreach(app(\App\Services\NavigationRepository::class)->for('footer') as $link)<li><a href="{{ $link->url }}" @if($link->open_in_new_tab) target="_blank" rel="noopener noreferrer" @endif>{{ $link->label }}</a></li>@endforeach
+                    <li><a href="{{ route('orders.track') }}">Track Order</a></li>
                 </ul>
             </div>
             <div>
@@ -515,6 +517,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <li><a href="{{ route('login') }}">Login</a></li>
                     @endauth
                     <li><a href="{{ route('cart.index') }}">My Cart</a></li>
+                    <li><a href="{{ route('orders.track') }}">Track Order</a></li>
                 </ul>
             </div>
             <div>

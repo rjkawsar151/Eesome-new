@@ -27,16 +27,20 @@ class LogAdminActivity
             ->map(fn ($value) => $this->sanitize($value))
             ->all();
 
-        AdminActivityLog::create([
-            'admin_id' => $request->user()?->id,
-            'action' => (string) $route?->getName(),
-            'subject_type' => $subject ? $subject::class : null,
-            'subject_id' => $subject?->getKey(),
-            'description' => $request->method().' '.$request->path(),
-            'new_values' => $values,
-            'ip_address' => $request->ip(),
-            'user_agent' => mb_substr((string) $request->userAgent(), 0, 1000),
-        ]);
+        try {
+            AdminActivityLog::create([
+                'admin_id' => $request->user()?->id,
+                'action' => (string) $route?->getName(),
+                'subject_type' => $subject ? $subject::class : null,
+                'subject_id' => $subject?->getKey(),
+                'description' => $request->method().' '.$request->path(),
+                'new_values' => $values,
+                'ip_address' => $request->ip(),
+                'user_agent' => mb_substr((string) $request->userAgent(), 0, 1000),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to log admin activity', ['error' => $e->getMessage()]);
+        }
 
         return $response;
     }

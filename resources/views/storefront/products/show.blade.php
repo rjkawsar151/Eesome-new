@@ -312,7 +312,7 @@ document.addEventListener('click', function(e) {
                     @endforeach
                 </select>
             @endif
-            <input type="number" name="quantity" value="1" min="1" max="{{ ($product->stock <= 0 || $product->available_for_preorder) ? 100 : max(1, $defaultVariant?->stock ?? $product->stock) }}" aria-label="Quantity">
+            <input type="hidden" name="quantity" value="1">
             <button type="submit">Cart</button>
             <button type="submit" name="buy_now" value="1">{{ ($product->stock <= 0 || $product->available_for_preorder) ? 'Pre-order' : 'Buy' }}</button>
         </form>
