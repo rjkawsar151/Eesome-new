@@ -142,7 +142,7 @@ class Product extends Model
 
     public function activeVariants()
     {
-        return $this->hasMany(ProductVariant::class)->where('is_active', true)->orderByDesc('is_default')->orderBy('sort_order');
+        return $this->hasMany(ProductVariant::class)->where(fn ($q) => $q->where('is_active', true)->orWhere('is_active', 1)->orWhere('is_active', '1'))->orderByDesc('is_default')->orderBy('sort_order');
     }
 
     public function images()

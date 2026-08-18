@@ -84,7 +84,7 @@ class CartController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Successfully added to cart.');
+        return redirect()->back(fallback: route('cart.index'))->with('success', 'Successfully added to cart.');
     }
 
     public function update(Request $request, string $line)
