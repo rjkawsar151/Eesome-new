@@ -610,7 +610,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const form = event.target;
         if (!form || !form.action) return;
 
-        const isCartStore = form.action.includes('/cart') && !form.action.includes('/cart/');
+        let isCartStore = false;
+        try {
+            const url = new URL(form.action, window.location.href);
+            const path = url.pathname.replace(/\/+$/, '');
+            isCartStore = path.endsWith('/cart');
+        } catch(e) {
+            isCartStore = form.action.includes('/cart');
+        }
         if (!isCartStore || form.method.toUpperCase() !== 'POST') return;
 
         const submitter = event.submitter;
@@ -789,10 +796,35 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             feedback.textContent = 'Please select a color variant first.';
             return;
         }
-        if (sourceSelect) sourceSelect.value = selectedVariantId;
+        if (sourceSelect) {
+            if (sourceSelect.tagName === 'SELECT') {
+                let opt = sourceSelect.querySelector(`option[value="${CSS.escape(selectedVariantId)}"]`);
+                if (!opt) {
+                    opt = new Option(selectedVariantId, selectedVariantId, true, true);
+                    sourceSelect.add(opt);
+                }
+                opt.disabled = false;
+                opt.selected = true;
+            }
+            sourceSelect.value = selectedVariantId;
+        }
+        const matchingPill = document.querySelector(`.js-variant-item[data-variant-id="${CSS.escape(selectedVariantId)}"]`);
+        if (matchingPill && typeof window.handleVariantClick === 'function') {
+            try { window.handleVariantClick(matchingPill); } catch(e) {}
+        }
         try { dialog.close(); } catch(e) {}
-        if (pendingForm && pendingButton) {
-            pendingForm.requestSubmit(pendingButton);
+        if (pendingForm) {
+            if (pendingButton && typeof pendingForm.requestSubmit === 'function') {
+                try {
+                    pendingForm.requestSubmit(pendingButton);
+                } catch(e) {
+                    pendingForm.requestSubmit();
+                }
+            } else if (typeof pendingForm.requestSubmit === 'function') {
+                pendingForm.requestSubmit();
+            } else {
+                pendingForm.submit();
+            }
         }
     });
 
