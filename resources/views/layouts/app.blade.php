@@ -57,6 +57,14 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'EEsome') | EEsome — Women's Handbags</title>
     <meta name="description" content="@yield('meta_description', 'Shop premium women\'s handbags at EEsome. Discover featured collections, new arrivals, and exclusive designs.')">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    @php
+        $faviconLogoPath = app(\App\Services\SiteSettingsRepository::class)->get('logo_path');
+    @endphp
+    @if($faviconLogoPath)
+    <link rel="apple-touch-icon" href="{{ asset('storage/'.$faviconLogoPath) }}">
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
