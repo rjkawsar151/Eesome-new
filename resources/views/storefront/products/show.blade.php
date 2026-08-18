@@ -252,7 +252,7 @@ document.addEventListener('click', function(e) {
         <h1>{{ $product->name }}</h1>
         <p style="color:var(--text-muted)">SKU: <span id="product-sku">{{ $defaultVariant?->sku ?: ($product->sku ?: 'N/A') }}</span></p>
         <div class="detail-price">৳{{ number_format((float)($defaultVariant ? $defaultVariant->effective_price : $product->effective_price), 0) }} @if($product->has_discount || ($defaultVariant && $defaultVariant->sale_price !== null && (float)$defaultVariant->sale_price < (float)$defaultVariant->regular_price))<s>৳{{ number_format((float)($defaultVariant ? $defaultVariant->regular_price : $product->price), 0) }}</s>@endif</div>
-        <p><span class="stock">{{ $product->available_for_preorder ? 'Available for preorder · delivery in 25–35 days' : (($defaultVariant?->stock ?? $product->stock) > 0 ? ($defaultVariant?->stock ?? $product->stock).' in stock' : 'Sold out') }}</span></p>
+        <p><span class="stock">{{ ($product->stock <= 0 || $product->available_for_preorder) ? 'Pre-order only · delivery in 25–35 days' : (($defaultVariant?->stock ?? $product->stock) > 0 ? ($defaultVariant?->stock ?? $product->stock).' in stock' : 'Pre-order only · delivery in 25–35 days') }}</span></p>
         
         @if($hasActiveVariants)
         <div class="variants">
@@ -291,9 +291,9 @@ document.addEventListener('click', function(e) {
             @if($hasActiveVariants)
                 <input type="hidden" id="selected-variant-id" name="variant_id" value="{{ $defaultVariant?->id ?? '' }}">
             @endif
-            <input type="number" name="quantity" value="1" min="1" max="{{ $product->available_for_preorder ? 100 : max(1, $defaultVariant?->stock ?? $product->stock) }}" aria-label="Quantity">
-            <button type="submit">Add to cart</button>
-            <button type="submit" name="buy_now" value="1">Buy now</button>
+            <input type="number" name="quantity" value="1" min="1" max="{{ ($product->stock <= 0 || $product->available_for_preorder) ? 100 : max(1, $defaultVariant?->stock ?? $product->stock) }}" aria-label="Quantity">
+            <button type="submit">{{ ($product->stock <= 0 || $product->available_for_preorder) ? 'Pre-order' : 'Add to cart' }}</button>
+            <button type="submit" name="buy_now" value="1">{{ ($product->stock <= 0 || $product->available_for_preorder) ? 'Pre-order now' : 'Buy now' }}</button>
         </form>
         @endif
     </div>
@@ -356,7 +356,7 @@ document.addEventListener('click', function(e) {
             <article class="related-card">
                 <a href="{{ route('products.show',$related->slug ?? $related->id) }}"><img class="related-card__image" src="{{ app(\App\Services\ProductImageResolver::class)->resolve($img) }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $related->name }}" loading="lazy"></a>
                 <div class="related-card__body"><h3 class="related-card__name">{{ $related->name }}</h3><div class="related-card__price">৳{{ number_format((float)$related->effective_price,0) }}</div><div class="related-card__actions">
-                    @if($related->stock > 0 || $related->available_for_preorder)<form method="POST" action="{{ route('cart.store') }}">@csrf<input type="hidden" name="product_id" value="{{ $related->id }}"><input type="hidden" name="quantity" value="1"><button class="related-card__cart" type="submit">Add to cart</button></form>@else<button class="related-card__cart" type="button" disabled>Sold out</button>@endif
+                    @if($related->stock > 0 || $related->available_for_preorder)<form method="POST" action="{{ route('cart.store') }}">@csrf<input type="hidden" name="product_id" value="{{ $related->id }}"><input type="hidden" name="quantity" value="1"><button class="related-card__cart" type="submit">{{ ($related->stock <= 0 || $related->available_for_preorder) ? 'Pre-order' : 'Add to cart' }}</button></form>@else<button class="related-card__cart" type="button" disabled>Sold out</button>@endif
                     <a class="related-card__details" href="{{ route('products.show',$related->slug ?? $related->id) }}">Details</a>
                 </div></div>
             </article>

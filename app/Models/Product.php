@@ -70,7 +70,18 @@ class Product extends Model
 
     public function getAvailableForPreorderAttribute(): bool
     {
-        return $this->is_preorder
+        if ($this->is_preorder) {
+            return true;
+        }
+
+        if ($this->has_variants) {
+            $vars = $this->relationLoaded('variants') ? $this->variants : $this->variants()->get();
+            if ($vars->isNotEmpty()) {
+                return $vars->every(fn ($v) => (int) $v->stock <= 0);
+            }
+        }
+
+        return (int) $this->stock <= 0
             || preg_match('/\bpre[\s-]?order\b/i', strip_tags((string) $this->description)) === 1;
     }
 
@@ -91,10 +102,7 @@ class Product extends Model
     // Badge priority helper
     public function getBadgeInfoAttribute(): ?array
     {
-        if ($this->stock <= 0 && ! $this->available_for_preorder) {
-            return ['text' => 'SOLD OUT', 'type' => 'danger'];
-        }
-        if ($this->available_for_preorder) {
+        if ($this->available_for_preorder || (int) $this->stock <= 0) {
             return ['text' => 'PREORDER', 'type' => 'warning'];
         }
         if ($this->has_discount) {

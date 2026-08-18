@@ -136,8 +136,8 @@ class CheckoutService
                 ]);
 
                 // 8. Decrement stock
-                if (! $p->available_for_preorder) {
-                    $inventory = $variant ?: $p;
+                $inventory = $variant ?: $p;
+                if ($inventory->stock > 0 || ! $p->available_for_preorder) {
                     $stockBefore = $inventory->stock;
                     $inventory->decrement('stock', $line['qty']);
                     $inventory->refresh();

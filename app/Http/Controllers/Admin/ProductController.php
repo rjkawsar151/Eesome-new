@@ -20,7 +20,7 @@ class ProductController extends Controller
 {
     public function index(Request $r)
     {
-        $q = Product::with(['category', 'images'])->withCount('images')->orderBy('sort_order')->latest('id');
+        $q = Product::with(['category', 'images'])->withCount('images')->latest('id');
         if ($r->filled('search')) {
             $s = $r->search;
             $q->where(fn ($x) => $x->where('name', 'like', "%$s%")->orWhere('sku', 'like', "%$s%"));
@@ -191,21 +191,71 @@ class ProductController extends Controller
             $r->merge(['slug' => $this->uniqueSlug($name, $p?->id)]);
         }
 
+        $submittedSku = trim((string) $r->input('sku'));
+        if ($submittedSku === '') {
+            $r->merge(['sku' => $this->uniqueSku($name, $p?->id)]);
+        }
+
         $hasVariants = $r->boolean('has_variants');
-        $d = $r->validate(['category_id' => 'required|exists:categories,id', 'brand_id' => 'nullable|exists:brands,id', 'tag_ids' => 'nullable|array', 'tag_ids.*' => 'integer|exists:tags,id', 'name' => 'required|string|max:255', 'slug' => ['required', 'alpha_dash', 'max:255', Rule::unique('products')->ignore($p?->id)], 'sku' => ['nullable', 'string', 'max:100', Rule::unique('products')->ignore($p?->id)], 'description' => 'nullable|string|max:50000', 'price' => 'required|numeric|min:0', 'discount_price' => 'nullable|numeric|min:0|lte:price', 'stock' => 'required|integer|min:0', 'badge_text' => 'nullable|string|max:30', 'sort_order' => 'required|integer|min:0', 'meta_title' => 'nullable|string|max:255', 'meta_description' => 'nullable|string|max:1000', 'has_variants' => 'nullable|boolean', 'is_active' => 'nullable|boolean', 'is_featured' => 'nullable|boolean', 'is_new' => 'nullable|boolean', 'is_preorder' => 'nullable|boolean',
+        $d = $r->validate([
+            'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'tag_ids' => 'nullable|array',
+            'tag_ids.*' => 'integer|exists:tags,id',
+            'name' => 'required|string|max:255',
+            'slug' => ['required', 'alpha_dash', 'max:255', Rule::unique('products')->ignore($p?->id)],
+            'sku' => ['nullable', 'string', 'max:100', Rule::unique('products')->ignore($p?->id)],
+            'description' => 'nullable|string|max:50000',
+            'price' => 'required|numeric|min:0',
+            'discount_price' => 'nullable|numeric|min:0|lte:price',
+            'stock' => 'required|integer|min:0',
+            'badge_text' => 'nullable|string|max:30',
+            'sort_order' => 'nullable|integer|min:0',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:1000',
+            'has_variants' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
+            'is_featured' => 'nullable|boolean',
+            'is_new' => 'nullable|boolean',
+            'is_preorder' => 'nullable|boolean',
             'variants' => [$hasVariants ? 'required' : 'nullable', 'array', $hasVariants ? 'min:1' : 'max:0'],
-            'variants.*.id' => 'nullable|integer', 'variants.*.color_name' => 'required_with:variants|string|max:100',
-            'variants.*.color_code' => ['required_with:variants', 'regex:/^#[0-9A-Fa-f]{6}$/'], 'variants.*.sku' => 'required_with:variants|string|max:100',
-            'variants.*.regular_price' => 'required_with:variants|numeric|min:0', 'variants.*.sale_price' => 'nullable|numeric|min:0',
-            'variants.*.stock' => 'required_with:variants|integer|min:0', 'variants.*.image' => 'nullable|image|mimes:png,webp,jpg,jpeg|max:5120',
-            'variants.*.is_active' => 'nullable|boolean', 'variants.*.is_default' => 'nullable|boolean',
+            'variants.*.id' => 'nullable|integer',
+            'variants.*.color_name' => 'required_with:variants|string|max:100',
+            'variants.*.color_code' => ['required_with:variants', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'variants.*.sku' => 'required_with:variants|string|max:100',
+            'variants.*.regular_price' => 'required_with:variants|numeric|min:0',
+            'variants.*.sale_price' => 'nullable|numeric|min:0',
+            'variants.*.stock' => 'required_with:variants|integer|min:0',
+            'variants.*.image' => 'nullable|image|mimes:png,webp,jpg,jpeg|max:5120',
+            'variants.*.is_active' => 'nullable|boolean',
+            'variants.*.is_default' => 'nullable|boolean',
         ]);
+
+        $d['sort_order'] = (int) ($d['sort_order'] ?? ($p?->sort_order ?? 0));
+
         foreach (['has_variants', 'is_active', 'is_featured', 'is_new', 'is_preorder'] as $k) {
             $d[$k] = $r->boolean($k);
         }
+
+        if ((int) ($d['stock'] ?? 0) === 0) {
+            $d['is_preorder'] = true;
+            $d['is_sold_out'] = false;
+        }
+
         unset($d['variants']);
 
         return $d;
+    }
+
+    private function uniqueSku(string $name, ?int $ignoreId = null): string
+    {
+        $clean = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', Str::slug($name)));
+        $prefix = 'EES-' . (substr($clean, 0, 8) ?: 'PROD');
+        do {
+            $sku = $prefix . '-' . random_int(1000, 9999);
+        } while (Product::where('sku', $sku)->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))->exists());
+
+        return $sku;
     }
 
     private function uniqueSlug(string $name, ?int $ignoreId = null): string

@@ -142,16 +142,26 @@
         footer .footer-credit-link:hover { color: #fff; }
         @media (max-width: 768px) {
             body { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
-            footer .footer-grid { grid-template-columns: 1fr 1fr; }
             .nav-links { display: none; }
-            .nav { animation: mobileHeaderEnter .3s cubic-bezier(.22,1,.36,1) both; }
+            .nav { background: #e1d0f0; -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom: 1px solid rgba(190,24,93,.15); box-shadow: 0 4px 16px rgba(0,0,0,.06); animation: mobileHeaderEnter .3s cubic-bezier(.22,1,.36,1) both; }
             .nav-inner { width: min(calc(100% - 24px), 1200px); min-height: 62px; gap: .75rem; }
-            .nav-logo { font-size: 1.55rem; }
+            .nav-logo { font-size: 1.55rem; background: linear-gradient(135deg, #831843, #be185d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
             .nav-logo img { max-width: clamp(88px,28vw,120px); height: 42px; }
             .nav-search { display: flex; flex: 1 1 auto; min-width: 0; margin-left: 0; }
-            .nav-search input { width: 100%; min-width: 0; height: 40px; padding-left: .8rem; background: rgba(255,255,255,.11); }
-            .nav-search input:focus { border-color: rgba(244,114,182,.9); outline: 2px solid rgba(244,114,182,.3); outline-offset: 1px; }
+            .nav-search input { width: 100%; min-width: 0; height: 40px; padding-left: .8rem; background: #ffffff; color: #1e1b4b; border: 1px solid rgba(0,0,0,.14); }
+            .nav-search input::placeholder { color: #6b7280; }
+            .nav-search button { color: #831843; }
+            .nav-search input:focus { border-color: rgba(219,39,119,.9); outline: 2px solid rgba(219,39,119,.25); outline-offset: 1px; }
             .nav-actions { display: none; }
+            footer { background: #e1d0f0; color: #374151; }
+            footer h4 { color: #1e1b4b; }
+            footer a { color: #4b5563; }
+            footer a:hover { color: var(--brand-600); }
+            footer p { color: #4b5563; }
+            footer .footer-brand-title { color: #1e1b4b !important; }
+            footer .footer-grid { grid-template-columns: 1fr 1fr; }
+            footer .footer-bottom { border-top: 1px solid rgba(0,0,0,.08); color: #6b7280; }
+            footer .footer-credit-link { color: var(--brand-700); }
             .whatsapp-btn { bottom: calc(92px + env(safe-area-inset-bottom)); width: 52px; height: 52px; }
             .mobile-bottom-nav { position: fixed; z-index: 1000; right: 1rem; bottom: calc(.75rem + env(safe-area-inset-bottom)); left: 1rem; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); max-width: 420px; min-height: 64px; margin-inline: auto; padding: .4rem; border: 1px solid rgba(167,139,250,.18); border-radius: 20px; background: rgba(26,10,46,.88); box-shadow: 0 10px 32px rgba(10,4,22,.32); -webkit-backdrop-filter: blur(16px) saturate(135%); backdrop-filter: blur(16px) saturate(135%); animation: mobileBottomNavEnter .36s cubic-bezier(.22,1,.36,1) both; }
             .mobile-bottom-nav__item { position: relative; display: grid; width: 100%; min-width: 44px; min-height: 52px; place-items: center; border-radius: 15px; color: rgba(249,234,243,.7); text-decoration: none; transition: color .2s ease,background-color .2s ease,transform .2s ease; }
@@ -291,7 +301,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="container">
         <div class="footer-grid">
             <div>
-                <div style="margin-bottom:.75rem;">@if($logoPath)<img src="{{ asset('storage/'.$logoPath) }}" alt="{{ $storeName }}" style="display:block;max-width:200px;max-height:90px;object-fit:contain">@else<span style="font-size:1.5rem;font-weight:800;color:#fff">{{ $storeName }}</span>@endif</div>
+                <div style="margin-bottom:.75rem;">@if($logoPath)<img src="{{ asset('storage/'.$logoPath) }}" alt="{{ $storeName }}" style="display:block;max-width:200px;max-height:90px;object-fit:contain">@else<span class="footer-brand-title" style="font-size:1.5rem;font-weight:800;color:#fff">{{ $storeName }}</span>@endif</div>
                 <p style="font-size:.85rem;line-height:1.7;color:#9ca3af">Premium women's handbags — crafted for every occasion.</p>
             </div>
             <div>

@@ -76,4 +76,49 @@ class AdminManagementTest extends TestCase
         $payload = \App\Models\AdminActivityLog::latest('id')->value('new_values');
         $this->assertStringNotContainsString('must-not-be-logged', json_encode($payload));
     }
+
+    public function test_product_creation_autogenerates_sku_and_works_without_display_order(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $category = Category::create(['name' => 'Shoulder Bags', 'slug' => 'shoulder-bags', 'is_active' => true, 'sort_order' => 1]);
+
+        $response = $this->actingAs($admin)->post('/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Azure Crescent Bag',
+            'slug' => 'azure-crescent-bag',
+            'price' => 4500,
+            'stock' => 5,
+            'is_active' => 1,
+        ]);
+
+        $response->assertRedirect();
+        $product = \App\Models\Product::where('slug', 'azure-crescent-bag')->first();
+        $this->assertNotNull($product);
+        $this->assertNotEmpty($product->sku);
+        $this->assertStringStartsWith('EES-', $product->sku);
+        $this->assertSame(0, $product->sort_order);
+    }
+
+    public function test_product_with_zero_stock_is_preorder_only(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $category = Category::create(['name' => 'Clutches', 'slug' => 'clutches', 'is_active' => true, 'sort_order' => 1]);
+
+        $response = $this->actingAs($admin)->post('/admin/products', [
+            'category_id' => $category->id,
+            'name' => 'Golden Velvet Clutch',
+            'slug' => 'golden-velvet-clutch',
+            'price' => 3800,
+            'stock' => 0,
+            'is_active' => 1,
+        ]);
+
+        $response->assertRedirect();
+        $product = \App\Models\Product::where('slug', 'golden-velvet-clutch')->first();
+        $this->assertNotNull($product);
+        $this->assertTrue($product->is_preorder);
+        $this->assertTrue($product->available_for_preorder);
+        $this->assertSame(['text' => 'PREORDER', 'type' => 'warning'], $product->badge_info);
+    }
 }
+

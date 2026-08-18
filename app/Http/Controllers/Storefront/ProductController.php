@@ -38,19 +38,8 @@ class ProductController extends Controller
             $query->where('is_featured', true);
         }
 
-        $randomSeed = (int) $request->session()->get('catalog_random_seed');
-        if ($randomSeed === 0) {
-            $randomSeed = random_int(1, 2147483647);
-            $request->session()->put('catalog_random_seed', $randomSeed);
-        }
-
-        if ($query->getConnection()->getDriverName() === 'mysql') {
-            $query->orderByRaw('RAND(?)', [$randomSeed]);
-        } else {
-            $query->inRandomOrder();
-        }
-
         $products = $query
+            ->latest('id')
             ->paginate(8)
             ->withQueryString();
 

@@ -23,6 +23,9 @@
             @php($image = $product->images->first()?->image_path ?? $product->image)
             @php($wishlisted = in_array($product->id, $wishlistIds, true))
             <article class="product-card">
+                @if($badge = $product->badge_info)
+                    <span style="position:absolute;top:0.65rem;left:0.65rem;z-index:3;padding:0.2rem 0.55rem;border-radius:999px;font-size:0.65rem;font-weight:800;letter-spacing:0.05em;background:{{ $badge['type']==='warning'?'#fef3c7':($badge['type']==='danger'?'#fee2e2':($badge['type']==='sale'?'#fce7f3':'#dbeafe')) }};color:{{ $badge['type']==='warning'?'#92400e':($badge['type']==='danger'?'#991b1b':($badge['type']==='sale'?'#9d174d':'#1e40af')) }}">{{ $badge['text'] }}</span>
+                @endif
                 <div class="wishlist">
                     @auth<form method="POST" action="{{ route('products.wishlist.toggle', $product) }}">@csrf<button class="{{ $wishlisted ? 'active' : '' }}" aria-label="{{ $wishlisted ? 'Remove from' : 'Add to' }} wishlist" title="{{ $wishlisted ? 'Remove from wishlist' : 'Add to wishlist' }}"><span aria-hidden="true">{{ $wishlisted ? '♥' : '♡' }}</span></button></form>
                     @else<a href="{{ route('login') }}" aria-label="Log in to add to wishlist" title="Log in to save">♡</a>@endauth
@@ -31,8 +34,11 @@
                 <div class="product-body">
                     <a class="product-title" href="{{ route('products.show', $product->slug ?? $product->id) }}">{{ $product->name }}</a>
                     <div><span class="price">৳{{ number_format((float)$product->effective_price, 0) }}</span> @if($product->has_discount)<span class="old">৳{{ number_format((float)$product->price, 0) }}</span>@endif</div>
+                    @if($product->stock <= 0 || $product->available_for_preorder)
+                        <div style="font-size:0.75rem;color:#92400e;font-weight:600;margin-top:0.25rem">Pre-order · 25–35 days</div>
+                    @endif
                     <div class="actions">
-                        @if($product->stock > 0 || $product->available_for_preorder)<form method="POST" action="{{ route('cart.store') }}">@csrf<input type="hidden" name="product_id" value="{{ $product->id }}"><button>Add to cart</button></form>@endif
+                        @if($product->stock > 0 || $product->available_for_preorder)<form method="POST" action="{{ route('cart.store') }}">@csrf<input type="hidden" name="product_id" value="{{ $product->id }}"><button>{{ ($product->stock <= 0 || $product->available_for_preorder) ? 'Pre-order' : 'Add to cart' }}</button></form>@endif
                         <a class="details" href="{{ route('products.show', $product->slug ?? $product->id) }}">Details</a>
                     </div>
                 </div>
