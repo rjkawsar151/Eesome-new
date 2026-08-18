@@ -689,7 +689,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <dialog id="global-variant-dialog" class="variant-popup-dialog">
     <div class="variant-popup-header">
         <div>
-            <span class="variant-popup-tag">Choose Color</span>
+            <span class="variant-popup-tag">Choose your color</span>
             <h3 id="global-variant-product" class="variant-popup-title">Select Color Variant</h3>
         </div>
         <button type="button" class="variant-popup-close" aria-label="Close selector">&times;</button>
@@ -741,11 +741,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         
         options.forEach(opt => {
             const val = opt.value;
-            const colorName = opt.dataset.color || opt.textContent.split('/')[0].trim();
-            const colorCode = opt.dataset.colorCode || '';
-            const imgUrl = opt.dataset.image || defaultPlaceholder;
-            const price = opt.dataset.price || '';
-            const sku = opt.dataset.sku || '';
+            const colorName = opt.dataset.color || opt.getAttribute('data-color') || opt.textContent.split('/')[0].trim();
+            const colorCode = opt.dataset.colorCode || opt.getAttribute('data-color-code') || '';
+            const imgUrl = opt.dataset.image || opt.getAttribute('data-image') || defaultPlaceholder;
+            const price = opt.dataset.price || opt.getAttribute('data-price') || '';
+            const sku = opt.dataset.sku || opt.getAttribute('data-sku') || '';
             const isDisabled = opt.disabled;
 
             const card = document.createElement('div');

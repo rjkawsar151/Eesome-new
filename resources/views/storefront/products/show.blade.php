@@ -314,24 +314,7 @@ document.addEventListener('click', function(e) {
     </div>
 </section>
 
-@if($product->has_variants && $product->activeVariants->count() > 1)
-<dialog id="variant-dialog" class="variant-dialog" aria-labelledby="variant-dialog-title">
-    <button id="variant-close" class="variant-close" type="button" aria-label="Close color selector">×</button>
-    <h2 id="variant-dialog-title">Choose your color</h2>
-    <img class="variant-dialog-image" src="{{ $initialResolvedImage }}" alt="{{ $product->name }}">
-    <p>{{ $product->name }}</p>
-    <label for="purchase-variant"><strong>Available colors</strong></label>
-    <select id="purchase-variant" class="variant-select">
-        <option value="">Choose a color</option>
-        @foreach($product->activeVariants as $index => $variant)
-            @php($varImg = $resolveVariantImage($variant, $index))
-            <option value="{{ $variant->id }}" data-image="{{ $varImg }}" data-color="{{ trim($variant->color_name ?: $variant->name) }}" @selected($defaultVariant && $defaultVariant->id === $variant->id) @disabled($variant->stock < 1)>{{ $variant->color_name ?: $variant->name }} / SKU {{ $variant->sku }} / BDT {{ number_format((float)$variant->effective_price,0) }}</option>
-        @endforeach
-    </select>
-    <p id="variant-feedback" class="variant-feedback">Select an available color to continue.</p>
-    <button id="variant-confirm" type="button">Continue</button>
-</dialog>
-@endif
+
 
 <section class="reviews">
     <h2>Customer reviews</h2>
@@ -384,50 +367,6 @@ document.addEventListener('click', function(e) {
 @push('scripts')
 <script>
 var purchaseForm = document.getElementById('purchase-form');
-var variantDialog = document.getElementById('variant-dialog');
-var variantSelect = document.getElementById('purchase-variant');
-var variantInput = document.getElementById('selected-variant-id');
-var pendingSubmitter = null;
-
-if (purchaseForm && variantDialog && variantSelect) {
-    purchaseForm.addEventListener('submit', function(event) {
-        var selectedVal = variantInput ? variantInput.value : variantSelect.value;
-        if (!selectedVal) {
-            event.preventDefault();
-            pendingSubmitter = event.submitter;
-            variantDialog.showModal();
-            document.body.style.overflow = 'hidden';
-            variantSelect.focus();
-        }
-    });
-
-    document.getElementById('variant-confirm')?.addEventListener('click', function() {
-        if (!variantSelect.value) {
-            document.getElementById('variant-feedback').textContent = 'Please select a color.';
-            variantSelect.focus();
-            return;
-        }
-        var matchingPill = document.querySelector('.js-variant-item[data-variant-id="' + variantSelect.value + '"]');
-        if (matchingPill) {
-            window.handleVariantClick(matchingPill);
-        }
-        variantDialog.close();
-        document.body.style.overflow = '';
-        purchaseForm.requestSubmit(pendingSubmitter);
-    });
-
-    document.getElementById('variant-close')?.addEventListener('click', function() { variantDialog.close(); });
-    variantDialog.addEventListener('close', function() { document.body.style.overflow = ''; });
-    variantDialog.addEventListener('click', function(event) { if (event.target === variantDialog) variantDialog.close(); });
-    variantSelect.addEventListener('change', function() {
-        var option = variantSelect.selectedOptions[0];
-        document.getElementById('variant-feedback').textContent = option.value ? option.textContent : 'Select an available color to continue.';
-        if (option.dataset.image) {
-            var dlgImg = variantDialog.querySelector('.variant-dialog-image');
-            if (dlgImg) dlgImg.src = option.dataset.image;
-        }
-    });
-}
 
 if (typeof window.fbq === 'function') {
     window.fbq('track', 'ViewContent', {
