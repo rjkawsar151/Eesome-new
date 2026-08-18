@@ -383,17 +383,24 @@
                 @foreach($order->items as $item)
                 <div class="order-item-row">
                     {{-- 1. Square Thumbnail --}}
-                    <div class="order-item-thumb-box">
-                        <img src="{{ $item->resolved_image }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $item->product_name }}" class="order-item-thumb-img" loading="lazy">
-                    </div>
+                    @if($item->product)
+                        <a href="{{ route('products.show', $item->product->slug ?? $item->product->id) }}" target="_blank" class="order-item-thumb-box" title="View item page">
+                            <img src="{{ $item->resolved_image }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $item->product_name }}" class="order-item-thumb-img" loading="lazy">
+                        </a>
+                    @else
+                        <div class="order-item-thumb-box">
+                            <img src="{{ $item->resolved_image }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $item->product_name }}" class="order-item-thumb-img" loading="lazy">
+                        </div>
+                    @endif
 
                     {{-- 2. Product Name & Meta Badges --}}
                     <div class="order-item-info">
                         @if($item->product)
-                            <a href="{{ route('admin.products.edit', $item->product) }}" class="order-item-name">{{ $item->product_name ?: 'Product' }}</a>
+                            <a href="{{ route('products.show', $item->product->slug ?? $item->product->id) }}" target="_blank" class="order-item-name" title="View item page">{{ $item->product_name ?: 'Product' }} ↗</a>
                         @else
                             <span class="order-item-name">{{ $item->product_name ?: 'Legacy product' }}</span>
                         @endif
+
 
                         <div class="order-item-meta-badges">
                             @if($item->display_color)
