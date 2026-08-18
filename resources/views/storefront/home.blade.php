@@ -79,8 +79,8 @@
 .product-card__actions { display: flex; gap: .5rem; }
 .btn-cart { flex: 1; padding: .5rem; background: var(--brand-50); color: var(--brand-700); border: 1px solid var(--brand-100); border-radius: 10px; font-size: .78rem; font-weight: 600; cursor: pointer; transition: all .2s; text-align: center; }
 .btn-cart:hover { background: var(--brand-600); color: #fff; border-color: var(--brand-600); }
-.btn-buy { flex: 1; padding: .5rem; background: var(--brand-600); color: #fff; border: none; border-radius: 10px; font-size: .78rem; font-weight: 600; cursor: pointer; transition: background .2s; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; }
-.btn-buy:hover { background: var(--brand-700); }
+.btn-buy { flex: 1; padding: .5rem; background: #e1d0f0; color: #1e1b4b; border: 1px solid rgba(190,24,93,.18); border-radius: 10px; font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .2s; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+.btn-buy:hover { background: #d4bee8; color: #1e1b4b; border-color: rgba(190,24,93,.3); }
 .btn-disabled { opacity: .5; cursor: not-allowed; pointer-events: none; }
 
 /* ── Testimonials ── */
