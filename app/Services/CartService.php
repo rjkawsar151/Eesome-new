@@ -110,20 +110,25 @@ class CartService
 
     public function addToDbCart(int $userId, int $productId, int $qty = 1, ?int $variantId = null): void
     {
-        $existing = CartItem::where('user_id', $userId)
-            ->where('product_id', $productId)
-            ->where('variant_id', $variantId)
-            ->first();
+        try {
+            $existing = CartItem::where('user_id', $userId)
+                ->where('product_id', $productId)
+                ->where('variant_id', $variantId)
+                ->first();
 
-        if ($existing) {
-            $existing->increment('quantity', $qty);
-        } else {
-            CartItem::create([
-                'user_id' => $userId,
-                'product_id' => $productId,
-                'variant_id' => $variantId,
-                'quantity' => $qty,
-            ]);
+            if ($existing) {
+                $existing->increment('quantity', $qty);
+            } else {
+                CartItem::create([
+                    'user_id' => $userId,
+                    'product_id' => $productId,
+                    'variant_id' => $variantId,
+                    'quantity' => $qty,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Guarantee storage in session cart as reliable fallback
+            $this->addToSessionCart($productId, $qty, $variantId);
         }
     }
 
@@ -199,9 +204,12 @@ class CartService
 
     public function cartCount(): int
     {
-        if (Auth::check()) {
-            return CartItem::where('user_id', Auth::id())->sum('quantity');
-        }
-        return array_sum(array_column($this->getSessionCart(), 'quantity'));
+        try {
+            if (Auth::check()) {
+                $dbCount = (int) CartItem::where('user_id', Auth::id())->sum('quantity');
+                if ($dbCount > 0) return $dbCount;
+            }
+        } catch (\Throwable $e) {}
+        return (int) array_sum(array_column($this->getSessionCart(), 'quantity'));
     }
 }

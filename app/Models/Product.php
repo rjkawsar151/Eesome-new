@@ -191,17 +191,19 @@ class Product extends Model
         return $query->orderByRaw('
             CASE 
                 WHEN products.is_sold_out = 1 OR products.is_preorder = 1 THEN 0
-                WHEN products.has_variants = 1 THEN (
+                WHEN products.has_variants = 1 OR EXISTS (SELECT 1 FROM product_variants WHERE product_variants.product_id = products.id) THEN (
                     CASE WHEN EXISTS (
                         SELECT 1 FROM product_variants 
                         WHERE product_variants.product_id = products.id 
-                          AND product_variants.is_active = 1 
+                          AND (product_variants.is_active = 1 OR product_variants.is_active IS NULL)
                           AND product_variants.stock > 0
-                    ) THEN 1 ELSE 0 END
+                    ) THEN 1 
+                    WHEN products.stock > 0 THEN 1
+                    ELSE 0 END
                 )
                 WHEN products.stock > 0 THEN 1
                 ELSE 0
-            END DESC, products.id DESC
+            END DESC, products.created_at DESC, products.id DESC
         ');
     }
 }

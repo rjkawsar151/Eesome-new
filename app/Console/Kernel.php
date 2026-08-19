@@ -12,7 +12,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Daily database optimization: prune visitor page views older than 60 days
+        $schedule->command('pageviews:prune --days=60')->daily()->withoutOverlapping();
     }
 
     /**

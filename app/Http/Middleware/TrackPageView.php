@@ -25,6 +25,11 @@ class TrackPageView
                     'referrer'   => $referrer ? substr($referrer, 0, 500) : null,
                     'source'     => $this->sourceFromReferrer($referrer),
                 ]);
+
+                // Opportunistic background pruning (1 in 200 requests) to keep DB under 60-day maximum
+                if (random_int(1, 200) === 1) {
+                    dispatch(new \App\Jobs\PruneOldPageViewsJob(60))->afterResponse();
+                }
             } catch (\Throwable $e) {
                 // Prevent analytics errors from breaking page responses
                 report($e);

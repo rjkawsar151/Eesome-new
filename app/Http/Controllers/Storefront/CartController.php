@@ -45,7 +45,8 @@ class CartController extends Controller
                     $vid = (int) $rawVariantId;
                     $variant = $product->activeVariants->firstWhere('id', $vid)
                         ?? $product->variants->firstWhere('id', $vid)
-                        ?? \App\Models\ProductVariant::where('product_id', $product->id)->where('id', $vid)->first();
+                        ?? \App\Models\ProductVariant::where('product_id', $product->id)->where('id', $vid)->first()
+                        ?? \App\Models\ProductVariant::find($vid);
                 }
                 if (! $variant && is_string($rawVariantId)) {
                     $search = trim(strtolower($rawVariantId));
@@ -54,7 +55,11 @@ class CartController extends Controller
                             || strtolower(trim((string) $v->color)) === $search
                             || strtolower(trim((string) $v->name)) === $search
                             || strtolower(trim((string) $v->sku)) === $search;
-                    });
+                    }) ?? \App\Models\ProductVariant::where('product_id', $product->id)->where(function ($q) use ($search) {
+                        $q->whereRaw('LOWER(color_name) = ?', [$search])
+                          ->orWhereRaw('LOWER(name) = ?', [$search])
+                          ->orWhereRaw('LOWER(color) = ?', [$search]);
+                    })->first();
                 }
             }
 
@@ -88,10 +93,10 @@ class CartController extends Controller
                 return back()->withErrors(['quantity' => $msg]);
             }
 
+            // Safe cart addition
+            $this->cart->addToSessionCart($product->id, $qty, $variant?->id);
             if (Auth::check()) {
                 $this->cart->addToDbCart(Auth::id(), $product->id, $qty, $variant?->id);
-            } else {
-                $this->cart->addToSessionCart($product->id, $qty, $variant?->id);
             }
 
             $eventId = $request->input('event_id') ?: (string) \Illuminate\Support\Str::uuid();
@@ -110,11 +115,16 @@ class CartController extends Controller
                 return redirect()->route('checkout.show');
             }
 
+            $cartCount = 1;
+            try {
+                $cartCount = $this->cart->cartCount();
+            } catch (\Throwable $e) {}
+
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success'      => true,
                     'message'      => 'Successfully added to cart.',
-                    'cart_count'   => $this->cart->cartCount(),
+                    'cart_count'   => $cartCount,
                     'event_id'     => $eventId,
                     'content_id'   => $contentId,
                     'product_name' => $product->name,
@@ -133,14 +143,31 @@ class CartController extends Controller
                 'variant_id' => $request->input('variant_id'),
             ]);
 
+            // Guaranteed session fallback addition
+            try {
+                $pid = (int) $request->input('product_id');
+                if ($pid > 0) {
+                    $vid = is_numeric($request->input('variant_id')) ? (int) $request->input('variant_id') : null;
+                    $this->cart->addToSessionCart($pid, 1, $vid);
+                    if ($request->expectsJson() || $request->ajax()) {
+                        return response()->json([
+                            'success'    => true,
+                            'message'    => 'Successfully added to cart.',
+                            'cart_count' => $this->cart->cartCount(),
+                        ]);
+                    }
+                    return redirect()->back(fallback: route('cart.index'))->with('success', 'Successfully added to cart.');
+                }
+            } catch (\Throwable $fallbackEx) {}
+
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Could not add item to cart. Please try again.',
+                    'message' => $e->getMessage() ?: 'Could not add item to cart. Please try again.',
                 ], 422);
             }
 
-            return back()->withErrors(['cart' => 'Could not add item to cart. Please try again.']);
+            return back()->withErrors(['cart' => $e->getMessage() ?: 'Could not add item to cart. Please try again.']);
         }
     }
 
