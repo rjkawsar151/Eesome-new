@@ -569,10 +569,11 @@ window.productSlides = @json($slides);
                 <a href="{{ route('products.show',$related->slug ?? $related->id) }}"><img class="related-card__image" src="{{ app(\App\Services\ProductImageResolver::class)->resolve($img) }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $related->name }}" loading="lazy"></a>
                 <div class="related-card__body"><h3 class="related-card__name">{{ $related->name }}</h3><div class="related-card__price">৳{{ number_format((float)$related->effective_price,0) }}</div><div class="related-card__actions">
                     @php
-                        $relHasVariants = $related->has_variants && $related->activeVariants->count() > 1;
-                        $relUsesVariants = $related->has_variants && $related->activeVariants->isNotEmpty();
+                        $relVars = $related->activeVariants->isNotEmpty() ? $related->activeVariants : $related->variants;
+                        $relHasVariants = ($related->has_variants || $relVars->count() > 1) && $relVars->count() > 1;
+                        $relUsesVariants = ($related->has_variants || $relVars->isNotEmpty()) && $relVars->isNotEmpty();
                     @endphp
-                    @if($related->stock > 0 || $related->available_for_preorder)
+                    @if($related->stock > 0 || $related->available_for_preorder || $relUsesVariants)
                         <form class="js-card-purchase" method="POST" action="{{ route('cart.store') }}" data-product-name="{{ $related->name }}" data-product-image="{{ app(\App\Services\ProductImageResolver::class)->resolve($img) }}">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $related->id }}">
@@ -580,22 +581,21 @@ window.productSlides = @json($slides);
                             @if($relHasVariants)
                                 <select class="js-card-variant" name="variant_id" hidden aria-label="Selected color">
                                     <option value="">Choose a color</option>
-                                    @foreach($related->activeVariants as $index => $rVariant)
+                                    @foreach($relVars as $index => $rVariant)
                                         @php $rImg = app(\App\Services\ProductImageResolver::class)->resolve($rVariant->image_path ?: $img); @endphp
                                         <option value="{{ $rVariant->id }}"
-
                                             data-color="{{ trim($rVariant->color_name ?: $rVariant->name) }}"
                                             data-color-code="{{ $rVariant->color_code ?? '' }}"
                                             data-image="{{ $rImg }}"
                                             data-price="৳{{ number_format((float)$rVariant->effective_price, 0) }}"
                                             data-sku="{{ $rVariant->sku }}"
-                                            @disabled($rVariant->stock < 1)>
+                                            data-stock="{{ (int)$rVariant->stock }}">
                                             {{ $rVariant->color_name ?: $rVariant->name }}
                                         </option>
                                     @endforeach
                                 </select>
                             @elseif($relUsesVariants)
-                                <input type="hidden" name="variant_id" value="{{ $related->activeVariants->first()->id }}">
+                                <input type="hidden" name="variant_id" value="{{ $relVars->first()->id }}">
                             @endif
                             <button class="related-card__cart" type="submit">Cart</button>
                         </form>

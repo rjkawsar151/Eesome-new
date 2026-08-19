@@ -643,13 +643,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         sourceSelect = variantSelect;
         selectedVariantId = null;
 
+        const isBuyNow = submitter && submitter.name === 'buy_now';
+        const defaultActionText = isBuyNow ? 'Proceed to Checkout' : 'Add to Cart';
+
         productLabel.textContent = form.dataset.productName || 'Select Color Variant';
-        feedback.textContent = 'Please select a color variant to continue.';
+        feedback.textContent = isBuyNow 
+            ? 'Select a color variant to proceed directly to checkout.' 
+            : 'Select a color variant to add to your cart.';
         confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Confirm & Continue';
+        confirmBtn.textContent = defaultActionText;
 
         grid.innerHTML = '';
-        const options = [...variantSelect.options].filter(opt => opt.value !== '');
+        const options = variantSelect ? [...variantSelect.options].filter(opt => opt.value !== '') : [];
         const defaultPlaceholder = form.dataset.productImage || "{{ asset('images/handbag-placeholder.svg') }}";
         
         options.forEach(opt => {
@@ -658,6 +663,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const colorCode = opt.dataset.colorCode || opt.getAttribute('data-color-code') || '';
             const imgUrl = opt.dataset.image || opt.getAttribute('data-image') || defaultPlaceholder;
             const price = opt.dataset.price || opt.getAttribute('data-price') || '';
+            const sku = opt.dataset.sku || opt.getAttribute('data-sku') || '';
             const stockAttr = opt.dataset.stock || opt.getAttribute('data-stock');
             const stock = stockAttr !== null && stockAttr !== undefined ? parseInt(stockAttr, 10) : 1;
             const isDisabled = opt.disabled;
@@ -665,29 +671,56 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const card = document.createElement('div');
             card.className = 'variant-card' + (isDisabled ? ' is-disabled' : '');
             card.dataset.value = val;
+            card.setAttribute('role', 'radio');
+            card.setAttribute('aria-checked', 'false');
+            card.tabIndex = isDisabled ? -1 : 0;
             
             let colorDotHtml = colorCode ? `<span class="variant-card__color-dot" style="background-color:${colorCode}"></span>` : '';
             let thumbHtml = `<img class="variant-card__thumb" src="${imgUrl}" onerror="this.onerror=null;this.src='${defaultPlaceholder}'" alt="${colorName}">`;
             let metaHtml = sku ? `SKU: ${sku}` : '';
             if (stock <= 0) {
-                metaHtml += (metaHtml ? ' • ' : '') + 'Pre-order';
-            } else if (isDisabled) {
-                metaHtml += (metaHtml ? ' • ' : '') + 'Out of Stock';
+                metaHtml += (metaHtml ? ' • ' : '') + '<span style="color:#b45309;font-weight:600">Pre-order · 25–35 days</span>';
+            } else {
+                metaHtml += (metaHtml ? ' • ' : '') + `<span style="color:#15803d;font-weight:600">In Stock (${stock})</span>`;
             }
 
             card.innerHTML = `${thumbHtml}<div class="variant-card__info"><div class="variant-card__name">${colorDotHtml} <span>${colorName}</span></div><div class="variant-card__meta">${metaHtml}</div></div>${price ? `<div class="variant-card__price">${price}</div>` : ''}<div class="variant-card__check">✓</div>`;
 
-            if (!isDisabled) {
-                card.addEventListener('click', () => {
-                    grid.querySelectorAll('.variant-card').forEach(c => c.classList.remove('is-selected'));
-                    card.classList.add('is-selected');
-                    selectedVariantId = val;
-                    confirmBtn.disabled = false;
-                    feedback.textContent = `Selected color: ${colorName}`;
+            const selectThisCard = () => {
+                if (isDisabled) return;
+                grid.querySelectorAll('.variant-card').forEach(c => {
+                    c.classList.remove('is-selected');
+                    c.setAttribute('aria-checked', 'false');
                 });
-            }
+                card.classList.add('is-selected');
+                card.setAttribute('aria-checked', 'true');
+                selectedVariantId = val;
+                confirmBtn.disabled = false;
+                feedback.innerHTML = `Selected color: <strong>${colorName}</strong> ${price ? `— <strong style="color:var(--brand-700)">${price}</strong>` : ''}`;
+                confirmBtn.textContent = isBuyNow 
+                    ? (stock <= 0 ? 'Pre-order & Direct Checkout' : 'Proceed to Checkout') 
+                    : 'Add to Cart';
+            };
+
+            card.addEventListener('click', selectThisCard);
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectThisCard();
+                }
+            });
+            card.addEventListener('dblclick', () => {
+                selectThisCard();
+                confirmBtn.click();
+            });
+
             grid.appendChild(card);
         });
+
+        // If only 1 option available, pre-select it
+        if (options.length === 1 && grid.firstElementChild) {
+            grid.firstElementChild.click();
+        }
 
         try { dialog.showModal(); } catch(e) {}
         document.body.style.overflow = 'hidden';
@@ -706,9 +739,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (!isCartStore || form.method.toUpperCase() !== 'POST') return;
 
         const submitter = event.submitter;
-        const isBuyNow = submitter && submitter.name === 'buy_now';
+        const isBuyNow = (submitter && submitter.name === 'buy_now') || form.querySelector('input[name="buy_now"][value="1"]');
         const variantSelect = form.querySelector('.js-card-variant');
-        const needsVariant = variantSelect && !variantSelect.value;
+        const hasVariantSelect = !!variantSelect;
+        const hasSelectedVariant = hasVariantSelect && !!variantSelect.value;
+        const needsVariant = hasVariantSelect && !hasSelectedVariant;
 
         if (needsVariant) {
             event.preventDefault();
@@ -718,8 +753,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             return;
         }
 
-        if (isBuyNow) return;
+        // Direct checkout on Buy / Pre-order: Allow native form POST redirect to /checkout
+        if (isBuyNow) {
+            return;
+        }
 
+        // AJAX Add to Cart workflow
         event.preventDefault();
         const submitBtn = submitter || form.querySelector('button[type="submit"]');
         const originalText = submitBtn ? submitBtn.innerHTML : '';
@@ -731,39 +770,109 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const clientEventId = 'atc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
             if (!formData.has('event_id')) formData.append('event_id', clientEventId);
 
-            const response = await fetch(form.action, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
+            const response = await fetch(form.action, { 
+                method: 'POST', 
+                body: formData, 
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest', 
+                    'Accept': 'application/json' 
+                } 
+            });
             const data = await response.json();
 
             if (response.ok && data.success) {
                 window.updateCartBadge(data.cart_count);
                 window.showToast(data.message || 'Successfully added to cart.');
                 if (typeof window.fbq === 'function') {
-                    window.fbq('track', 'AddToCart', { content_name: data.product_name, content_ids: data.content_id ? [String(data.content_id)] : [], content_type: 'product', value: Number(data.value || 0), currency: data.currency || 'BDT' }, { eventID: data.event_id || clientEventId });
+                    window.fbq('track', 'AddToCart', { 
+                        content_name: data.product_name, 
+                        content_ids: data.content_id ? [String(data.content_id)] : [], 
+                        content_type: 'product', 
+                        value: Number(data.value || 0), 
+                        currency: data.currency || 'BDT' 
+                    }, { eventID: data.event_id || clientEventId });
                 }
-                if (submitBtn) { submitBtn.innerHTML = '✓ Added!'; setTimeout(() => { submitBtn.innerHTML = originalText; }, 1500); }
-            } else { window.showToast(data.message || 'Could not add item to cart.', 'error'); }
-        } catch (err) { window.showToast('Something went wrong. Please try again.', 'error'); } finally {
+                if (submitBtn) { 
+                    submitBtn.innerHTML = '✓ Added!'; 
+                    setTimeout(() => { submitBtn.innerHTML = originalText; }, 1500); 
+                }
+            } else { 
+                window.showToast(data.message || 'Could not add item to cart.', 'error'); 
+            }
+        } catch (err) { 
+            window.showToast('Something went wrong. Please try again.', 'error'); 
+        } finally {
             if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = ''; }
         }
     });
 
     confirmBtn?.addEventListener('click', () => {
-        if (!selectedVariantId) { feedback.textContent = 'Please select a color variant first.'; return; }
+        if (!selectedVariantId) { 
+            feedback.textContent = 'Please select a color variant first.'; 
+            return; 
+        }
+
+        // Apply selected variant to form
         if (sourceSelect) {
             if (sourceSelect.tagName === 'SELECT') {
                 let opt = sourceSelect.querySelector(`option[value="${CSS.escape(selectedVariantId)}"]`);
-                if (!opt) { opt = new Option(selectedVariantId, selectedVariantId, true, true); sourceSelect.add(opt); }
-                opt.disabled = false; opt.selected = true;
+                if (!opt) { 
+                    opt = new Option(selectedVariantId, selectedVariantId, true, true); 
+                    sourceSelect.add(opt); 
+                }
+                opt.disabled = false; 
+                opt.selected = true;
             }
             sourceSelect.value = selectedVariantId;
         }
-        const matchingPill = document.querySelector(`.js-variant-item[data-variant-id="${CSS.escape(selectedVariantId)}"]`);
-        if (matchingPill && typeof window.handleVariantClick === 'function') { try { window.handleVariantClick(matchingPill); } catch(e) {} }
-        try { dialog.close(); } catch(e) {}
+
         if (pendingForm) {
-            if (pendingButton && typeof pendingForm.requestSubmit === 'function') {
-                try { pendingForm.requestSubmit(pendingButton); } catch(e) { pendingForm.requestSubmit(); }
-            } else if (typeof pendingForm.requestSubmit === 'function') { pendingForm.requestSubmit(); } else { pendingForm.submit(); }
+            let hiddenVarInput = pendingForm.querySelector('input[name="variant_id"]');
+            if (!hiddenVarInput && !sourceSelect) {
+                hiddenVarInput = document.createElement('input');
+                hiddenVarInput.type = 'hidden';
+                hiddenVarInput.name = 'variant_id';
+                pendingForm.appendChild(hiddenVarInput);
+            }
+            if (hiddenVarInput) {
+                hiddenVarInput.value = selectedVariantId;
+            }
+        }
+
+        const matchingPill = document.querySelector(`.js-variant-item[data-variant-id="${CSS.escape(selectedVariantId)}"]`);
+        if (matchingPill && typeof window.handleVariantClick === 'function') { 
+            try { window.handleVariantClick(matchingPill); } catch(e) {} 
+        }
+
+        try { dialog.close(); } catch(e) {}
+
+        if (pendingForm) {
+            const isBuyNow = pendingButton && pendingButton.name === 'buy_now';
+            if (isBuyNow) {
+                let buyInput = pendingForm.querySelector('input[name="buy_now"]');
+                if (!buyInput) {
+                    buyInput = document.createElement('input');
+                    buyInput.type = 'hidden';
+                    buyInput.name = 'buy_now';
+                    buyInput.value = '1';
+                    pendingForm.appendChild(buyInput);
+                } else {
+                    buyInput.value = '1';
+                }
+                pendingForm.submit();
+            } else {
+                const existingBuyInput = pendingForm.querySelector('input[name="buy_now"]');
+                if (existingBuyInput && existingBuyInput.type === 'hidden') {
+                    existingBuyInput.remove();
+                }
+                if (pendingButton && typeof pendingForm.requestSubmit === 'function') {
+                    try { pendingForm.requestSubmit(pendingButton); } catch(e) { pendingForm.requestSubmit(); }
+                } else if (typeof pendingForm.requestSubmit === 'function') { 
+                    pendingForm.requestSubmit(); 
+                } else { 
+                    pendingForm.submit(); 
+                }
+            }
         }
     });
 

@@ -62,12 +62,10 @@
                         <div style="font-size:0.75rem;color:#92400e;font-weight:600;margin-top:0.25rem">Pre-order · 25–35 days</div>
                     @endif
                     @php
-                        $activeVarsIndex = $product->activeVariants;
-                        $hasMultipleVariants = $product->has_variants && $activeVarsIndex->count() > 1;
-                        $usesVariants = $product->has_variants && $activeVarsIndex->isNotEmpty();
-                        $canPurchase = $usesVariants
-                            ? $activeVarsIndex->contains(fn ($v) => (int)$v->stock > 0)
-                            : ($product->stock > 0 || $product->available_for_preorder);
+                        $cardVars = $product->activeVariants->isNotEmpty() ? $product->activeVariants : $product->variants;
+                        $hasMultipleVariants = ($product->has_variants || $cardVars->count() > 1) && $cardVars->count() > 1;
+                        $usesVariants = ($product->has_variants || $cardVars->isNotEmpty()) && $cardVars->isNotEmpty();
+                        $canPurchase = true;
                     @endphp
                     <div class="actions">
                         @if($canPurchase)
@@ -78,7 +76,7 @@
                                 @if($hasMultipleVariants)
                                     <select class="js-card-variant" name="variant_id" hidden aria-label="Selected color">
                                         <option value="">Choose a color</option>
-                                        @foreach($product->activeVariants as $index => $variant)
+                                        @foreach($cardVars as $index => $variant)
                                             @php $varImg = app(\App\Services\ProductImageResolver::class)->resolve($variant->image_path ?: ($product->images->first()?->image_path ?? $product->image)); @endphp
                                             <option value="{{ $variant->id }}"
                                                 data-color="{{ trim($variant->color_name ?: $variant->name) }}"
@@ -86,13 +84,13 @@
                                                 data-image="{{ $varImg }}"
                                                 data-price="৳{{ number_format((float)$variant->effective_price, 0) }}"
                                                 data-sku="{{ $variant->sku }}"
-                                                @disabled($variant->stock < 1)>
+                                                data-stock="{{ (int)$variant->stock }}">
                                                 {{ $variant->color_name ?: $variant->name }}
                                             </option>
                                         @endforeach
                                     </select>
                                 @elseif($usesVariants)
-                                    <input type="hidden" name="variant_id" value="{{ $product->activeVariants->first()->id }}">
+                                    <input type="hidden" name="variant_id" value="{{ $cardVars->first()->id }}">
                                 @endif
                                 <button type="submit" class="btn-cart" style="flex:1">Cart</button>
                                 <button type="submit" name="buy_now" value="1" class="btn-buy" style="flex:1">{{ ($product->stock <= 0 || $product->available_for_preorder) ? 'Pre-order' : 'Buy' }}</button>
