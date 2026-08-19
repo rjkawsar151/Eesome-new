@@ -4,10 +4,18 @@
 @push('styles')
 <style>
 .detail{display:grid;grid-template-columns:1.05fr .95fr;gap:3rem;padding-top:3rem;min-width:0}.detail>div{min-width:0}
-.main-image-wrap{position:relative;width:100%;aspect-ratio:1;border-radius:24px;overflow:hidden;background:var(--brand-50);display:flex;align-items:center;justify-content:center}
-.main-image{width:100%;height:100%;object-fit:contain;transition:opacity .15s ease}
+.main-image-wrap{position:relative;width:100%;aspect-ratio:1;border-radius:24px;overflow:hidden;background:var(--brand-50);display:flex;align-items:center;justify-content:center;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.main-image{width:100%;height:100%;object-fit:contain;transition:opacity .18s ease}
 .main-image-badge{position:absolute;top:1rem;left:1rem;z-index:10;background:rgba(26,10,46,.85);color:#fff;padding:.45rem .95rem;border-radius:999px;font-size:.85rem;font-weight:700;letter-spacing:.02em;box-shadow:0 4px 16px rgba(0,0,0,.22);backdrop-filter:blur(8px);pointer-events:none;transition:all .2s ease}
 .main-image-badge:empty{display:none}
+.slider-nav-btn{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.9);border:1px solid rgba(190,24,93,.2);box-shadow:0 4px 16px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;color:var(--brand-700);cursor:pointer;z-index:12;transition:all .2s ease;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.slider-nav-btn:hover{background:#fff;color:var(--brand-900);transform:translateY(-50%) scale(1.08);box-shadow:0 6px 20px rgba(190,24,93,.22)}
+.slider-nav-btn:active{transform:translateY(-50%) scale(.95)}
+.slider-nav-prev{left:.85rem}
+.slider-nav-next{right:.85rem}
+.slider-indicators{position:absolute;bottom:.85rem;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:.4rem;z-index:12;padding:.35rem .65rem;border-radius:999px;background:rgba(26,10,46,.55);backdrop-filter:blur(6px);pointer-events:auto}
+.slider-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45);cursor:pointer;transition:all .2s ease}
+.slider-dot.active{width:20px;border-radius:999px;background:#ffffff}
 .thumbs{display:flex;gap:.65rem;margin-top:.75rem;overflow:auto}.thumbs button{padding:0;border:2px solid var(--brand-100);border-radius:10px;background:#fff;cursor:pointer;transition:border-color .2s,box-shadow .2s;flex-shrink:0}.thumbs button.active{border-color:var(--brand-600);box-shadow:0 0 0 2px var(--brand-100)}.thumbs img{display:block;width:74px;height:74px;object-fit:contain;border-radius:8px}
 .eyebrow{color:var(--brand-700);font-weight:700}.detail h1{font-size:clamp(2rem,4vw,3.2rem);margin:.5rem 0}.detail-price{font-size:1.7rem;color:var(--brand-700);font-weight:800}.detail-price s{font-size:1rem;color:#9ca3af;margin-left:.5rem}.stock{display:inline-block;padding:.35rem .7rem;border-radius:999px;background:#dcfce7;color:#166534;font-weight:700;font-size:.8rem}.description{line-height:1.8;color:#4b5563;overflow-wrap:anywhere}
 .variants{position:relative;z-index:10;margin:1.25rem 0}
@@ -20,16 +28,89 @@
 .buybox{display:flex;gap:.75rem;margin:1.5rem 0;position:relative;z-index:5}.buybox input[type=number]{width:80px;border:1px solid #d1d5db;border-radius:10px;padding:.75rem}.buybox button{border:1px solid rgba(190,24,93,.18);border-radius:10px;background:#e1d0f0;color:#1e1b4b;font-weight:800;padding:.8rem 1.5rem;cursor:pointer;transition:all .2s}.buybox button:hover{background:#d4bee8;color:#1e1b4b;border-color:rgba(190,24,93,.3)}.buybox button[name="buy_now"]{background:#7e22ce;color:#fff;border:1px solid rgba(126,34,206,.2)}.buybox button[name="buy_now"]:hover{background:#6b21a8;color:#fff;border-color:rgba(107,33,168,.3)}
 .reviews,.review-entry,.related{margin-top:4rem}.review{border-top:1px solid #eee;padding:1.25rem 0}.stars{color:#f59e0b}.review-image{display:block;max-width:320px;max-height:320px;width:auto;height:auto;object-fit:contain;border-radius:14px;border:1px solid var(--brand-100);margin-top:.75rem}.review-form{max-width:760px;display:grid;gap:.85rem;padding:1.25rem;margin:1.5rem 0 2rem;background:var(--brand-50);border-radius:16px}.review-form input,.review-form select,.review-form textarea{width:100%;padding:.75rem;border:1px solid #d1d5db;border-radius:9px;background:#fff}.review-form textarea{min-height:120px;resize:vertical}.review-form button{justify-self:start;border:0;border-radius:9px;background:var(--brand-600);color:#fff;padding:.75rem 1.2rem;font-weight:700;cursor:pointer}.review-fields{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}.related-header{display:flex;align-items:end;justify-content:space-between;gap:1rem;margin-bottom:1.25rem}.related-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.25rem}.related-card{display:flex;flex-direction:column;min-width:0;border:1px solid #f0e4eb;border-radius:18px;background:#fff;overflow:hidden;box-shadow:0 4px 16px rgba(23,18,26,.05)}.related-card__image{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:var(--brand-50);padding:.5rem}.related-card__body{display:flex;flex:1;flex-direction:column;padding:.9rem}.related-card__name{margin:0 0 .4rem;font-size:.95rem;line-height:1.35}.related-card__price{color:var(--brand-700);font-weight:800;margin-bottom:.8rem}.related-card__actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:auto}.related-card__actions form{margin:0}.related-card__actions button,.related-card__actions a{display:flex;width:100%;min-height:40px;align-items:center;justify-content:center;border-radius:9px;padding:.55rem;border:0;font:inherit;font-size:.78rem;font-weight:800;text-decoration:none;cursor:pointer}.related-card__cart{background:#e1d0f0;color:#1e1b4b;border:1px solid rgba(190,24,93,.18)!important}.related-card__cart:hover{background:#d4bee8;color:#1e1b4b}.related-card__details{background:var(--brand-50);color:var(--brand-700);border:1px solid var(--brand-100)!important}.explore-all{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:.7rem 1.1rem;background:var(--brand-600);color:#fff;text-decoration:none;font-weight:800;white-space:nowrap}
 @media(max-width:980px){.related-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:760px){.detail{grid-template-columns:1fr;gap:1.5rem}.review-fields{grid-template-columns:1fr}.related-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}.related-header{align-items:flex-start;flex-direction:column}.related-card__actions{grid-template-columns:1fr}.review-image{max-width:100%}.buybox{flex-direction:column;align-items:stretch}.buybox input[type=number],.buybox button{width:100%}}
+@media(max-width:760px){.detail{grid-template-columns:1fr;gap:1.5rem}.review-fields{grid-template-columns:1fr}.related-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}.related-header{align-items:flex-start;flex-direction:column}.related-card__actions{grid-template-columns:1fr}.review-image{max-width:100%}.buybox{flex-direction:column;align-items:stretch}.buybox input[type=number],.buybox button{width:100%}.slider-nav-btn{width:38px;height:38px}}
 dialog:not([open]){display:none!important;pointer-events:none!important}
 @keyframes variant-dialog-in{from{opacity:0;transform:translateY(16px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes variant-backdrop-in{from{background:rgba(23,18,26,0)}to{background:rgba(23,18,26,.55)}}.variant-dialog[open]{animation:variant-dialog-in 280ms cubic-bezier(.22,1,.36,1) both;display:block!important;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999}.variant-dialog[open]::backdrop{animation:variant-backdrop-in 240ms ease-out both}.variant-dialog{width:min(92vw,480px);padding:1.5rem;border:0;border-radius:22px;box-shadow:0 24px 70px rgba(25,15,22,.28);text-align:center}.variant-dialog::backdrop{background:rgba(23,18,26,.55);backdrop-filter:blur(3px)}.variant-close{position:absolute;right:.8rem;top:.8rem;width:40px;height:40px;border:0;border-radius:50%;background:var(--brand-50);font-size:1.35rem;cursor:pointer}.variant-dialog-image{width:150px;height:150px;margin:auto;object-fit:contain}.variant-select{width:100%;margin:.75rem 0;padding:.8rem;border:1px solid var(--brand-100);border-radius:10px}.variant-feedback{color:var(--text-muted);font-size:.85rem}.variant-dialog #variant-confirm{width:100%;min-height:46px;border:0;border-radius:10px;background:var(--brand-600);color:#fff;font-weight:800;cursor:pointer}@media(max-width:600px){@keyframes variant-dialog-in{from{opacity:0;transform:translateY(42px)}to{opacity:1;transform:translateY(0)}}.variant-dialog{width:100%;max-width:none;margin:auto 0 0;border-radius:22px 22px 0 0}}@media(prefers-reduced-motion:reduce){.variant-dialog[open],.variant-dialog[open]::backdrop{animation:none}}
 </style>
 @endpush
 @push('scripts')
 <script>
+window.productSlides = window.productSlides || [];
+window.currentSlideIndex = 0;
 
+window.goToSlide = function(index, syncVariant = true) {
+    if (!window.productSlides || window.productSlides.length === 0) return;
+    var total = window.productSlides.length;
+    if (index < 0) index = total - 1;
+    if (index >= total) index = 0;
+    window.currentSlideIndex = index;
 
-window.handleVariantClick = function(button, event) {
+    var slide = window.productSlides[index];
+    var mainImg = document.getElementById('main-product-image');
+    if (mainImg && slide && slide.url) {
+        mainImg.style.opacity = '0.7';
+        mainImg.src = slide.url;
+        setTimeout(function() { mainImg.style.opacity = '1'; }, 120);
+    }
+
+    var imageBadge = document.getElementById('main-image-badge');
+    if (imageBadge) {
+        if (slide && slide.color) {
+            imageBadge.textContent = slide.color;
+            imageBadge.style.display = 'inline-block';
+        } else {
+            imageBadge.style.display = 'none';
+        }
+    }
+
+    // Sync dots
+    var dots = document.querySelectorAll('.slider-dot');
+    for (var d = 0; d < dots.length; d++) {
+        if (d === index) {
+            dots[d].classList.add('active');
+        } else {
+            dots[d].classList.remove('active');
+        }
+    }
+
+    // Sync thumbnails
+    var thumbs = document.querySelectorAll('.thumbs .js-variant-image');
+    for (var t = 0; t < thumbs.length; t++) {
+        var thumb = thumbs[t];
+        var thumbImg = thumb.getAttribute('data-image') || thumb.dataset.image || '';
+        var thumbColor = (thumb.getAttribute('data-color') || thumb.dataset.color || '').trim().toLowerCase();
+        var slideColor = (slide && slide.color ? slide.color : '').trim().toLowerCase();
+        var isMatch = (slide && slide.url && thumbImg === slide.url) || (slideColor && thumbColor && thumbColor === slideColor);
+        if (isMatch) {
+            thumb.classList.add('active');
+            try { thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch(e) {}
+        } else {
+            thumb.classList.remove('active');
+        }
+    }
+
+    // Auto-select variant if image has associated color
+    if (syncVariant && slide && slide.color) {
+        var colorLower = slide.color.trim().toLowerCase();
+        var allVariants = document.querySelectorAll('.js-variant-item');
+        var matchingBtn = null;
+        for (var v = 0; v < allVariants.length; v++) {
+            var vc = (allVariants[v].getAttribute('data-color') || allVariants[v].dataset.color || '').trim().toLowerCase();
+            if (vc === colorLower) {
+                matchingBtn = allVariants[v];
+                break;
+            }
+        }
+        if (matchingBtn) {
+            window.handleVariantClick(matchingBtn, null, false);
+        } else {
+            var colorSpan = document.getElementById('selected-color');
+            if (colorSpan) colorSpan.textContent = slide.color;
+        }
+    }
+};
+
+window.handleVariantClick = function(button, event, syncSlider = true) {
     if (event && event.type === 'click') {
         event.stopPropagation();
     }
@@ -47,44 +128,38 @@ window.handleVariantClick = function(button, event) {
     var price = button.getAttribute('data-price') || button.dataset.price || '';
     var sku = button.getAttribute('data-sku') || button.dataset.sku || '';
 
-    // 1. Replace main product image immediately
-    var mainImg = document.getElementById('main-product-image');
-    if (mainImg && imgUrl) {
-        mainImg.src = imgUrl;
-    }
-
-    // 2. Show variant name badge on image left corner
+    // 1. Show variant name badge on image left corner
     var imageBadge = document.getElementById('main-image-badge');
     if (imageBadge) {
         imageBadge.textContent = color;
         imageBadge.style.display = color ? 'inline-block' : 'none';
     }
 
-    // 3. Update "Color: <selected-color>" text
+    // 2. Update "Choose your color: <selected-color>" text
     var colorSpan = document.getElementById('selected-color');
     if (colorSpan) {
         colorSpan.textContent = color;
     }
 
-    // 4. Update hidden input for cart
+    // 3. Update hidden input for cart
     var variantInput = document.getElementById('selected-variant-id');
     if (variantInput && variantId) {
         variantInput.value = variantId;
     }
 
-    // 5. Update purchase modal select if present
+    // 4. Update purchase modal select if present
     var select = document.getElementById('purchase-variant');
     if (select && variantId) {
         select.value = variantId;
     }
 
-    // 6. Update SKU
+    // 5. Update SKU
     var skuEl = document.getElementById('product-sku');
     if (skuEl && sku) {
         skuEl.textContent = sku;
     }
 
-    // 7. Update Price
+    // 6. Update Price
     if (price) {
         var priceEl = document.querySelector('.detail-price');
         if (priceEl) {
@@ -97,27 +172,51 @@ window.handleVariantClick = function(button, event) {
         }
     }
 
-    // 8. Sync Thumbnails
-    var colorLower = color.trim().toLowerCase();
-    var thumbMatched = false;
-    var thumbs = document.querySelectorAll('.thumbs .js-variant-image');
-    for (var j = 0; j < thumbs.length; j++) {
-        var thumb = thumbs[j];
-        var thumbColor = (thumb.getAttribute('data-color') || thumb.dataset.color || '').trim().toLowerCase();
-        var thumbImg = thumb.getAttribute('data-image') || thumb.dataset.image || '';
-        var isMatch = (colorLower && thumbColor && thumbColor === colorLower) || (imgUrl && thumbImg === imgUrl);
-        if (isMatch && !thumbMatched) {
-            thumb.classList.add('active');
-            thumbMatched = true;
-            try { thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); } catch(e) {}
-        } else {
-            thumb.classList.remove('active');
+    // 7. Sync slider image when variant is selected
+    if (syncSlider && window.productSlides && window.productSlides.length > 0) {
+        var colorLower = color.trim().toLowerCase();
+        var targetIndex = -1;
+        for (var s = 0; s < window.productSlides.length; s++) {
+            var sc = (window.productSlides[s].color || '').trim().toLowerCase();
+            var su = window.productSlides[s].url || '';
+            if ((imgUrl && su === imgUrl) || (colorLower && sc === colorLower)) {
+                targetIndex = s;
+                break;
+            }
         }
+        if (targetIndex >= 0) {
+            window.goToSlide(targetIndex, false);
+        } else if (imgUrl) {
+            var mainImg = document.getElementById('main-product-image');
+            if (mainImg) mainImg.src = imgUrl;
+        }
+    } else if (imgUrl) {
+        var mainImg = document.getElementById('main-product-image');
+        if (mainImg) mainImg.src = imgUrl;
     }
 };
 
 window.handleThumbClick = function(thumb, event) {
     if (!thumb) return;
+    var imgUrl = thumb.getAttribute('data-image') || thumb.dataset.image || '';
+    var color = thumb.getAttribute('data-color') || thumb.dataset.color || '';
+
+    if (window.productSlides && window.productSlides.length > 0) {
+        var colorLower = color.trim().toLowerCase();
+        var targetIndex = -1;
+        for (var s = 0; s < window.productSlides.length; s++) {
+            var su = window.productSlides[s].url || '';
+            var sc = (window.productSlides[s].color || '').trim().toLowerCase();
+            if ((imgUrl && su === imgUrl) || (colorLower && sc === colorLower)) {
+                targetIndex = s;
+                break;
+            }
+        }
+        if (targetIndex >= 0) {
+            window.goToSlide(targetIndex, true);
+            return;
+        }
+    }
 
     var allThumbs = document.querySelectorAll('.thumbs .js-variant-image');
     for (var i = 0; i < allThumbs.length; i++) {
@@ -125,13 +224,8 @@ window.handleThumbClick = function(thumb, event) {
     }
     thumb.classList.add('active');
 
-    var imgUrl = thumb.getAttribute('data-image') || thumb.dataset.image;
-    var color = thumb.getAttribute('data-color') || thumb.dataset.color || '';
-
     var mainImg = document.getElementById('main-product-image');
-    if (mainImg && imgUrl) {
-        mainImg.src = imgUrl;
-    }
+    if (mainImg && imgUrl) mainImg.src = imgUrl;
 
     var imageBadge = document.getElementById('main-image-badge');
     if (imageBadge) {
@@ -148,7 +242,7 @@ window.handleThumbClick = function(thumb, event) {
             if (c === colorLower) { matchingBtn = allVariants[j]; break; }
         }
         if (matchingBtn) {
-            window.handleVariantClick(matchingBtn, event);
+            window.handleVariantClick(matchingBtn, event, false);
         } else {
             var colorSpan = document.getElementById('selected-color');
             if (colorSpan) colorSpan.textContent = color;
@@ -167,8 +261,19 @@ window.handleColorFallbackClick = function(btn, event) {
     var imgUrl = btn.getAttribute('data-image') || btn.dataset.image;
     var color = btn.getAttribute('data-color') || btn.dataset.color || '';
 
-    var mainImg = document.getElementById('main-product-image');
-    if (mainImg && imgUrl) mainImg.src = imgUrl;
+    if (window.productSlides && window.productSlides.length > 0) {
+        var colorLower = color.trim().toLowerCase();
+        for (var s = 0; s < window.productSlides.length; s++) {
+            var sc = (window.productSlides[s].color || '').trim().toLowerCase();
+            if (colorLower && sc === colorLower) {
+                window.goToSlide(s, false);
+                break;
+            }
+        }
+    } else {
+        var mainImg = document.getElementById('main-product-image');
+        if (mainImg && imgUrl) mainImg.src = imgUrl;
+    }
 
     var imageBadge = document.getElementById('main-image-badge');
     if (imageBadge) {
@@ -178,26 +283,79 @@ window.handleColorFallbackClick = function(btn, event) {
 
     var colorSpan = document.getElementById('selected-color');
     if (colorSpan) colorSpan.textContent = color;
-
-    var colorLower = color.trim().toLowerCase();
-    var thumbs = document.querySelectorAll('.thumbs .js-variant-image');
-    for (var j = 0; j < thumbs.length; j++) {
-        var tc = (thumbs[j].getAttribute('data-color') || thumbs[j].dataset.color || '').trim().toLowerCase();
-        if (colorLower && tc === colorLower) {
-            thumbs[j].classList.add('active');
-        } else {
-            thumbs[j].classList.remove('active');
-        }
-    }
 };
 
-// Global capturing click listener as bulletproof fallback
+// Global click listener for variant items
 document.addEventListener('click', function(e) {
     var btn = e.target && e.target.closest ? e.target.closest('.js-variant-item') : null;
     if (btn) {
-        window.handleVariantClick(btn, e);
+        window.handleVariantClick(btn, e, true);
     }
 }, true);
+
+// Initialize swipe and button listeners on load
+document.addEventListener('DOMContentLoaded', function() {
+    var prevBtn = document.getElementById('slider-prev-btn');
+    var nextBtn = document.getElementById('slider-next-btn');
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.goToSlide(window.currentSlideIndex - 1, true);
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.goToSlide(window.currentSlideIndex + 1, true);
+        });
+    }
+
+    // Dot clicks
+    var dots = document.querySelectorAll('.slider-dot');
+    dots.forEach(function(dot) {
+        dot.addEventListener('click', function(e) {
+            e.preventDefault();
+            var idx = parseInt(dot.getAttribute('data-slide-index') || 0, 10);
+            window.goToSlide(idx, true);
+        });
+    });
+
+    // Touch swipe support on main image container
+    var sliderWrap = document.getElementById('main-image-container');
+    if (sliderWrap) {
+        var startX = 0, startY = 0, startTime = 0;
+        var threshold = 40; // minimum swipe distance
+        var restraint = 100; // maximum vertical deviation allowed
+
+        sliderWrap.addEventListener('touchstart', function(e) {
+            var touch = e.changedTouches[0];
+            startX = touch.pageX;
+            startY = touch.pageY;
+            startTime = new Date().getTime();
+        }, { passive: true });
+
+        sliderWrap.addEventListener('touchend', function(e) {
+            var touch = e.changedTouches[0];
+            var distX = touch.pageX - startX;
+            var distY = touch.pageY - startY;
+            var elapsedTime = new Date().getTime() - startTime;
+
+            if (elapsedTime <= 500 && Math.abs(distX) >= threshold && Math.abs(distY) <= restraint) {
+                if (distX < 0) {
+                    // Swiped Left -> Next image
+                    window.goToSlide(window.currentSlideIndex + 1, true);
+                } else {
+                    // Swiped Right -> Previous image
+                    window.goToSlide(window.currentSlideIndex - 1, true);
+                }
+            }
+        }, { passive: true });
+    }
+});
 </script>
 @endpush
 @section('content')
@@ -227,26 +385,60 @@ document.addEventListener('click', function(e) {
         return $imgPath ? app(\App\Services\ProductImageResolver::class)->resolve($imgPath) : null;
     };
 
+    // Construct full ordered slides array
+    $slides = [];
+    if ($product->images->isNotEmpty()) {
+        foreach ($product->images as $img) {
+            $slides[] = [
+                'url' => app(\App\Services\ProductImageResolver::class)->resolve($img->image_path),
+                'color' => trim((string)$img->color_name),
+                'alt' => $img->color_name ?: ($img->alt_text ?: $product->name),
+            ];
+        }
+    } else {
+        $primaryImg = $product->image;
+        $slides[] = [
+            'url' => app(\App\Services\ProductImageResolver::class)->resolve($primaryImg),
+            'color' => '',
+            'alt' => $product->name,
+        ];
+    }
+
     $initialResolvedImage = $defaultVariant ? $resolveVariantImage($defaultVariant, 0) : null;
     if (!$initialResolvedImage) {
-        $primary = $product->images->first()?->image_path ?? $product->image;
-        $initialResolvedImage = app(\App\Services\ProductImageResolver::class)->resolve($primary);
+        $initialResolvedImage = $slides[0]['url'] ?? app(\App\Services\ProductImageResolver::class)->placeholder();
     }
     $initialColorName = trim($defaultVariant?->color_name ?: ($defaultVariant?->name ?: ($colorVariants->first()?->color_name ?? '')));
 @endphp
+<script>
+window.productSlides = @json($slides);
+</script>
 <main class="container">
 <section class="detail">
     <div>
-        <div class="main-image-wrap">
+        <div class="main-image-wrap" id="main-image-container">
             <span id="main-image-badge" class="main-image-badge" @if(empty($initialColorName)) style="display:none" @endif>{{ $initialColorName }}</span>
             <img id="main-product-image" class="main-image" src="{{ $initialResolvedImage }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $product->name }}">
+
+            @if(count($slides) > 1)
+                <button type="button" class="slider-nav-btn slider-nav-prev" id="slider-prev-btn" aria-label="Previous product image">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <button type="button" class="slider-nav-btn slider-nav-next" id="slider-next-btn" aria-label="Next product image">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+                <div class="slider-indicators" id="slider-indicators" aria-hidden="true">
+                    @foreach($slides as $i => $s)
+                        <span class="slider-dot @if($loop->first) active @endif" data-slide-index="{{ $i }}"></span>
+                    @endforeach
+                </div>
+            @endif
         </div>
-        @if($product->images->count() > 1)
+        @if(count($slides) > 1)
         <div class="thumbs">
-            @foreach($product->images as $image)
-                @php $resolvedThumb = app(\App\Services\ProductImageResolver::class)->resolve($image->image_path); @endphp
-                <button type="button" class="js-variant-image @if($resolvedThumb === $initialResolvedImage || ($loop->first && !$defaultVariant)) active @endif" onclick="handleThumbClick(this, event)" data-image="{{ $resolvedThumb }}" data-color="{{ trim((string)$image->color_name) }}" title="{{ $image->color_name ?: ($image->alt_text ?: $product->name) }}">
-                    <img src="{{ $resolvedThumb }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $image->color_name ?: ($image->alt_text ?: $product->name) }}" loading="lazy">
+            @foreach($slides as $i => $s)
+                <button type="button" class="js-variant-image @if($loop->first) active @endif" onclick="handleThumbClick(this, event)" data-image="{{ $s['url'] }}" data-color="{{ $s['color'] }}" title="{{ $s['alt'] }}">
+                    <img src="{{ $s['url'] }}" onerror="this.onerror=null;this.src='{{ app(\App\Services\ProductImageResolver::class)->placeholder() }}'" alt="{{ $s['alt'] }}" loading="lazy">
                 </button>
             @endforeach
         </div>
@@ -321,8 +513,6 @@ document.addEventListener('click', function(e) {
         <div class="description">{!! $product->clean_description !!}</div>
     </div>
 </section>
-
-
 
 <section class="reviews">
     <h2>Customer reviews</h2>
@@ -423,5 +613,3 @@ if (typeof window.fbq === 'function') {
 }
 </script>
 @endpush
-
-

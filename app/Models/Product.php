@@ -185,4 +185,23 @@ class Product extends Model
     {
         return $this->hasMany(InventoryMovement::class, 'product_id');
     }
+
+    public function scopeOrderByInStockFirst($query)
+    {
+        return $query->orderByRaw('
+            CASE 
+                WHEN products.is_sold_out = 1 OR products.is_preorder = 1 THEN 0
+                WHEN products.has_variants = 1 THEN (
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM product_variants 
+                        WHERE product_variants.product_id = products.id 
+                          AND product_variants.is_active = 1 
+                          AND product_variants.stock > 0
+                    ) THEN 1 ELSE 0 END
+                )
+                WHEN products.stock > 0 THEN 1
+                ELSE 0
+            END DESC, products.id DESC
+        ');
+    }
 }

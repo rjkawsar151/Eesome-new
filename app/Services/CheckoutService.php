@@ -50,11 +50,18 @@ class CheckoutService
                 $product = $products[$productId];
                 $qty = (int) $requestedQty;
                 $variant = empty($cartLine['variant_id']) ? null : $product->variants->firstWhere('id', (int) $cartLine['variant_id']);
-                if ($product->has_variants and ! $variant) throw new \RuntimeException('A selected color is no longer available.');
-                if ($variant and ! $variant->is_active) throw new \RuntimeException('A selected color is inactive.');
-                $availableStock = $variant ? $variant->stock : $product->stock;
+                if ($product->has_variants && ! $variant && $product->variants->count() === 1) {
+                    $variant = $product->variants->first();
+                }
+                if ($product->has_variants && ! $variant && $product->variants->isNotEmpty()) {
+                    throw new \RuntimeException("Please select an available color for '{$product->name}'.");
+                }
+                if ($variant && ! $variant->is_active) {
+                    throw new \RuntimeException("A selected color for '{$product->name}' is no longer active.");
+                }
+                $availableStock = (int) ($variant ? $variant->stock : $product->stock);
 
-                if (! $product->available_for_preorder and $availableStock < $qty) {
+                if (! $product->available_for_preorder && $availableStock < $qty) {
                     throw new \RuntimeException("'{$product->name}' has insufficient stock.");
                 }
 
@@ -113,6 +120,7 @@ class CheckoutService
                 'payment_method' => $customerData['payment_method'] ?? 'COD',
                 'payment_status' => 'pending',
                 'order_status' => 'awaiting',
+                'transaction_id' => $customerData['transaction_id'] ?? null,
                 'placed_from' => 'web',
             ]);
 
@@ -120,13 +128,14 @@ class CheckoutService
             foreach ($orderLines as $line) {
                 $p = $line['product'];
                 $variant = $line['variant'];
+                $colorName = $variant?->color_name ?: ($variant?->color ?: ($variant?->name ?: null));
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $p->id,
                     'variant_id' => $variant?->id,
                     'product_name' => $p->name,
                     'product_sku' => $variant?->sku ?? $p->sku ?? 'LEGACY-'.$p->id,
-                    'selected_color_name' => $variant?->color_name ?? $variant?->color,
+                    'selected_color_name' => $colorName,
                     'selected_color_code' => $variant?->color_code,
                     'product_image' => $variant?->image ?? $p->image,
                     'price' => (string) $line['unit_price'],

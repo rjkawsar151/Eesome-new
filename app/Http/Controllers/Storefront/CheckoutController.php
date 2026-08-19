@@ -47,6 +47,20 @@ class CheckoutController extends Controller
         if ($data['payment_method'] === 'COD' && ! $shippingMethod->cod_available) {
             return back()->withInput()->withErrors(['payment_method' => 'Cash on delivery is not available for this delivery method.']);
         }
+
+        $paymentMethod = PaymentMethod::where('code', $data['payment_method'])->where('is_active', true)->first();
+        if ($paymentMethod && $paymentMethod->requires_transaction_id) {
+            $request->validate([
+                'transaction_id' => 'required|string|min:3|max:100',
+            ], [
+                'transaction_id.required' => 'Transaction ID is required for ' . $paymentMethod->name . '.',
+                'transaction_id.min' => 'Please enter a valid Transaction ID.',
+            ]);
+            $data['transaction_id'] = trim((string) $request->input('transaction_id'));
+        } else {
+            $data['transaction_id'] = $request->filled('transaction_id') ? trim((string) $request->input('transaction_id')) : null;
+        }
+
         if (Auth::check()) {
             $rawItems = $this->cartService->getDbCart(Auth::id());
             $cartMap = $rawItems->map(fn ($item) => ['product_id' => $item->product_id, 'variant_id' => $item->variant_id, 'quantity' => $item->quantity])->all();

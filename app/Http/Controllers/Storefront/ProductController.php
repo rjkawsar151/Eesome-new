@@ -39,7 +39,7 @@ class ProductController extends Controller
         }
 
         $products = $query
-            ->latest('id')
+            ->orderByInStockFirst()
             ->paginate(8)
             ->withQueryString();
 

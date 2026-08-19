@@ -114,21 +114,25 @@
         .nav-cart-badge { position: absolute; top: -8px; right: -8px; background: var(--brand-600); color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
         .mobile-bottom-nav { display: none; }
 
-        /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ WhatsApp Button ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+        /* ── WhatsApp Button ── */
         .whatsapp-btn { position: fixed; bottom: calc(1rem + env(safe-area-inset-bottom)); right: 1rem; z-index: 200; background: #25d366; color: #fff; border-radius: 50%; width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 4px 20px rgba(37,211,102,0.4); transition: transform .2s, box-shadow .2s; }
         .whatsapp-btn:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(37,211,102,0.5); }
         .whatsapp-btn::before { content: 'Chat with us'; position: absolute; right: calc(100% + .65rem); padding: .45rem .7rem; border-radius: 8px; background: #17121a; color: #fff; font-size: .75rem; font-weight: 600; white-space: nowrap; opacity: 0; transform: translateX(6px); pointer-events: none; transition: opacity .2s, transform .2s; }
         .whatsapp-btn:hover::before, .whatsapp-btn:focus-visible::before { opacity: 1; transform: translateX(0); }
 
-        /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Alerts ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+        /* ── Alerts & Toast Notifications ── */
         .alert { padding: .75rem 1.25rem; border-radius: 10px; margin-bottom: 1rem; font-size: .9rem; }
         .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
         .alert-error   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-        .toast-success { position: fixed; z-index: 500; top: 88px; right: 1.25rem; display: flex; align-items: center; gap: .75rem; max-width: min(390px, calc(100vw - 2rem)); padding: .9rem 1rem; border: 1px solid rgba(255,255,255,.32); border-radius: 14px; background: rgba(22,101,52,.94); color: #fff; box-shadow: 0 14px 35px rgba(0,0,0,.24); backdrop-filter: blur(14px); transition: opacity .25s, transform .25s; }
-        .toast-success.is-leaving { opacity: 0; transform: translateY(-10px); }
-        .toast-success button { margin-left: auto; border: 0; background: transparent; color: #fff; font-size: 1.15rem; cursor: pointer; }
+        .toast-success, .toast-error, .toast-warning { position: fixed; z-index: 9999; top: 88px; right: 1.25rem; display: flex; align-items: center; gap: .75rem; max-width: min(420px, calc(100vw - 2rem)); padding: .9rem 1.1rem; border-radius: 14px; color: #fff; box-shadow: 0 14px 35px rgba(0,0,0,.28); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: opacity .25s, transform .25s; }
+        .toast-success { border: 1px solid rgba(255,255,255,.32); background: rgba(22,101,52,.95); }
+        .toast-error   { border: 1px solid rgba(255,255,255,.32); background: rgba(185,28,28,.95); }
+        .toast-warning { border: 1px solid rgba(255,255,255,.32); background: rgba(180,83,9,.95); }
+        .toast-success.is-leaving, .toast-error.is-leaving, .toast-warning.is-leaving { opacity: 0; transform: translateY(-10px); }
+        .toast-success button, .toast-error button, .toast-warning button { margin-left: auto; border: 0; background: transparent; color: #fff; font-size: 1.25rem; line-height: 1; cursor: pointer; padding: 0 .2rem; opacity: .85; }
+        .toast-success button:hover, .toast-error button:hover, .toast-warning button:hover { opacity: 1; }
 
-        /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Container ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+        /* ── Container ── */
         .container { width: min(calc(100% - 40px), 1200px); margin-inline: auto; }
         .section-gap { padding: 4rem 0; }
 
@@ -606,22 +610,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     };
 
     window.showToast = function(message, type = 'success') {
-        let toast = document.getElementById('success-toast');
+        let toast = document.getElementById('global-toast');
         if (!toast) {
-            const container = document.querySelector('.container') || document.body;
             toast = document.createElement('div');
-            toast.id = 'success-toast';
-            toast.className = type === 'error' ? 'alert alert-error' : 'toast-success';
+            toast.id = 'global-toast';
             toast.setAttribute('role', 'status');
             toast.setAttribute('aria-live', 'polite');
-            container.prepend(toast);
+            document.body.appendChild(toast);
         } else {
             toast.classList.remove('is-leaving');
-            toast.className = type === 'error' ? 'alert alert-error' : 'toast-success';
         }
-        toast.innerHTML = type === 'error'
-            ? `<span>${message}</span>`
-            : `<span>✓</span><span>${message}</span><button type="button" aria-label="Dismiss notification">×</button>`;
+        const toastClass = type === 'error' ? 'toast-error' : (type === 'warning' ? 'toast-warning' : 'toast-success');
+        const icon = type === 'error' ? '✕' : (type === 'warning' ? '⚠' : '✓');
+        toast.className = toastClass;
+        toast.innerHTML = `<span style="font-weight:bold;font-size:1.1rem;line-height:1">${icon}</span><span style="font-size:0.92rem;font-weight:600">${message}</span><button type="button" aria-label="Dismiss notification">×</button>`;
 
         toast.querySelector('button')?.addEventListener('click', () => {
             toast.classList.add('is-leaving');
@@ -631,7 +633,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         window._toastTimer = setTimeout(() => {
             toast.classList.add('is-leaving');
             setTimeout(() => toast.remove(), 260);
-        }, 3500);
+        }, 4000);
     };
 
     window.openVariantModal = function(form, submitter, variantSelect) {

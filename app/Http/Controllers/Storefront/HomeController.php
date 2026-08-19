@@ -28,7 +28,7 @@ class HomeController extends Controller
 
         $allProducts = Product::with(['images', 'activeVariants'])
             ->where('is_active', true)
-            ->latest('id')
+            ->orderByInStockFirst()
             ->paginate(12);
 
         $latestPosts = BlogPost::latest()->take(3)->get();

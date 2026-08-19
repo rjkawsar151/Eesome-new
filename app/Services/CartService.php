@@ -60,7 +60,7 @@ class CartService
         if (empty($raw)) return [];
 
         $productIds = collect($raw)->map(fn ($item, $key) => $item['product_id'] ?? (int) $key)->all();
-        $products = Product::with(['images','activeVariants'])->whereIn('id', $productIds)
+        $products = Product::with(['images', 'activeVariants', 'variants'])->whereIn('id', $productIds)
             ->where('is_active', true)
             ->get()
             ->keyBy('id');
@@ -70,16 +70,30 @@ class CartService
             $productId = (int) ($data['product_id'] ?? $key);
             if (!isset($products[$productId])) continue;
             $product = $products[$productId];
-            $variant = ! empty($data['variant_id']) ? $product->activeVariants->firstWhere('id', (int) $data['variant_id']) : null;
-            if ($product->has_variants && ! $variant) continue;
+            
+            $variant = ! empty($data['variant_id'])
+                ? ($product->activeVariants->firstWhere('id', (int) $data['variant_id']) ?? $product->variants->firstWhere('id', (int) $data['variant_id']))
+                : null;
+
+            if ($product->has_variants && ! $variant) {
+                if ($product->activeVariants->count() === 1) {
+                    $variant = $product->activeVariants->first();
+                } elseif ($product->variants->count() === 1) {
+                    $variant = $product->variants->first();
+                } else {
+                    continue;
+                }
+            }
+
             $qty = max(1, (int)$data['quantity']);
+            $unitPrice = (string) ($variant?->effective_price ?? $product->effective_price);
             $items[] = [
                 'product' => $product,
                 'quantity' => $qty,
                 'variant' => $variant,
                 'key' => (string) $key,
-                'unit_price' => $variant?->effective_price ?? $product->effective_price,
-                'line_total' => bcmul($variant?->effective_price ?? $product->effective_price, (string)$qty, 2),
+                'unit_price' => $unitPrice,
+                'line_total' => bcmul($unitPrice, (string)$qty, 2),
             ];
         }
         return $items;
@@ -89,7 +103,7 @@ class CartService
 
     public function getDbCart(int $userId): \Illuminate\Database\Eloquent\Collection
     {
-        return CartItem::with(['product.images', 'productVariant'])
+        return CartItem::with(['product.images', 'product.variants', 'productVariant'])
             ->where('user_id', $userId)
             ->get();
     }
