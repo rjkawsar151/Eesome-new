@@ -77,7 +77,7 @@ class Product extends Model
         if ($this->has_variants) {
             $vars = $this->relationLoaded('variants') ? $this->variants : $this->variants()->get();
             if ($vars->isNotEmpty()) {
-                return $vars->every(fn ($v) => (int) $v->stock <= 0);
+                return true;
             }
         }
 

@@ -132,6 +132,73 @@ class StorefrontEnhancementsTest extends TestCase
         $this->assertArrayHasKey($product->id.':'.$variant->id, session('guest_cart'));
     }
 
+    public function test_product_with_mixed_stock_variants_allows_adding_zero_stock_color(): void
+    {
+        $category = Category::create(['name' => 'Pouches', 'slug' => 'pouches', 'is_active' => true]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'The Origami Pouch',
+            'slug' => 'the-origami-pouch',
+            'sku' => 'ORI-01',
+            'price' => 2500,
+            'stock' => 5,
+            'is_preorder' => false,
+            'has_variants' => true,
+            'is_active' => true,
+        ]);
+
+        // In-stock variant
+        $blackVariant = ProductVariant::create([
+            'product_id' => $product->id,
+            'name' => 'Black',
+            'color_name' => 'Black',
+            'sku' => 'ORI-01-BLK',
+            'regular_price' => 2500,
+            'stock' => 5,
+            'is_active' => true,
+            'is_default' => true,
+        ]);
+
+        // 0-stock / preorder variant (e.g. "merron" / maroon)
+        $merronVariant = ProductVariant::create([
+            'product_id' => $product->id,
+            'name' => 'Merron',
+            'color_name' => 'Merron',
+            'sku' => 'ORI-01-MRN',
+            'regular_price' => 2500,
+            'stock' => 0,
+            'is_active' => true,
+        ]);
+
+        // 1. Adding merron variant by ID should succeed as preorder without 500 error
+        $response = $this->postJson('/cart', [
+            'product_id' => $product->id,
+            'variant_id' => $merronVariant->id,
+            'quantity' => 1,
+        ]);
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'message' => 'Successfully added to cart.',
+            ]);
+
+        $this->assertArrayHasKey($product->id.':'.$merronVariant->id, session('guest_cart'));
+
+        // 2. Adding merron variant by color string name should also resolve and succeed
+        $responseStr = $this->postJson('/cart', [
+            'product_id' => $product->id,
+            'variant_id' => 'Merron',
+            'quantity' => 1,
+        ]);
+
+        $responseStr->assertOk()
+            ->assertJson([
+                'success' => true,
+                'message' => 'Successfully added to cart.',
+            ]);
+    }
+
     public function test_product_detail_page_renders_slider_and_variant_elements(): void
     {
         $category = Category::create(['name' => 'Bags', 'slug' => 'bags', 'is_active' => true]);

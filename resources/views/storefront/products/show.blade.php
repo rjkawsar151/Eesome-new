@@ -114,7 +114,7 @@ window.handleVariantClick = function(button, event, syncSlider = true) {
     if (event && event.type === 'click') {
         event.stopPropagation();
     }
-    if (!button || button.disabled) return;
+    if (!button) return;
 
     var allVariants = document.querySelectorAll('.js-variant-item');
     for (var i = 0; i < allVariants.length; i++) {
@@ -127,6 +127,8 @@ window.handleVariantClick = function(button, event, syncSlider = true) {
     var imgUrl = button.getAttribute('data-image') || button.dataset.image || '';
     var price = button.getAttribute('data-price') || button.dataset.price || '';
     var sku = button.getAttribute('data-sku') || button.dataset.sku || '';
+    var stockAttr = button.getAttribute('data-stock') || button.dataset.stock;
+    var stock = stockAttr !== null && stockAttr !== undefined ? parseInt(stockAttr, 10) : 1;
 
     // 1. Show variant name badge on image left corner
     var imageBadge = document.getElementById('main-image-badge');
@@ -172,7 +174,21 @@ window.handleVariantClick = function(button, event, syncSlider = true) {
         }
     }
 
-    // 7. Sync slider image when variant is selected
+    // 7. Update Stock Text & Buy Button Text
+    var stockEl = document.querySelector('.stock');
+    if (stockEl) {
+        if (stock > 0) {
+            stockEl.textContent = stock + ' in stock';
+        } else {
+            stockEl.textContent = 'Pre-order only · delivery in 25–35 days';
+        }
+    }
+    var buyNowBtn = document.querySelector('button[name="buy_now"]');
+    if (buyNowBtn) {
+        buyNowBtn.textContent = stock > 0 ? 'Buy' : 'Pre-order';
+    }
+
+    // 8. Sync slider image when variant is selected
     if (syncSlider && window.productSlides && window.productSlides.length > 0) {
         var colorLower = color.trim().toLowerCase();
         var targetIndex = -1;
@@ -459,7 +475,7 @@ window.productSlides = @json($slides);
                     @php $varImg = $resolveVariantImage($variant, $index); @endphp
                     @php $isActive = $defaultVariant && $defaultVariant->id === $variant->id; @endphp
 
-                    <button type="button" class="variant js-variant-item @if($isActive) active @endif" onclick="handleVariantClick(this, event)" data-variant-id="{{ $variant->id }}" data-color="{{ trim($variant->color_name ?: $variant->name) }}" data-price="৳{{ number_format((float)$variant->effective_price, 0) }}" data-sku="{{ $variant->sku }}" @if($varImg) data-image="{{ $varImg }}" @endif @disabled($variant->stock < 1)>
+                    <button type="button" class="variant js-variant-item @if($isActive) active @endif" onclick="handleVariantClick(this, event)" data-variant-id="{{ $variant->id }}" data-color="{{ trim($variant->color_name ?: $variant->name) }}" data-price="৳{{ number_format((float)$variant->effective_price, 0) }}" data-sku="{{ $variant->sku }}" data-stock="{{ (int)$variant->stock }}" @if($varImg) data-image="{{ $varImg }}" @endif>
                         @if($variant->color_code)
                             <span class="color-swatch-dot" style="background-color: {{ $variant->color_code }}"></span>
                         @endif
@@ -491,14 +507,14 @@ window.productSlides = @json($slides);
                     @foreach($activeVariants as $index => $variant)
                         @php $varImg = $resolveVariantImage($variant, $index); @endphp
                         <option value="{{ $variant->id }}"
-
                             data-variant-id="{{ $variant->id }}"
                             data-color="{{ trim($variant->color_name ?: $variant->name) }}"
                             data-color-code="{{ $variant->color_code ?? '' }}"
                             data-image="{{ $varImg }}"
                             data-price="৳{{ number_format((float)$variant->effective_price, 0) }}"
                             data-sku="{{ $variant->sku }}"
-                            @disabled($variant->stock < 1)>
+                            data-stock="{{ (int)$variant->stock }}"
+                            @selected($defaultVariant && $defaultVariant->id === $variant->id)>
                             {{ $variant->color_name ?: $variant->name }} / SKU {{ $variant->sku }} / BDT {{ number_format((float)$variant->effective_price, 0) }}
                         </option>
                     @endforeach
@@ -506,7 +522,7 @@ window.productSlides = @json($slides);
             @endif
             <input type="hidden" name="quantity" value="1">
             <button type="submit">Cart</button>
-            <button type="submit" name="buy_now" value="1">{{ ($product->stock <= 0 || $product->available_for_preorder) ? 'Pre-order' : 'Buy' }}</button>
+            <button type="submit" name="buy_now" value="1">{{ ($product->stock <= 0 || $product->available_for_preorder || ($defaultVariant && $defaultVariant->stock <= 0)) ? 'Pre-order' : 'Buy' }}</button>
         </form>
         @endif
 

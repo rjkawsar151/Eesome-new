@@ -658,7 +658,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const colorCode = opt.dataset.colorCode || opt.getAttribute('data-color-code') || '';
             const imgUrl = opt.dataset.image || opt.getAttribute('data-image') || defaultPlaceholder;
             const price = opt.dataset.price || opt.getAttribute('data-price') || '';
-            const sku = opt.dataset.sku || opt.getAttribute('data-sku') || '';
+            const stockAttr = opt.dataset.stock || opt.getAttribute('data-stock');
+            const stock = stockAttr !== null && stockAttr !== undefined ? parseInt(stockAttr, 10) : 1;
             const isDisabled = opt.disabled;
 
             const card = document.createElement('div');
@@ -668,7 +669,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             let colorDotHtml = colorCode ? `<span class="variant-card__color-dot" style="background-color:${colorCode}"></span>` : '';
             let thumbHtml = `<img class="variant-card__thumb" src="${imgUrl}" onerror="this.onerror=null;this.src='${defaultPlaceholder}'" alt="${colorName}">`;
             let metaHtml = sku ? `SKU: ${sku}` : '';
-            if (isDisabled) metaHtml += (metaHtml ? ' • ' : '') + 'Out of Stock';
+            if (stock <= 0) {
+                metaHtml += (metaHtml ? ' • ' : '') + 'Pre-order';
+            } else if (isDisabled) {
+                metaHtml += (metaHtml ? ' • ' : '') + 'Out of Stock';
+            }
 
             card.innerHTML = `${thumbHtml}<div class="variant-card__info"><div class="variant-card__name">${colorDotHtml} <span>${colorName}</span></div><div class="variant-card__meta">${metaHtml}</div></div>${price ? `<div class="variant-card__price">${price}</div>` : ''}<div class="variant-card__check">✓</div>`;
 
