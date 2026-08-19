@@ -1,156 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $isNew ? 'New Order' : 'Order Update' }} - {{ $order->order_number }}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ $isNew ? 'New Order' : 'Order Update' }} #{{ $order->order_number }}</title>
 </head>
-<body style="margin:0;padding:0;background:#fdf2f8;font-family:'Segoe UI',Arial,Helvetica,sans-serif;font-size:15px;color:#4a1d30;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fdf2f8;padding:28px 0;">
-  <tr><td align="center">
-    <table width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;">
+<body style="margin:0; padding:0; background:#f4f5f7; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size:14px; line-height:1.5; color:#1f2937;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f5f7; padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; width:100%; background:#ffffff; border-radius:8px; overflow:hidden; border:1px solid #e5e7eb; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+          
+          <!-- Simple Header -->
+          <tr>
+            <td style="padding:20px 24px; border-bottom:1px solid #e5e7eb; background:#ffffff;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td>
+                    <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#6b7280; margin-bottom:4px;">
+                      {{ config('app.name', 'EESOME') }} &bull; Admin Notification
+                    </div>
+                    <div style="font-size:20px; font-weight:700; color:#111827;">
+                      {{ $isNew ? '🔔 New Order Placed' : '⚡ Order Status Updated' }}
+                    </div>
+                  </td>
+                  <td align="right" valign="top">
+                    <span style="display:inline-block; padding:4px 10px; border-radius:4px; font-size:12px; font-weight:600; text-transform:uppercase; background:{{ $isNew ? '#dbeafe; color:#1e40af;' : '#f3f4f6; color:#374151;' }}">
+                      #{{ $order->order_number }}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-      {{-- Header --}}
-      <tr>
-        <td style="background:linear-gradient(135deg,#831843 0%,#ec4899 100%);border-radius:14px 14px 0 0;padding:28px 36px 22px;text-align:center;">
-          <p style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#fff;">{{ config('app.name', 'EESOME') }} - Admin Alert</p>
-          <p style="margin:0;font-size:12px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.06em;">
-            {{ $isNew ? 'New Order Received' : 'Order Status Updated' }}
-          </p>
-        </td>
-      </tr>
+          <!-- Quick Summary Cards -->
+          <tr>
+            <td style="padding:20px 24px; background:#f9fafb; border-bottom:1px solid #e5e7eb;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td width="33%" style="padding:0 8px 0 0;">
+                    <div style="font-size:11px; color:#6b7280; text-transform:uppercase; font-weight:600;">Total Amount</div>
+                    <div style="font-size:18px; font-weight:700; color:#111827; margin-top:2px;">৳{{ number_format((float)$order->total_amount, 0) }}</div>
+                  </td>
+                  <td width="33%" style="padding:0 8px;">
+                    <div style="font-size:11px; color:#6b7280; text-transform:uppercase; font-weight:600;">Payment</div>
+                    <div style="font-size:13px; font-weight:600; color:{{ $order->payment_status === 'paid' ? '#059669' : '#d97706' }}; margin-top:2px;">
+                      {{ ucfirst($order->payment_status) }} ({{ strtoupper($order->payment_method) }})
+                    </div>
+                  </td>
+                  <td width="33%" style="padding:0 0 0 8px;">
+                    <div style="font-size:11px; color:#6b7280; text-transform:uppercase; font-weight:600;">Order Status</div>
+                    <div style="font-size:13px; font-weight:600; color:#4f46e5; margin-top:2px;">
+                      {{ \Illuminate\Support\Str::headline($order->order_status) }}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-      {{-- Event Badge + Order Number --}}
-      <tr>
-        <td style="background:#fff;padding:22px 36px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td>
-                <span style="display:inline-block;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:{{ $isNew ? '#ec4899' : '#be185d' }};color:#fff;">
-                  {{ $isNew ? 'New Order' : $statusLabel }}
-                </span>
-              </td>
-              <td style="text-align:right;">
-                <span style="font-size:18px;font-weight:800;color:#831843;">#{{ $order->order_number }}</span>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+          <!-- Customer & Delivery Information -->
+          <tr>
+            <td style="padding:20px 24px; border-bottom:1px solid #e5e7eb;">
+              <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#374151; margin-bottom:12px;">
+                Customer & Shipping
+              </div>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;">
+                <tr>
+                  <td width="110" style="color:#6b7280; padding-bottom:6px; font-weight:500;">Customer:</td>
+                  <td style="color:#111827; padding-bottom:6px; font-weight:600;">{{ $order->customer_name }}</td>
+                </tr>
+                <tr>
+                  <td style="color:#6b7280; padding-bottom:6px; font-weight:500;">Phone:</td>
+                  <td style="color:#111827; padding-bottom:6px;">
+                    <a href="tel:{{ $order->phone }}" style="color:#2563eb; text-decoration:none; font-weight:600;">{{ $order->phone }}</a>
+                  </td>
+                </tr>
+                @if($order->email)
+                <tr>
+                  <td style="color:#6b7280; padding-bottom:6px; font-weight:500;">Email:</td>
+                  <td style="color:#111827; padding-bottom:6px;">
+                    <a href="mailto:{{ $order->email }}" style="color:#2563eb; text-decoration:none;">{{ $order->email }}</a>
+                  </td>
+                </tr>
+                @endif
+                <tr>
+                  <td valign="top" style="color:#6b7280; padding-bottom:6px; font-weight:500;">Address:</td>
+                  <td style="color:#111827; padding-bottom:6px;">{{ $order->shipping_address }}</td>
+                </tr>
+                @if($order->shipping_method)
+                <tr>
+                  <td style="color:#6b7280; padding-bottom:6px; font-weight:500;">Delivery:</td>
+                  <td style="color:#111827; padding-bottom:6px;">{{ $order->shipping_method }}</td>
+                </tr>
+                @endif
+                @if($order->transaction_id)
+                <tr>
+                  <td style="color:#6b7280; padding-bottom:6px; font-weight:500;">Trx ID:</td>
+                  <td style="color:#059669; padding-bottom:6px; font-weight:700;">{{ $order->transaction_id }}</td>
+                </tr>
+                @endif
+                @if($order->notes)
+                <tr>
+                  <td valign="top" style="color:#6b7280; font-weight:500;">Notes:</td>
+                  <td style="color:#6b7280; font-style:italic;">{{ $order->notes }}</td>
+                </tr>
+                @endif
+              </table>
+            </td>
+          </tr>
 
-      {{-- Customer Details --}}
-      <tr>
-        <td style="background:#fff;padding:20px 36px 0;">
-          <p style="margin:0 0 10px;font-size:12px;color:#a3547a;letter-spacing:.05em;text-transform:uppercase;font-weight:600;">Customer Details</p>
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fdf2f8;border-radius:10px;overflow:hidden;border:1px solid #fbcfe8;">
-            <tr><td style="padding:10px 14px;font-size:13px;border-bottom:1px solid #fce7f3;color:#a3547a;width:110px;font-weight:600;">Name</td><td style="padding:10px 14px;font-size:14px;border-bottom:1px solid #fce7f3;color:#4a1d30;font-weight:700;">{{ $order->customer_name }}</td></tr>
-            <tr><td style="padding:10px 14px;font-size:13px;border-bottom:1px solid #fce7f3;color:#a3547a;font-weight:600;">Phone</td><td style="padding:10px 14px;font-size:14px;border-bottom:1px solid #fce7f3;color:#4a1d30;">{{ $order->phone ?? 'N/A' }}</td></tr>
-            <tr><td style="padding:10px 14px;font-size:13px;border-bottom:1px solid #fce7f3;color:#a3547a;font-weight:600;">Email</td><td style="padding:10px 14px;font-size:14px;border-bottom:1px solid #fce7f3;color:#4a1d30;">{{ $order->email ?? 'N/A' }}</td></tr>
-            <tr><td style="padding:10px 14px;font-size:13px;color:#a3547a;font-weight:600;vertical-align:top;">Address</td><td style="padding:10px 14px;font-size:14px;color:#4a1d30;line-height:1.5;">{{ $order->shipping_address }}</td></tr>
-          </table>
-        </td>
-      </tr>
+          <!-- Items Ordered Table -->
+          <tr>
+            <td style="padding:20px 24px 12px; border-bottom:1px solid #e5e7eb;">
+              <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#374151; margin-bottom:12px;">
+                Items ({{ $order->items->count() }})
+              </div>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;">
+                <thead>
+                  <tr style="border-bottom:1px solid #e5e7eb; color:#6b7280;">
+                    <th align="left" style="padding-bottom:8px; font-weight:600; font-size:11px; text-transform:uppercase;">Item</th>
+                    <th align="center" width="60" style="padding-bottom:8px; font-weight:600; font-size:11px; text-transform:uppercase;">Qty</th>
+                    <th align="right" width="100" style="padding-bottom:8px; font-weight:600; font-size:11px; text-transform:uppercase;">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach($order->items as $item)
+                  <tr>
+                    <td style="padding:8px 0; border-top:1px solid #f3f4f6;">
+                      <div style="font-weight:600; color:#111827;">{{ $item->product_name }}</div>
+                      @if($item->display_color)
+                        <div style="font-size:12px; color:#6b7280;">Color: {{ $item->display_color }}</div>
+                      @endif
+                      @if($item->product_sku)
+                        <div style="font-size:11px; color:#9ca3af;">SKU: {{ $item->product_sku }}</div>
+                      @endif
+                    </td>
+                    <td align="center" style="padding:8px 0; border-top:1px solid #f3f4f6; color:#374151;">
+                      {{ $item->quantity }}
+                    </td>
+                    <td align="right" style="padding:8px 0; border-top:1px solid #f3f4f6; font-weight:600; color:#111827;">
+                      ৳{{ number_format((float)($item->line_total ?: ($item->price * $item->quantity)), 0) }}
+                    </td>
+                  </tr>
+                  @endforeach
+                </tbody>
+              </table>
+            </td>
+          </tr>
 
-      {{-- Order Status & Payment --}}
-      <tr>
-        <td style="background:#fff;padding:16px 36px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #fbcfe8;border-radius:10px;overflow:hidden;">
-            <tr style="background:#fce7f3;">
-              <td style="padding:10px 14px;font-size:13px;color:#a3547a;font-weight:600;border-bottom:1px solid #fbcfe8;">Order Status</td>
-              <td style="padding:10px 14px;font-size:13px;color:#a3547a;font-weight:600;border-bottom:1px solid #fbcfe8;">Payment Status</td>
-              <td style="padding:10px 14px;font-size:13px;color:#a3547a;font-weight:600;border-bottom:1px solid #fbcfe8;">Payment Method</td>
-            </tr>
-            <tr>
-              <td style="padding:12px 14px;font-size:14px;font-weight:700;color:#be185d;">{{ \Illuminate\Support\Str::headline($order->order_status) }}</td>
-              <td style="padding:12px 14px;font-size:14px;font-weight:600;color:{{ $order->payment_status === 'paid' ? '#15803d' : '#b45309' }};">{{ \Illuminate\Support\Str::headline($order->payment_status) }}</td>
-              <td style="padding:12px 14px;font-size:14px;color:#6b3a52;">{{ \Illuminate\Support\Str::headline($order->payment_method ?? 'N/A') }}</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
+          <!-- Action Button -->
+          <tr>
+            <td align="center" style="padding:24px;">
+              <a href="{{ $adminUrl }}" target="_blank" style="display:inline-block; padding:12px 28px; background:#111827; color:#ffffff; font-size:14px; font-weight:600; text-decoration:none; border-radius:6px; text-align:center;">
+                View Order #{{ $order->order_number }} in Admin &rarr;
+              </a>
+            </td>
+          </tr>
 
-      {{-- Order Items --}}
-      <tr>
-        <td style="background:#fff;padding:16px 36px 0;">
-          <p style="margin:0 0 10px;font-size:12px;color:#a3547a;letter-spacing:.05em;text-transform:uppercase;font-weight:600;">Items Ordered</p>
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #fbcfe8;border-radius:10px;overflow:hidden;">
-            <thead>
-              <tr style="background:#fce7f3;">
-                <th style="padding:9px 12px;text-align:left;font-size:11px;color:#a3547a;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid #fbcfe8;">Product</th>
-                <th style="padding:9px 12px;text-align:center;font-size:11px;color:#a3547a;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid #fbcfe8;">Qty</th>
-                <th style="padding:9px 12px;text-align:right;font-size:11px;color:#a3547a;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid #fbcfe8;">Price</th>
-                <th style="padding:9px 12px;text-align:right;font-size:11px;color:#a3547a;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid #fbcfe8;">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              @foreach($order->items as $i => $item)
-              <tr style="{{ $i % 2 === 0 ? 'background:#fff;' : 'background:#fff5f9;' }}">
-                <td style="padding:10px 12px;font-size:13px;color:#4a1d30;border-bottom:1px solid #fce7f3;vertical-align:top;">
-                  <strong>{{ $item->product_name }}</strong>
-                  @if($item->display_color) <span style="color:#a3547a;"> - {{ $item->display_color }}</span>@endif
-                  @if($item->product_sku) <br><span style="font-size:11px;color:#c98bab;">SKU: {{ $item->product_sku }}</span>@endif
-                </td>
-                <td style="padding:10px 12px;text-align:center;font-size:13px;color:#4a1d30;border-bottom:1px solid #fce7f3;vertical-align:top;">{{ $item->quantity }}</td>
-                <td style="padding:10px 12px;text-align:right;font-size:13px;color:#4a1d30;border-bottom:1px solid #fce7f3;vertical-align:top;white-space:nowrap;">&#2547;{{ number_format((float)$item->price, 0) }}</td>
-                <td style="padding:10px 12px;text-align:right;font-size:13px;font-weight:600;color:#be185d;border-bottom:1px solid #fce7f3;vertical-align:top;white-space:nowrap;">&#2547;{{ number_format((float)$item->line_total, 0) }}</td>
-              </tr>
-              @endforeach
-            </tbody>
-            <tfoot>
-              @if(!empty($order->subtotal_amount) && (float)$order->subtotal_amount > 0)
-              <tr style="background:#fff5f9;">
-                <td colspan="3" style="padding:9px 12px;text-align:right;font-size:12px;color:#a3547a;border-top:1px solid #fbcfe8;">Subtotal</td>
-                <td style="padding:9px 12px;text-align:right;font-size:12px;color:#6b3a52;font-weight:600;border-top:1px solid #fbcfe8;">&#2547;{{ number_format((float)$order->subtotal_amount, 0) }}</td>
-              </tr>
-              @endif
-              @if(!empty($order->discount_amount) && (float)$order->discount_amount > 0)
-              <tr style="background:#fff5f9;">
-                <td colspan="3" style="padding:9px 12px;text-align:right;font-size:12px;color:#a3547a;">Discount</td>
-                <td style="padding:9px 12px;text-align:right;font-size:12px;color:#dc2626;font-weight:600;">-&#2547;{{ number_format((float)$order->discount_amount, 0) }}</td>
-              </tr>
-              @endif
-              @if(!empty($order->shipping_charge) && (float)$order->shipping_charge > 0)
-              <tr style="background:#fff5f9;">
-                <td colspan="3" style="padding:9px 12px;text-align:right;font-size:12px;color:#a3547a;">Shipping</td>
-                <td style="padding:9px 12px;text-align:right;font-size:12px;color:#6b3a52;font-weight:600;">&#2547;{{ number_format((float)$order->shipping_charge, 0) }}</td>
-              </tr>
-              @endif
-              <tr style="background:#fce7f3;">
-                <td colspan="3" style="padding:11px 12px;text-align:right;font-size:14px;font-weight:700;color:#4a1d30;border-top:2px solid #f9a8d4;">Total</td>
-                <td style="padding:11px 12px;text-align:right;font-size:15px;font-weight:800;color:#be185d;border-top:2px solid #f9a8d4;white-space:nowrap;">&#2547;{{ number_format((float)$order->total_amount, 0) }}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </td>
-      </tr>
+          <!-- Simple Footer -->
+          <tr>
+            <td align="center" style="padding:16px 24px; background:#f9fafb; border-top:1px solid #e5e7eb; font-size:12px; color:#9ca3af;">
+              {{ config('app.name', 'EESOME') }} Admin System &bull; {{ now()->format('M d, Y h:i A') }}
+            </td>
+          </tr>
 
-      {{-- Tracking (if set) --}}
-      @if($order->tracking_number)
-      <tr>
-        <td style="background:#fff;padding:16px 36px 0;">
-          <div style="background:#fdf2f8;border-radius:10px;padding:12px 16px;border-left:3px solid #ec4899;">
-            <p style="margin:0;font-size:13px;font-weight:700;color:#be185d;">Tracking: {{ $order->shipping_provider ? $order->shipping_provider.' - ' : '' }}{{ $order->tracking_number }}</p>
-          </div>
-        </td>
-      </tr>
-      @endif
-
-      {{-- CTA --}}
-      <tr>
-        <td style="background:#fff;padding:24px 36px;text-align:center;">
-          <a href="{{ $adminUrl }}" target="_blank" style="display:inline-block;padding:12px 30px;background:linear-gradient(135deg,#831843,#ec4899);color:#fff;text-decoration:none;border-radius:999px;font-size:14px;font-weight:700;letter-spacing:.03em;">Open Order in Admin Panel</a>
-        </td>
-      </tr>
-
-      {{-- Footer --}}
-      <tr>
-        <td style="background:linear-gradient(135deg,#831843,#ec4899);border-radius:0 0 14px 14px;padding:16px 36px;text-align:center;">
-          <p style="margin:0;font-size:11px;color:rgba(255,255,255,.75);letter-spacing:.04em;">{{ config('app.name', 'EESOME') }} Admin System &copy; {{ date('Y') }}</p>
-        </td>
-      </tr>
-
-    </table>
-  </td></tr>
-</table>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>

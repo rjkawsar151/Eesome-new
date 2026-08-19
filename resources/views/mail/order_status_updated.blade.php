@@ -32,8 +32,13 @@
 
           <!-- Brand header -->
           <tr>
-            <td align="center" style="padding:28px 28px 22px; background:#FFF6FA; border-bottom:1px solid #F4D7E4;">
-              <img src="{{ $logoUrl }}" width="240" alt="{{ config('app.name', 'EESOME') }}" class="logo" style="display:block; border:0; width:240px; max-width:100%; height:auto; margin:0 auto;">
+            <td align="center" style="padding:32px 28px 26px; background:#FFF6FA; border-bottom:1px solid #F4D7E4;">
+              <div style="font-family:Georgia, 'Times New Roman', serif; font-size:32px; font-weight:700; letter-spacing:6px; color:#6F2F50; text-transform:uppercase; margin:0; line-height:1;">
+                EESOME
+              </div>
+              <div style="font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#B54A7B; margin-top:6px; font-weight:600;">
+                The Charm In You
+              </div>
             </td>
           </tr>
 

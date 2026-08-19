@@ -14,10 +14,9 @@ use Illuminate\Support\Str;
 
 class CheckoutService
 {
-    public function calculateShipping(float $subtotal, ?string $shippingMethod = null): float
+    public function calculateShipping(float $subtotal, ?string $shippingMethod = null, ?\App\Models\District $district = null): float
     {
-        return app(ShippingCalculator::class)->calculate($subtotal, $shippingMethod);
-
+        return app(ShippingCalculator::class)->calculate($subtotal, $shippingMethod, $district);
     }
 
     public function placeOrder(array $customerData, array $cartLines, ?string $couponCode = null): Order
@@ -53,8 +52,9 @@ class CheckoutService
                 if ($product->has_variants and ! $variant) throw new \RuntimeException('A selected color is no longer available.');
                 if ($variant and ! $variant->is_active) throw new \RuntimeException('A selected color is inactive.');
                 $availableStock = $variant ? $variant->stock : $product->stock;
-
-                if (! $product->available_for_preorder and $availableStock < $qty) {
+                // A variant with 0 stock is pre-orderable unless the whole product is marked sold out
+                $lineIsPreorder = $product->is_sold_out ? false : ($availableStock <= 0);
+                if (! $lineIsPreorder && $availableStock < $qty) {
                     throw new \RuntimeException("'{$product->name}' has insufficient stock.");
                 }
 
@@ -85,11 +85,38 @@ class CheckoutService
                 $discount = round($coupon->calculateDiscount($subtotal), 2);
             }
 
-            // 5. Shipping
-            $shipping = $this->calculateShipping($subtotal, $customerData['shipping_method'] ?? null);
+            // 5. Division and District resolution & validation
+            $districtModel = null;
+            if (! empty($customerData['district_id'])) {
+                $districtModel = \App\Models\District::with('division')->find((int) $customerData['district_id']);
+            } elseif (! empty($customerData['district'])) {
+                $districtModel = \App\Models\District::with('division')->where('name', $customerData['district'])->first();
+            }
+
+            if (! $districtModel || ! $districtModel->status) {
+                throw new \RuntimeException('The selected district is invalid or inactive.');
+            }
+
+            $divisionModel = null;
+            if (! empty($customerData['division_id'])) {
+                $divisionModel = \App\Models\Division::find((int) $customerData['division_id']);
+            } elseif (! empty($customerData['division'])) {
+                $divisionModel = \App\Models\Division::where('name', $customerData['division'])->first();
+            }
+
+            if (! $divisionModel || ! $divisionModel->status) {
+                throw new \RuntimeException('The selected division is invalid or inactive.');
+            }
+
+            if ((int) $districtModel->division_id !== (int) $divisionModel->id) {
+                throw new \RuntimeException("The district '{$districtModel->name}' does not belong to the division '{$divisionModel->name}'.");
+            }
+
+            // 6. Shipping calculation
+            $shipping = $this->calculateShipping($subtotal, $customerData['shipping_method'] ?? null, $districtModel);
             $total = round($subtotal - $discount + $shipping, 2);
 
-            // 6. Create order
+            // 7. Create order
             $orderNumber = 'EES-'.strtoupper(Str::random(8));
             $order = Order::create([
                 'order_number' => $orderNumber,
@@ -97,7 +124,10 @@ class CheckoutService
                 'customer_name' => $customerData['name'],
                 'email' => $customerData['email'],
                 'phone' => $customerData['phone'],
-                'district' => $customerData['district'] ?? null,
+                'division' => $divisionModel->name,
+                'division_id' => $divisionModel->id,
+                'district' => $districtModel->name,
+                'district_id' => $districtModel->id,
                 'thana' => $customerData['thana'] ?? null,
                 'post_office' => $customerData['post_office'] ?? null,
                 'post_code' => $customerData['post_code'] ?? null,
@@ -111,6 +141,7 @@ class CheckoutService
                 'coupon_code' => $coupon ? $coupon->code : null,
                 'coupon_id' => $coupon ? $coupon->id : null,
                 'payment_method' => $customerData['payment_method'] ?? 'COD',
+                'transaction_id' => $customerData['transaction_id'] ?? null,
                 'payment_status' => 'pending',
                 'order_status' => 'awaiting',
                 'placed_from' => 'web',

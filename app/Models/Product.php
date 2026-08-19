@@ -68,21 +68,21 @@ class Product extends Model
         return ! is_null($this->discount_price) && (float) $this->discount_price > 0 && (float) $this->discount_price < (float) $this->price;
     }
 
-    public function getAvailableForPreorderAttribute(): bool
+    public function getHasStockAttribute(): bool
     {
-        if ($this->is_preorder) {
-            return true;
-        }
-
         if ($this->has_variants) {
-            $vars = $this->relationLoaded('variants') ? $this->variants : $this->variants()->get();
+            $vars = $this->relationLoaded('activeVariants') ? $this->activeVariants : ($this->relationLoaded('variants') ? $this->variants : $this->activeVariants()->get());
             if ($vars->isNotEmpty()) {
-                return $vars->every(fn ($v) => (int) $v->stock <= 0);
+                return $vars->contains(fn ($v) => (int) $v->stock > 0);
             }
         }
 
-        return (int) $this->stock <= 0
-            || preg_match('/\bpre[\s-]?order\b/i', strip_tags((string) $this->description)) === 1;
+        return (int) $this->stock > 0;
+    }
+
+    public function getAvailableForPreorderAttribute(): bool
+    {
+        return ! $this->has_stock;
     }
 
     public function getCleanDescriptionAttribute(): string
@@ -99,10 +99,12 @@ class Product extends Model
         return trim($description);
     }
 
-    // Badge priority helper
     public function getBadgeInfoAttribute(): ?array
     {
-        if ($this->available_for_preorder || (int) $this->stock <= 0) {
+        if ($this->is_sold_out) {
+            return ['text' => 'SOLD OUT', 'type' => 'danger'];
+        }
+        if (! $this->has_stock) {
             return ['text' => 'PREORDER', 'type' => 'warning'];
         }
         if ($this->has_discount) {
@@ -184,5 +186,19 @@ class Product extends Model
     public function inventoryMovements()
     {
         return $this->hasMany(InventoryMovement::class, 'product_id');
+    }
+
+    public function scopeOrderByInStockFirst($query)
+    {
+        return $query->orderByRaw('
+            (CASE 
+                WHEN products.has_variants = 1 THEN (
+                    SELECT COALESCE(SUM(v.stock), 0) 
+                    FROM product_variants v 
+                    WHERE v.product_id = products.id AND v.is_active = 1
+                ) 
+                ELSE products.stock 
+            END) DESC
+        ');
     }
 }

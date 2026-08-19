@@ -185,6 +185,134 @@
             .product-card__actions button, .actions button, form.js-card-purchase button, .product-card__actions a, .actions a { width: 100% !important; flex: 1 1 auto !important; }
         }
 
+        /* ── Live Search Suggestions Dropdown ── */
+        .search-suggestions-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: clamp(310px, 85vw, 420px);
+            background: rgba(26, 10, 46, 0.97);
+            -webkit-backdrop-filter: blur(20px) saturate(140%);
+            backdrop-filter: blur(20px) saturate(140%);
+            border: 1px solid rgba(249, 168, 212, 0.28);
+            border-radius: 18px;
+            box-shadow: 0 20px 45px rgba(10, 4, 22, 0.55);
+            z-index: 1050;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(10px) scale(0.97);
+            pointer-events: none;
+            transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .search-suggestions-dropdown.is-visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+        .search-sugg-list {
+            list-style: none;
+            margin: 0;
+            padding: 0.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+        .search-sugg-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.55rem 0.75rem;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #f9eaf3;
+            transition: background 0.18s ease;
+        }
+        .search-sugg-item:hover, .search-sugg-item:focus-visible {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+        }
+        .search-sugg-thumb {
+            width: 46px;
+            height: 46px;
+            min-width: 46px;
+            border-radius: 10px;
+            object-fit: cover;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            flex-shrink: 0;
+        }
+        .search-sugg-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            min-width: 0;
+            flex: 1;
+        }
+        .search-sugg-title {
+            font-size: 0.86rem;
+            font-weight: 700;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #ffffff;
+        }
+        .search-sugg-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.75rem;
+            color: rgba(249,234,243,0.7);
+        }
+        .search-sugg-price {
+            font-weight: 800;
+            color: #f472b6;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .search-sugg-old-price {
+            text-decoration: line-through;
+            color: rgba(255,255,255,0.45);
+            font-size: 0.75rem;
+        }
+        .search-sugg-badge {
+            padding: 0.15rem 0.45rem;
+            border-radius: 999px;
+            font-size: 0.62rem;
+            font-weight: 800;
+            background: rgba(244, 114, 182, 0.2);
+            color: #f9a8d4;
+            border: 1px solid rgba(244, 114, 182, 0.3);
+            white-space: nowrap;
+        }
+        .search-sugg-footer {
+            padding: 0.65rem 0.85rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+        }
+        .search-sugg-footer a {
+            color: #f9a8d4;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .search-sugg-footer a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+        .search-sugg-empty, .search-sugg-loading {
+            padding: 1.25rem 1rem;
+            text-align: center;
+            color: rgba(249,234,243,0.8);
+            font-size: 0.84rem;
+        }
+
         /* ── Visual Variant Selector Modal ── */
         .variant-popup-dialog {
             width: min(94vw, 500px);
@@ -404,7 +532,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <li><a href="{{ route('orders.track') }}">Track Order</a></li>
         </ul>
         <form class="nav-search" method="GET" action="{{ route('products.index') }}" role="search">
-            <input type="search" name="search" value="{{ request()->routeIs('products.index') ? request('search') : '' }}" placeholder="Search products" aria-label="Search products">
+            <input type="search" name="search" value="{{ request()->routeIs('products.index') ? request('search') : '' }}" placeholder="Search products" aria-label="Search products" autocomplete="off">
             <button type="submit" aria-label="Submit search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
         </form>
         <div class="nav-actions">
@@ -763,6 +891,124 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     dialog?.querySelector('.variant-popup-close')?.addEventListener('click', () => { try { dialog.close(); } catch(e) {} });
     dialog?.addEventListener('click', (event) => { if (event.target === dialog) { try { dialog.close(); } catch(e) {} } });
     dialog?.addEventListener('close', () => { document.body.style.overflow = ''; pendingButton?.focus(); });
+})();
+</script>
+<script>
+(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInputs = document.querySelectorAll('input[type="search"][name="search"], #catalog-search');
+
+        searchInputs.forEach(input => {
+            let dropdown = document.createElement('div');
+            dropdown.className = 'search-suggestions-dropdown';
+            dropdown.setAttribute('aria-live', 'polite');
+
+            let container = input.closest('.nav-search') || input.closest('.filter-field') || input.parentElement;
+            if (getComputedStyle(container).position === 'static') {
+                container.style.position = 'relative';
+            }
+            container.appendChild(dropdown);
+
+            let debounceTimer;
+
+            const hideDropdown = () => {
+                dropdown.classList.remove('is-visible');
+            };
+
+            const escapeHtml = str => (str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+            const renderLoading = () => {
+                dropdown.innerHTML = '<div class="search-sugg-loading"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 0.7s linear infinite;display:inline-block;margin-right:6px;vertical-align:middle"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg> Searching products...</div>';
+                dropdown.classList.add('is-visible');
+            };
+
+            const renderResults = (data, query) => {
+                if (!data.suggestions || data.suggestions.length === 0) {
+                    dropdown.innerHTML = `
+                        <div class="search-sugg-empty">
+                            No products found matching "<strong>${escapeHtml(query)}</strong>"
+                        </div>
+                    `;
+                } else {
+                    let html = '<ul class="search-sugg-list">';
+                    data.suggestions.forEach(item => {
+                        let oldPriceHtml = item.old_price ? `<span class="search-sugg-old-price">${item.old_price}</span>` : '';
+                        let badgeHtml = item.badge ? `<span class="search-sugg-badge">${escapeHtml(item.badge.text)}</span>` : '';
+                        html += `
+                            <li>
+                                <a class="search-sugg-item" href="${item.url}">
+                                    <img class="search-sugg-thumb" src="${item.image}" alt="${escapeHtml(item.name)}" onerror="this.onerror=null;this.src='/favicon.ico'">
+                                    <div class="search-sugg-info">
+                                        <span class="search-sugg-title">${escapeHtml(item.name)}</span>
+                                        <div class="search-sugg-meta">
+                                            <span class="search-sugg-price">${item.price}</span>
+                                            ${oldPriceHtml}
+                                            ${item.category ? `<span class="search-sugg-cat">• ${escapeHtml(item.category)}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    ${badgeHtml}
+                                </a>
+                            </li>
+                        `;
+                    });
+                    html += '</ul>';
+
+                    if (data.total > data.suggestions.length) {
+                        html += `
+                            <div class="search-sugg-footer">
+                                <a href="${data.view_all_url}">View all ${data.total} results →</a>
+                            </div>
+                        `;
+                    }
+
+                    dropdown.innerHTML = html;
+                }
+                dropdown.classList.add('is-visible');
+            };
+
+            const performSearch = () => {
+                const query = input.value.trim();
+                if (query.length < 2) {
+                    hideDropdown();
+                    return;
+                }
+
+                renderLoading();
+
+                fetch("{{ route('products.suggestions') }}?q=" + encodeURIComponent(query))
+                    .then(res => res.json())
+                    .then(data => renderResults(data, query))
+                    .catch(() => hideDropdown());
+            };
+
+            input.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                if (input.value.trim().length < 2) {
+                    hideDropdown();
+                    return;
+                }
+                debounceTimer = setTimeout(performSearch, 400); // 400ms debounce
+            });
+
+            input.addEventListener('focus', () => {
+                if (input.value.trim().length >= 2 && !dropdown.classList.contains('is-visible')) {
+                    performSearch();
+                }
+            });
+
+            document.addEventListener('click', e => {
+                if (!container.contains(e.target)) {
+                    hideDropdown();
+                }
+            });
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') {
+                    hideDropdown();
+                }
+            });
+        });
+    });
 })();
 </script>
 @if($footerScripts = $siteSettings->get('custom_footer_scripts'))

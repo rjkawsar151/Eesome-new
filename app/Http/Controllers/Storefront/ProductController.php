@@ -39,6 +39,7 @@ class ProductController extends Controller
         }
 
         $products = $query
+            ->orderByInStockFirst()
             ->latest('id')
             ->paginate(8)
             ->withQueryString();
@@ -74,6 +75,7 @@ class ProductController extends Controller
             ->where('category_id', $product->category_id)
             ->where('is_active', true)
             ->where('id', '!=', $product->id)
+            ->orderByInStockFirst()
             ->inRandomOrder()
             ->take(12)
             ->get();
@@ -81,5 +83,53 @@ class ProductController extends Controller
         return view('storefront.products.show', compact(
             'product', 'reviews', 'avgRating', 'reviewCount', 'relatedProducts', 'metaEventId'
         ));
+    }
+
+    public function suggestions(Request $request)
+    {
+        $search = trim($request->string('q')->toString());
+        if (mb_strlen($search) < 2) {
+            return response()->json(['suggestions' => [], 'total' => 0]);
+        }
+
+        $query = Product::with(['images', 'category', 'activeVariants'])
+            ->where('is_active', true)
+            ->where(function ($builder) use ($search) {
+                $builder->where('name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%")
+                    ->orWhereHas('category', fn ($category) => $category->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('images', fn ($image) => $image->where('color_name', 'like', "%{$search}%"));
+            });
+
+        $total = (clone $query)->count();
+
+        $products = $query->orderByInStockFirst()
+            ->latest('id')
+            ->take(6)
+            ->get();
+
+        $currency = app(\App\Services\SiteSettingsRepository::class)->get('currency_symbol', '৳');
+
+        $suggestions = $products->map(function ($product) use ($currency) {
+            $imagePath = $product->images->first()?->image_path ?? $product->image;
+            $imageUrl = $this->imageResolver->resolve($imagePath);
+
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'url' => route('products.show', $product->slug ?? $product->id),
+                'image' => $imageUrl,
+                'price' => $currency . number_format((float) $product->effective_price, 0),
+                'old_price' => $product->has_discount ? $currency . number_format((float) $product->price, 0) : null,
+                'category' => $product->category?->name,
+                'badge' => $product->badge_info,
+            ];
+        });
+
+        return response()->json([
+            'suggestions' => $suggestions,
+            'total' => $total,
+            'view_all_url' => route('products.index', ['search' => $search]),
+        ]);
     }
 }

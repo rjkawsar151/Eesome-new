@@ -16,7 +16,13 @@ class AdminOrderNotificationService
     }
     public function notify(Order $order, string $event = 'new'): void
     {
+        // Exclude the customer's own email — they already get a separate customer copy
+        $customerEmail = strtolower(trim((string) ($order->email ?? '')));
+
         foreach ($this->recipients() as $email) {
+            if ($customerEmail && $email === $customerEmail) {
+                continue; // skip — this person is also the customer, already gets a customer email
+            }
             try {
                 Notification::route('mail', $email)->notify(new NewOrderAdminAlert($order->id, $event));
             } catch (\Throwable $e) {

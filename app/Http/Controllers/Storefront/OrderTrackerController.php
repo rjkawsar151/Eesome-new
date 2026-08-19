@@ -14,6 +14,8 @@ class OrderTrackerController extends Controller
         $order = null;
         $error = null;
         $fromEmailToken = false;
+        $orderNumber = trim((string) $request->query('order_number', $request->query('query', '')));
+        $phone = trim((string) $request->query('phone', $request->query('email_or_phone', '')));
 
         // 1. Check for signed URL or email token
         if ($request->hasValidSignature() || $request->filled('token')) {
@@ -27,15 +29,13 @@ class OrderTrackerController extends Controller
                     ->first();
             }
 
-            if (!$order && $token) {
-                // Direct lookup by order number or HMAC token check
+            if (! $order && $token) {
                 $order = Order::with(['items.product.images', 'items.variant', 'statusHistories.changedBy'])
                     ->where('order_number', $token)
                     ->orWhere('id', $token)
                     ->first();
 
-                if (!$order) {
-                    // Match generated HMAC hash
+                if (! $order) {
                     $candidates = Order::latest()->take(300)->get();
                     foreach ($candidates as $c) {
                         $expectedHash = hash_hmac('sha256', $c->id . '|' . $c->order_number, config('app.key'));
@@ -52,15 +52,10 @@ class OrderTrackerController extends Controller
             } else {
                 $error = 'This tracking link is no longer valid or has expired.';
             }
-        } elseif ($request->filled('order_number')) {
-            $orderNumber = trim((string) $request->query('order_number'));
-            $emailOrPhone = trim((string) $request->query('email_or_phone', ''));
-
-            $order = $this->findOrder($orderNumber, $emailOrPhone);
-
-            if (!$order) {
-                $error = "We couldn't find that order. Please check your order number and try again.";
-            }
+        } elseif (! empty($orderNumber) || ! empty($phone)) {
+            $result = $this->searchOrderByOrderNumberAndPhone($orderNumber, $phone);
+            $order = $result['order'];
+            $error = $result['error'];
         }
 
         $siteSettings = app(SiteSettingsRepository::class);
@@ -71,6 +66,8 @@ class OrderTrackerController extends Controller
             'order' => $order,
             'error' => $error,
             'fromEmailToken' => $fromEmailToken,
+            'searchedOrderNumber' => $orderNumber,
+            'searchedPhone' => $phone,
             'supportPhone' => $supportPhone,
             'supportEmail' => $supportEmail,
         ]);
@@ -78,69 +75,77 @@ class OrderTrackerController extends Controller
 
     public function search(Request $request)
     {
-        $request->validate([
-            'order_number' => 'required|string|max:100',
-            'email_or_phone' => 'nullable|string|max:150',
-        ]);
+        $orderNumber = trim((string) $request->input('order_number', $request->input('search_term', '')));
+        $phone = trim((string) $request->input('phone', $request->input('email_or_phone', '')));
 
-        $orderNumber = trim((string) $request->input('order_number'));
-        $emailOrPhone = trim((string) $request->input('email_or_phone', ''));
-
-        $order = $this->findOrder($orderNumber, $emailOrPhone);
+        $result = $this->searchOrderByOrderNumberAndPhone($orderNumber, $phone);
 
         $siteSettings = app(SiteSettingsRepository::class);
         $supportPhone = $siteSettings->get('contact_phone', '01700000000');
         $supportEmail = $siteSettings->get('contact_email', config('mail.from.address', 'support@eesome.com'));
 
-        if (!$order) {
-            return view('storefront.orders.track', [
-                'order' => null,
-                'error' => "We couldn't find that order. Please check your order number and try again.",
-                'fromEmailToken' => false,
-                'searchedOrderNumber' => $orderNumber,
-                'searchedEmailOrPhone' => $emailOrPhone,
-                'supportPhone' => $supportPhone,
-                'supportEmail' => $supportEmail,
-            ]);
-        }
-
         return view('storefront.orders.track', [
-            'order' => $order,
-            'error' => null,
+            'order' => $result['order'],
+            'error' => $result['error'],
             'fromEmailToken' => false,
             'searchedOrderNumber' => $orderNumber,
-            'searchedEmailOrPhone' => $emailOrPhone,
+            'searchedPhone' => $phone,
             'supportPhone' => $supportPhone,
             'supportEmail' => $supportEmail,
         ]);
     }
 
-    private function findOrder(string $orderNumber, string $emailOrPhone): ?Order
+    private function searchOrderByOrderNumberAndPhone(string $orderNumber, string $phone): array
     {
-        $cleanNumber = preg_replace('/[^a-zA-Z0-9-]/', '', $orderNumber);
-        $numericId = preg_replace('/\D/', '', $orderNumber);
-
-        $query = Order::with(['items.product.images', 'items.variant', 'statusHistories.changedBy'])
-            ->where(function ($q) use ($orderNumber, $cleanNumber, $numericId) {
-                $q->where('order_number', $orderNumber)
-                  ->orWhere('order_number', $cleanNumber)
-                  ->orWhere('order_number', 'EES-' . ltrim($orderNumber, '#'));
-
-                if (!empty($numericId)) {
-                    $q->orWhere('id', (int) $numericId);
-                }
-            });
-
-        if (!empty($emailOrPhone)) {
-            $cleanPhone = preg_replace('/\D/', '', $emailOrPhone);
-            $query->where(function ($q) use ($emailOrPhone, $cleanPhone) {
-                $q->where('email', 'like', "%{$emailOrPhone}%");
-                if (!empty($cleanPhone) && strlen($cleanPhone) >= 6) {
-                    $q->orWhere('phone', 'like', "%{$cleanPhone}%");
-                }
-            });
+        if (empty($orderNumber) || empty($phone)) {
+            return [
+                'order' => null,
+                'error' => 'Please provide both your Order Code (e.g. ES-163HXULA) and Phone Number to track your order.',
+            ];
         }
 
-        return $query->first();
+        $cleanOrderNum = trim($orderNumber);
+        $numericId = (int) preg_replace('/\D/', '', $cleanOrderNum);
+        $cleanPhoneDigits = preg_replace('/\D/', '', $phone);
+
+        if (strlen($cleanPhoneDigits) < 6) {
+            return [
+                'order' => null,
+                'error' => 'Please enter a valid Phone Number for verification.',
+            ];
+        }
+
+        $query = Order::with(['items.product.images', 'items.variant', 'statusHistories.changedBy']);
+
+        // Match Order Number or numeric ID
+        $query->where(function ($q) use ($cleanOrderNum, $numericId) {
+            $q->where('order_number', $cleanOrderNum)
+              ->orWhere('order_number', 'EES-' . ltrim($cleanOrderNum, '#'))
+              ->orWhere('order_number', 'ES-' . ltrim($cleanOrderNum, '#'));
+
+            if ($numericId > 0) {
+                $q->orWhere('id', $numericId);
+            }
+        });
+
+        // Match Phone Number
+        $query->where(function ($q) use ($phone, $cleanPhoneDigits) {
+            $q->where('phone', $phone)
+              ->orWhere('phone', 'like', "%{$cleanPhoneDigits}%");
+        });
+
+        $order = $query->first();
+
+        if (! $order) {
+            return [
+                'order' => null,
+                'error' => "No order found matching Order Code '{$cleanOrderNum}' and Phone Number '{$phone}'. Please verify your details.",
+            ];
+        }
+
+        return [
+            'order' => $order,
+            'error' => null,
+        ];
     }
 }

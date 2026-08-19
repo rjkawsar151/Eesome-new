@@ -43,15 +43,31 @@ class CategoryController extends Controller
         return back()->with('success', 'Category updated.');
     }
 
-    public function destroy(Category $category)
+    public function destroy(Request $request, Category $category)
     {
-        if ($category->products()->exists()) {
-            return back()->with('error', 'Archive or move products first.');
+        $name = $category->name;
+        $productCount = $category->products()->count();
+
+        if ($productCount > 0) {
+            $category->products()->update(['category_id' => null]);
         }
-        app(OptimizedImageStorage::class)->delete($category->image);
+
+        if ($category->image && str_starts_with($category->image, 'categories/')) {
+            try {
+                app(OptimizedImageStorage::class)->delete($category->image);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         $category->delete();
 
-        return back()->with('success', 'Category deleted.');
+        $msg = "Category '{$name}' deleted successfully.";
+        if ($productCount > 0) {
+            $msg .= " ({$productCount} product(s) were unassigned).";
+        }
+
+        return redirect()->route('admin.categories.index')->with('success', $msg);
     }
 
     private function data(Request $r, ?Category $c = null)

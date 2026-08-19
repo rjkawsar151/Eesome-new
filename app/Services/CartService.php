@@ -104,12 +104,20 @@ class CartService
         if ($existing) {
             $existing->increment('quantity', $qty);
         } else {
-            CartItem::create([
-                'user_id' => $userId,
-                'product_id' => $productId,
-                'variant_id' => $variantId,
-                'quantity' => $qty,
-            ]);
+            try {
+                CartItem::create([
+                    'user_id'    => $userId,
+                    'product_id' => $productId,
+                    'variant_id' => $variantId,
+                    'quantity'   => $qty,
+                ]);
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                // Race condition: another request inserted in the meantime — increment instead
+                CartItem::where('user_id', $userId)
+                    ->where('product_id', $productId)
+                    ->where('variant_id', $variantId)
+                    ->increment('quantity', $qty);
+            }
         }
     }
 

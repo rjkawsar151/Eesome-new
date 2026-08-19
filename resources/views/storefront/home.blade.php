@@ -251,38 +251,33 @@
                     <div style="padding:0 .85rem .85rem">
                         <div class="product-card__actions">
                             @php
-                                $hasMultipleVariants = $product->has_variants && $product->activeVariants->count() > 1;
-                                $usesVariants = $product->has_variants && $product->activeVariants->isNotEmpty();
-                                $canPurchase = $usesVariants
-                                    ? $product->activeVariants->contains(fn ($variant) => $variant->stock > 0)
-                                    : ($product->stock > 0 || $product->available_for_preorder);
+                                $canPurchase = ! $product->is_sold_out;
                             @endphp
                             @if($canPurchase)
                                 <form class="js-card-purchase" method="POST" action="{{ route('cart.store') }}" data-product-name="{{ $product->name }}" data-product-image="{{ app(\App\Services\ProductImageResolver::class)->resolve($product->images->first()?->image_path ?? $product->image) }}" style="display:flex;flex:1;gap:.5rem">
                                     @csrf
                                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                                     <input type="hidden" name="quantity" value="1">
-                                    @if($hasMultipleVariants)
+                                    @if($product->has_variants && $product->activeVariants->count() > 1)
                                         <select class="js-card-variant" name="variant_id" hidden aria-label="Selected color">
                                             <option value="">Choose a color</option>
                                             @foreach($product->activeVariants as $index => $variant)
-                                                @php $varImg = app(\App\Services\ProductImageResolver::class)->resolve($variant->image_path ?: ($product->images->first()?->image_path ?? $product->image)); @endphp
+                                                @php $varImg = app(\App\Services\ProductImageResolver::class)->resolveVariantImage($product, $variant, $index); @endphp
                                                 <option value="{{ $variant->id }}"
                                                     data-color="{{ trim($variant->color_name ?: $variant->name) }}"
                                                     data-color-code="{{ $variant->color_code ?? '' }}"
                                                     data-image="{{ $varImg }}"
                                                     data-price="৳{{ number_format((float)$variant->effective_price, 0) }}"
-                                                    data-sku="{{ $variant->sku }}"
-                                                    @disabled($variant->stock < 1)>
+                                                    data-sku="{{ $variant->sku }}">
                                                     {{ $variant->color_name ?: $variant->name }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                    @elseif($usesVariants)
+                                    @elseif($product->has_variants && $product->activeVariants->isNotEmpty())
                                         <input type="hidden" name="variant_id" value="{{ $product->activeVariants->first()->id }}">
                                     @endif
                                     <button type="submit" class="btn-cart" style="flex:1">Cart</button>
-                                    <button type="submit" name="buy_now" value="1" class="btn-buy" style="flex:1">{{ ($product->stock <= 0 || $product->available_for_preorder) ? 'Pre-order' : 'Buy' }}</button>
+                                    <button type="submit" name="buy_now" value="1" class="btn-buy" style="flex:1">{{ !$product->has_stock ? 'Pre-order' : 'Buy' }}</button>
                                 </form>
                             @else
                                 <button class="btn-cart btn-disabled" style="flex:1">Sold Out</button>

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
+use App\Models\DeliverySetting;
+use App\Models\District;
+use App\Models\Division;
 use App\Models\PaymentMethod;
 use App\Models\ShippingMethod;
 use App\Services\CartService;
@@ -27,13 +30,38 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Checkout is temporarily unavailable. Please contact us.');
         }
 
-        return view('storefront.checkout.show', compact('items', 'shippingMethods', 'paymentMethods'));
+        $divisions = Division::where('status', true)->orderBy('sort_order')->orderBy('name')->get();
+        $deliverySetting = DeliverySetting::getSettings();
+
+        return view('storefront.checkout.show', compact('items', 'shippingMethods', 'paymentMethods', 'divisions', 'deliverySetting'));
+    }
+
+    public function getDistricts(Request $request)
+    {
+        $divisionId = $request->query('division_id');
+        $divisionName = $request->query('division');
+
+        $query = District::where('status', true);
+        if ($divisionId) {
+            $query->where('division_id', $divisionId);
+        } elseif ($divisionName) {
+            $query->whereHas('division', fn ($q) => $q->where('name', $divisionName));
+        } else {
+            return response()->json([]);
+        }
+
+        $districts = $query->orderBy('sort_order')->orderBy('name')->get(['id', 'division_id', 'name', 'delivery_charge']);
+
+        return response()->json($districts);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255', 'email' => 'required|email|max:255', 'phone' => 'required|string|max:30',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:30',
+            'division' => 'required|string|max:100',
             'district' => 'required|string|max:100',
             'thana' => 'required|string|max:100',
             'post_office' => 'required|string|max:100',
@@ -41,12 +69,33 @@ class CheckoutController extends Controller
             'address' => 'required|string|max:500',
             'shipping_method' => ['required', 'string', Rule::exists('shipping_methods', 'code')->where('is_active', true)],
             'payment_method' => ['required', 'string', Rule::exists('payment_methods', 'code')->where('is_active', true)],
+            'transaction_id' => 'nullable|string|max:100',
             'coupon_code' => 'nullable|string|max:100',
         ]);
+
+        $paymentMethod = PaymentMethod::where('code', $data['payment_method'])->where('is_active', true)->firstOrFail();
+        if ($paymentMethod->requires_transaction_id && empty(trim((string) ($data['transaction_id'] ?? '')))) {
+            return back()->withInput()->withErrors(['transaction_id' => 'Transaction ID is required for ' . $paymentMethod->name . '.']);
+        }
+
+        $division = Division::where('name', $data['division'])->where('status', true)->first();
+        if (! $division) {
+            return back()->withInput()->withErrors(['division' => 'The selected division is invalid.']);
+        }
+
+        $district = District::where('name', $data['district'])->where('division_id', $division->id)->where('status', true)->first();
+        if (! $district) {
+            return back()->withInput()->withErrors(['district' => 'The selected district is invalid or does not belong to the selected division.']);
+        }
+
+        $data['division_id'] = $division->id;
+        $data['district_id'] = $district->id;
+
         $shippingMethod = ShippingMethod::where('code', $data['shipping_method'])->where('is_active', true)->firstOrFail();
         if ($data['payment_method'] === 'COD' && ! $shippingMethod->cod_available) {
             return back()->withInput()->withErrors(['payment_method' => 'Cash on delivery is not available for this delivery method.']);
         }
+
         if (Auth::check()) {
             $rawItems = $this->cartService->getDbCart(Auth::id());
             $cartMap = $rawItems->map(fn ($item) => ['product_id' => $item->product_id, 'variant_id' => $item->variant_id, 'quantity' => $item->quantity])->all();
@@ -57,6 +106,7 @@ class CheckoutController extends Controller
         if (empty($cartMap)) {
             return back()->with('error', 'Cart is empty.');
         }
+
         $data['user_id'] = Auth::id();
         try {
             $order = $this->checkoutService->placeOrder($data, $cartMap, $data['coupon_code'] ?? null);

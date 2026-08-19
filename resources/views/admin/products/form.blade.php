@@ -261,7 +261,7 @@
 
             <div class="field full">
                 <div class="check-row">
-                    @foreach(['is_active'=>'Active','is_featured'=>'Homepage hero','is_new'=>'New','is_preorder'=>'Preorder'] as $key=>$label)
+                    @foreach(['is_active'=>'Active','is_featured'=>'Homepage hero','is_new'=>'New','is_sold_out'=>'Mark as Sold out (Stockout)'] as $key=>$label)
                         <label class="check-label"><input type="checkbox" name="{{ $key }}" value="1" @checked(old($key,$product->$key??($key==='is_active')))>{{ $label }}</label>
                     @endforeach
                 </div>

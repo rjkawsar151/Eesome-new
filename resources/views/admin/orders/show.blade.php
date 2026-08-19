@@ -539,6 +539,7 @@
                 <div class="detail-item">
                     <span class="detail-label">Location</span>
                     <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.2rem">
+                        <span>Division: <strong>{{ $order->division ?: '—' }}</strong></span>
                         <span>District: <strong>{{ $order->district ?: '—' }}</strong></span>
                         <span>Thana: <strong>{{ $order->thana ?: '—' }}</strong></span>
                     </div>
@@ -569,6 +570,13 @@
                     {{ \Illuminate\Support\Str::headline($order->payment_status) }}
                 </span>
             </div>
+
+            @if(!empty($order->transaction_id))
+                <div style="margin-bottom:1rem;padding:.85rem;border-radius:.6rem;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534">
+                    <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;font-weight:800;color:#15803d">Customer Transaction ID</div>
+                    <div style="font-size:1.15rem;font-weight:800;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.04em;margin-top:.2rem;color:#14532d;word-break:break-all">{{ $order->transaction_id }}</div>
+                </div>
+            @endif
 
             <form method="POST" action="{{ route('admin.orders.updatePayment', $order) }}">
                 @csrf

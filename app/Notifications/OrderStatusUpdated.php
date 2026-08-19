@@ -77,18 +77,40 @@ class OrderStatusUpdated extends Notification
             default      => "Your order status has been updated to {$statusLabel}.",
         };
 
-        // Generate signed 1-click tracking URL for the email button
-        $token = hash_hmac('sha256', $order->id . '|' . $order->order_number, config('app.key'));
-        $trackingUrl = URL::signedRoute('orders.track', [
-            'order' => $order->id,
-            'token' => $token,
-        ]);
-
         $siteSettings = app(SiteSettingsRepository::class);
         $supportPhone = $siteSettings->get('contact_phone', '01700000000');
         $supportEmail = $siteSettings->get('contact_email', config('mail.from.address', 'support@eesome.com'));
+        
+        // Resolve logo with base64 embedding for 100% email client compatibility
         $logoPath = $siteSettings->get('logo_path');
-        $logoUrl = $logoPath ? asset('storage/'.$logoPath) : asset('favicon.svg');
+        $logoFile = null;
+        if ($logoPath && file_exists(storage_path('app/public/' . $logoPath))) {
+            $logoFile = storage_path('app/public/' . $logoPath);
+        } elseif ($logoPath && file_exists(public_path('storage/' . $logoPath))) {
+            $logoFile = public_path('storage/' . $logoPath);
+        }
+
+        if ($logoFile) {
+            $mime = mime_content_type($logoFile) ?: 'image/png';
+            $logoData = base64_encode(file_get_contents($logoFile));
+            $logoUrl = "data:{$mime};base64,{$logoData}";
+        } else {
+            $logoUrl = url('images/logo.png');
+        }
+
+        // Generate robust 1-click tracking URL with Order Code, Phone & Token
+        $token = hash_hmac('sha256', $order->id . '|' . $order->order_number, config('app.key'));
+        $baseUrl = config('app.url');
+        if (empty($baseUrl) || str_contains($baseUrl, 'localhost')) {
+            try { $baseUrl = request()->schemeAndHttpHost(); } catch (\Throwable $e) {}
+        }
+        if (empty($baseUrl)) { $baseUrl = url('/'); }
+
+        $trackingUrl = rtrim($baseUrl, '/') . '/track-order?' . http_build_query([
+            'order_number' => $order->order_number,
+            'phone'        => $order->phone,
+            'token'        => $token,
+        ]);
 
         $subject = $isNew
             ? "Order Confirmation #{$order->order_number}"

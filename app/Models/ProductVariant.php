@@ -16,6 +16,11 @@ class ProductVariant extends Model
         return $this->sale_price !== null && (float) $this->sale_price < (float) $regular ? (string) $this->sale_price : (string) $regular;
     }
 
+    public function getImagePathAttribute(): ?string
+    {
+        return $this->image;
+    }
+
     public function product()
     {
         return $this->belongsTo(Product::class);

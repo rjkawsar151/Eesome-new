@@ -114,6 +114,26 @@ window.handleVariantClick = function(button, event) {
             thumb.classList.remove('active');
         }
     }
+
+    // 9. Update Buy/Pre-order button and stock label based on selected variant stock
+    var variantStock = parseInt(button.getAttribute('data-stock') || button.dataset.stock || '-1', 10);
+    var isPreorder = variantStock === 0;
+    var buyBtn = document.querySelector('#purchase-form button[name="buy_now"]');
+    if (buyBtn) {
+        buyBtn.textContent = isPreorder ? 'Pre-order' : 'Buy';
+    }
+    var stockEl = document.querySelector('.stock');
+    if (stockEl) {
+        if (isPreorder) {
+            stockEl.textContent = 'Pre-order only · delivery in 25\u201335 days';
+            stockEl.style.color = '#d97706';
+        } else if (variantStock > 0) {
+            stockEl.textContent = variantStock + ' in stock';
+            stockEl.style.color = '#16a34a';
+        } else {
+            stockEl.style.color = '';
+        }
+    }
 };
 
 window.handleThumbClick = function(thumb, event) {
@@ -198,6 +218,14 @@ document.addEventListener('click', function(e) {
         window.handleVariantClick(btn, e);
     }
 }, true);
+
+// On page load: sync buy button and stock label to the initially active variant
+document.addEventListener('DOMContentLoaded', function() {
+    var activeBtn = document.querySelector('.js-variant-item.active');
+    if (activeBtn) {
+        window.handleVariantClick(activeBtn, null);
+    }
+});
 </script>
 @endpush
 @section('content')
@@ -257,7 +285,7 @@ document.addEventListener('click', function(e) {
         <h1>{{ $product->name }}</h1>
         <p style="color:var(--text-muted)">SKU: <span id="product-sku">{{ $defaultVariant?->sku ?: ($product->sku ?: 'N/A') }}</span></p>
         <div class="detail-price">৳{{ number_format((float)($defaultVariant ? $defaultVariant->effective_price : $product->effective_price), 0) }} @if($product->has_discount || ($defaultVariant && $defaultVariant->sale_price !== null && (float)$defaultVariant->sale_price < (float)$defaultVariant->regular_price))<s>৳{{ number_format((float)($defaultVariant ? $defaultVariant->regular_price : $product->price), 0) }}</s>@endif</div>
-        <p><span class="stock">{{ ($product->stock <= 0 || $product->available_for_preorder) ? 'Pre-order only · delivery in 25–35 days' : (($defaultVariant?->stock ?? $product->stock) > 0 ? ($defaultVariant?->stock ?? $product->stock).' in stock' : 'Pre-order only · delivery in 25–35 days') }}</span></p>
+        <p><span class="stock">{{ $product->is_sold_out ? 'Sold out' : (!$product->has_stock ? 'Pre-order only · delivery in 25–35 days' : (($defaultVariant?->stock ?? $product->stock) > 0 ? ($defaultVariant?->stock ?? $product->stock).' in stock' : 'In stock')) }}</span></p>
         
         @if($hasActiveVariants)
         <div class="variants">
@@ -267,7 +295,7 @@ document.addEventListener('click', function(e) {
                     @php $varImg = $resolveVariantImage($variant, $index); @endphp
                     @php $isActive = $defaultVariant && $defaultVariant->id === $variant->id; @endphp
 
-                    <button type="button" class="variant js-variant-item @if($isActive) active @endif" onclick="handleVariantClick(this, event)" data-variant-id="{{ $variant->id }}" data-color="{{ trim($variant->color_name ?: $variant->name) }}" data-price="৳{{ number_format((float)$variant->effective_price, 0) }}" data-sku="{{ $variant->sku }}" @if($varImg) data-image="{{ $varImg }}" @endif @disabled($variant->stock < 1)>
+                    <button type="button" class="variant js-variant-item @if($isActive) active @endif" onclick="handleVariantClick(this, event)" data-variant-id="{{ $variant->id }}" data-color="{{ trim($variant->color_name ?: $variant->name) }}" data-price="৳{{ number_format((float)$variant->effective_price, 0) }}" data-sku="{{ $variant->sku }}" data-stock="{{ (int)$variant->stock }}" @if($varImg) data-image="{{ $varImg }}" @endif @if($product->is_sold_out) disabled @endif>
                         @if($variant->color_code)
                             <span class="color-swatch-dot" style="background-color: {{ $variant->color_code }}"></span>
                         @endif
@@ -289,7 +317,7 @@ document.addEventListener('click', function(e) {
         </div>
         @endif
 
-        @if($product->stock > 0 || $product->has_variants || $product->available_for_preorder)
+        @if(!$product->is_sold_out)
         <form id="purchase-form" class="buybox js-card-purchase" method="POST" action="{{ route('cart.store') }}" data-product-name="{{ $product->name }}" data-product-image="{{ $initialResolvedImage }}">
             @csrf
             <input type="hidden" name="product_id" value="{{ $product->id }}">
@@ -299,14 +327,12 @@ document.addEventListener('click', function(e) {
                     @foreach($activeVariants as $index => $variant)
                         @php $varImg = $resolveVariantImage($variant, $index); @endphp
                         <option value="{{ $variant->id }}"
-
                             data-variant-id="{{ $variant->id }}"
                             data-color="{{ trim($variant->color_name ?: $variant->name) }}"
                             data-color-code="{{ $variant->color_code ?? '' }}"
                             data-image="{{ $varImg }}"
                             data-price="৳{{ number_format((float)$variant->effective_price, 0) }}"
-                            data-sku="{{ $variant->sku }}"
-                            @disabled($variant->stock < 1)>
+                            data-sku="{{ $variant->sku }}">
                             {{ $variant->color_name ?: $variant->name }} / SKU {{ $variant->sku }} / BDT {{ number_format((float)$variant->effective_price, 0) }}
                         </option>
                     @endforeach
@@ -314,8 +340,12 @@ document.addEventListener('click', function(e) {
             @endif
             <input type="hidden" name="quantity" value="1">
             <button type="submit">Cart</button>
-            <button type="submit" name="buy_now" value="1">{{ ($product->stock <= 0 || $product->available_for_preorder) ? 'Pre-order' : 'Buy' }}</button>
+            <button type="submit" name="buy_now" value="1">{{ !$product->has_stock ? 'Pre-order' : 'Buy' }}</button>
         </form>
+        @else
+        <div class="buybox">
+            <button type="button" disabled style="opacity:0.65;cursor:not-allowed;background:#6b7280;color:#fff;width:100%;min-height:48px;border-radius:12px;font-weight:700;border:0">Sold out</button>
+        </div>
         @endif
 
         <div class="description">{!! $product->clean_description !!}</div>
@@ -375,7 +405,7 @@ document.addEventListener('click', function(e) {
                                 <select class="js-card-variant" name="variant_id" hidden aria-label="Selected color">
                                     <option value="">Choose a color</option>
                                     @foreach($related->activeVariants as $index => $rVariant)
-                                        @php $rImg = app(\App\Services\ProductImageResolver::class)->resolve($rVariant->image_path ?: $img); @endphp
+                                        @php $rImg = app(\App\Services\ProductImageResolver::class)->resolveVariantImage($related, $rVariant, $index); @endphp
                                         <option value="{{ $rVariant->id }}"
 
                                             data-color="{{ trim($rVariant->color_name ?: $rVariant->name) }}"

@@ -53,6 +53,7 @@ Route::get('/storage/{path}', PublicStorageImageController::class)
     ->where('path', '(?:blog|branding|categories|media|products|reviews|variants)/[A-Za-z0-9._/-]+')
     ->name('public-storage-images.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/suggestions', [ProductController::class, 'suggestions'])->name('products.suggestions');
 Route::post('/products/{product}/reviews', [ProductReviewController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('products.reviews.store');
@@ -62,8 +63,8 @@ Route::post('/products/{product}/wishlist', [WishlistController::class, 'toggle'
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
 // Order Tracking routes
-Route::get('/track-order', [OrderTrackerController::class, 'index'])->name('orders.track');
-Route::post('/track-order', [OrderTrackerController::class, 'search'])->middleware('throttle:10,1')->name('orders.track.search');
+Route::get('/track-order', [OrderTrackerController::class, 'index'])->middleware('throttle:10,1')->name('orders.track');
+Route::post('/track-order', [OrderTrackerController::class, 'search'])->middleware('throttle:6,1')->name('orders.track.search');
 
 // Cart routes (guest + auth)
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -73,6 +74,7 @@ Route::delete('/cart/{line}', [CartController::class, 'destroy'])->name('cart.de
 
 // Checkout routes
 Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
+Route::get('/checkout/districts', [CheckoutController::class, 'getDistricts'])->name('checkout.districts');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::get('/checkout/success/{orderNumber}', [CheckoutController::class, 'success'])->name('checkout.success');
 
@@ -125,6 +127,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'admin.acti
     Route::resource('blog', AdminBlogController::class)->except('show')->parameters(['blog' => 'blog']);
     Route::get('/settings', [AdminSettingController::class, 'edit'])->name('settings.edit');
     Route::put('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
+    Route::get('/delivery', [\App\Http\Controllers\Admin\DeliverySettingController::class, 'index'])->name('delivery.index');
+    Route::put('/delivery/settings', [\App\Http\Controllers\Admin\DeliverySettingController::class, 'updateSettings'])->name('delivery.update-settings');
+    Route::put('/delivery/district/{district}', [\App\Http\Controllers\Admin\DeliverySettingController::class, 'updateDistrictCharge'])->name('delivery.update-district');
+    Route::put('/delivery/bulk-update', [\App\Http\Controllers\Admin\DeliverySettingController::class, 'bulkUpdateDistricts'])->name('delivery.bulk-update');
     Route::resource('shipping-methods', AdminShippingMethodController::class)->except('show');
     Route::resource('payment-methods', AdminPaymentMethodController::class)->except('show');
     Route::resource('coupons', AdminCouponController::class)->except('show');

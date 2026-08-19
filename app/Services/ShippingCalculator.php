@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\DeliverySetting;
+use App\Models\District;
 use App\Models\ShippingMethod;
 use RuntimeException;
 
@@ -21,7 +23,7 @@ class ShippingCalculator
         return $method;
     }
 
-    public function calculate(float $subtotal, ?string $code): float
+    public function calculate(float $subtotal, ?string $code = null, ?District $district = null): float
     {
         $method = $this->method($code);
 
@@ -29,10 +31,25 @@ class ShippingCalculator
             throw new RuntimeException("{$method->name} requires a minimum order of ৳".number_format((float) $method->minimum_order_amount, 0).'.');
         }
 
+        if ($district) {
+            return $this->calculateForDistrict($subtotal, $district);
+        }
+
         if ($method->charge_type === 'free' || ($method->free_shipping_threshold !== null && $subtotal >= (float) $method->free_shipping_threshold)) {
             return 0.0;
         }
 
         return round((float) $method->base_charge, 2);
+    }
+
+    public function calculateForDistrict(float $subtotal, District $district): float
+    {
+        $settings = DeliverySetting::getSettings();
+
+        if ($settings->free_delivery_enabled && $subtotal >= (float) $settings->free_delivery_threshold) {
+            return 0.0;
+        }
+
+        return round((float) $district->delivery_charge, 2);
     }
 }

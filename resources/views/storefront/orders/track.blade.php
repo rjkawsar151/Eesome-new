@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', $order ? 'Tracking Order #' . $order->order_number : 'Track Your Order')
+@section('title', $order ? 'Tracking Order #' . $order->id : 'Track Your Order')
 @section('meta_description', 'Track your EESOME order status in real time.')
 
 @push('styles')
@@ -46,13 +46,13 @@
     }
     
     .track-form {
-        display: grid;
-        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.5fr) auto;
+        display: flex;
         gap: 0.85rem;
-        max-width: 720px;
+        max-width: 650px;
         margin: 1.8rem auto 0;
     }
     .track-input {
+        flex: 1;
         width: 100%;
         padding: 0.85rem 1.1rem;
         border: 1.5px solid #F2D2E0;
@@ -194,7 +194,7 @@
         line-height: 1.55;
     }
 
-    /* Hold / Refund Box */
+    /* Notice Box */
     .alert-notice-box {
         background: #FFFBEB;
         border: 1.5px solid #FCD34D;
@@ -227,9 +227,18 @@
         color: #B54A7B;
     }
 
+    /* Order List layout */
+    .order-list-row {
+        display: grid;
+        grid-template-columns: 1.2fr 2fr 1fr;
+        gap: 1rem;
+        align-items: center;
+    }
+
     @media (max-width: 768px) {
-        .track-form { grid-template-columns: 1fr; }
+        .track-form { flex-direction: column; }
         .order-grid { grid-template-columns: 1fr; }
+        .order-list-row { grid-template-columns: 1fr; gap: 0.85rem; }
         .timeline-steps { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
         .timeline-steps::before { top: 20px; bottom: 20px; left: 18px; width: 3px; height: auto; }
         .timeline-progress-line { display: none; }
@@ -246,18 +255,20 @@
         <div class="track-header">
             <span class="track-eyebrow">Real-Time Tracking</span>
             <h1 class="track-title">Track Your Order</h1>
-            <p class="track-sub">Enter your order number below to check the latest status of your order.</p>
+            <p class="track-sub">Enter your Order Code and Phone number to verify and check order status.</p>
             
-            <form class="track-form" method="POST" action="{{ route('orders.track.search') }}">
+            <form class="track-form" method="POST" action="{{ route('orders.track.search') }}" style="display:flex; flex-direction:column; gap:0.85rem; max-width:560px; margin:1.8rem auto 0;">
                 @csrf
-                <input class="track-input" type="text" name="order_number" value="{{ old('order_number', $searchedOrderNumber ?? ($order->order_number ?? '')) }}" placeholder="Order Number (e.g. #EES-1001)" required>
-                <input class="track-input" type="text" name="email_or_phone" value="{{ old('email_or_phone', $searchedEmailOrPhone ?? '') }}" placeholder="Email or Phone (optional for verification)">
-                <button class="track-btn" type="submit">Track Order</button>
+                <div style="display:flex; gap:0.85rem; width:100%; flex-wrap:wrap;">
+                    <input class="track-input" type="text" name="order_number" value="{{ old('order_number', $searchedOrderNumber ?? '') }}" placeholder="Order Code (e.g. ES-163HXULA)" required style="flex:1; min-width:200px;">
+                    <input class="track-input" type="tel" name="phone" value="{{ old('phone', $searchedPhone ?? '') }}" placeholder="Phone Number (e.g. 01712345678)" required style="flex:1; min-width:200px;">
+                </div>
+                <button class="track-btn" type="submit" style="width:100%; font-size:1.02rem; padding:0.9rem;">Track Order &rarr;</button>
             </form>
         </div>
 
         @if(!empty($error))
-            <div class="track-card" style="border-color:#FCA5A5; background:#FFF1F1; text-align:center;">
+            <div class="track-card" style="border-color:#FCA5A5; background:#FFF1F1; text-align:center; max-width:720px; margin-left:auto; margin-right:auto;">
                 <p style="color:#991B1B; font-weight:700; font-size:1.05rem; margin:0 0 0.5rem;">{{ $error }}</p>
                 <p style="color:#7F1D1D; font-size:0.9rem; margin:0;">
                     Need assistance? Call <a href="tel:{{ preg_replace('/\D/', '', $supportPhone) }}" style="color:#991B1B; font-weight:700;">{{ $supportPhone }}</a> or email <a href="mailto:{{ $supportEmail }}" style="color:#991B1B; font-weight:700;">{{ $supportEmail }}</a>.
@@ -265,6 +276,74 @@
             </div>
         @endif
 
+        {{-- CASE 1: Multiple orders matched by Email or Phone --}}
+        @if(!empty($orders) && $orders->isNotEmpty())
+            <div style="max-width:880px; margin:0 auto;">
+                <h2 style="font-family:Georgia, serif; font-size:1.4rem; color:#6F2F50; margin:0 0 1.25rem;">
+                    Orders List for "{{ $searchedTerm }}" ({{ $orders->count() }})
+                </h2>
+
+                <div style="display:grid; gap:1.25rem;">
+                    @foreach($orders as $o)
+                        <div class="track-card" style="margin-bottom:0; padding:1.5rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; padding-bottom:1rem; border-bottom:1px solid #F2DFE8; margin-bottom:1rem;">
+                                <div>
+                                    <strong style="font-size:1.05rem; color:#6F2F50;">Order ID: #{{ $o->id }}</strong>
+                                    <span style="font-size:0.82rem; color:#8A6C7B; display:block;">Placed {{ $o->created_at ? $o->created_at->format('M d, Y') : 'Recently' }}</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:0.75rem;">
+                                    <span style="display:inline-block; padding:4px 12px; border-radius:999px; background:#F2DFE8; color:#6F2F50; font-weight:800; font-size:0.78rem; text-transform:uppercase;">
+                                        {{ \Illuminate\Support\Str::headline($o->order_status) }}
+                                    </span>
+                                    <a href="{{ route('orders.track') }}?query={{ $o->id }}" class="track-btn" style="padding:0.45rem 0.95rem; font-size:0.82rem; text-decoration:none; background:#6F2F50;">View Details →</a>
+                                </div>
+                            </div>
+
+                            <div class="order-list-row">
+                                {{-- 1. Name --}}
+                                <div>
+                                    <span style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#B54A7B; display:block; margin-bottom:0.2rem;">Customer Name</span>
+                                    <strong style="font-size:0.95rem; color:#3E2A35;">{{ $o->customer_name }}</strong>
+                                </div>
+
+                                {{-- 2. Ordered Items --}}
+                                <div>
+                                    <span style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#B54A7B; display:block; margin-bottom:0.35rem;">Ordered Items</span>
+                                    <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                                        @foreach($o->items as $item)
+                                            @php
+                                                $img = null;
+                                                if ($item->variant && $item->variant->image_path) {
+                                                    $img = asset('storage/' . $item->variant->image_path);
+                                                } elseif ($item->product && $item->product->images->isNotEmpty()) {
+                                                    $img = asset('storage/' . $item->product->images->first()->image_path);
+                                                } elseif ($item->product && $item->product->image) {
+                                                    $img = app(\App\Services\ProductImageResolver::class)->resolve($item->product->image);
+                                                } else {
+                                                    $img = app(\App\Services\ProductImageResolver::class)->placeholder();
+                                                }
+                                            @endphp
+                                            <div style="display:flex; align-items:center; gap:0.55rem;">
+                                                <img src="{{ $img }}" alt="{{ $item->product_name }}" style="width:38px; height:38px; object-fit:cover; border-radius:6px; border:1px solid #F2DFE8; flex-shrink:0;">
+                                                <span style="font-size:0.88rem; font-weight:600; color:#4a2b36;">{{ $item->product_name }} × {{ $item->quantity }}</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                {{-- 3. Total Price --}}
+                                <div>
+                                    <span style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#B54A7B; display:block; margin-bottom:0.2rem;">Total Price</span>
+                                    <strong style="font-size:1.15rem; color:#B54A7B;">৳{{ number_format((float)$o->total_amount, 0) }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        {{-- CASE 2: Single order matched by Order ID --}}
         @if($order)
             @php
                 $statusKey = strtolower($order->order_status);
@@ -309,10 +388,10 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; padding-bottom:1.25rem; border-bottom:1px solid #F2DFE8;">
                     <div>
                         <h2 style="font-family:Georgia, serif; font-size:1.5rem; color:#6F2F50; margin:0 0 0.2rem;">
-                            Order #{{ $order->order_number }}
+                            Order ID: #{{ $order->id }}
                         </h2>
                         <span style="font-size:0.88rem; color:#6E5260;">
-                            Placed {{ $order->created_at ? $order->created_at->format('M d, Y · g:i A') : 'Recently' }}
+                            Customer: <strong>{{ $order->customer_name }}</strong> · Placed {{ $order->created_at ? $order->created_at->format('M d, Y · g:i A') : 'Recently' }}
                         </span>
                     </div>
                     <span style="display:inline-block; padding:8px 18px; border-radius:999px; background:{{ $badgeBg }}; color:{{ $badgeText }}; font-weight:800; font-size:0.85rem; letter-spacing:0.04em; text-transform:uppercase;">

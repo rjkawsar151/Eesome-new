@@ -233,13 +233,14 @@ class ProductController extends Controller
 
         $d['sort_order'] = (int) ($d['sort_order'] ?? ($p?->sort_order ?? 0));
 
-        foreach (['has_variants', 'is_active', 'is_featured', 'is_new', 'is_preorder'] as $k) {
+        foreach (['has_variants', 'is_active', 'is_featured', 'is_new', 'is_sold_out'] as $k) {
             $d[$k] = $r->boolean($k);
         }
 
-        if ((int) ($d['stock'] ?? 0) === 0) {
+        if ((int) ($d['stock'] ?? 0) <= 0) {
             $d['is_preorder'] = true;
-            $d['is_sold_out'] = false;
+        } else {
+            $d['is_preorder'] = false;
         }
 
         unset($d['variants']);

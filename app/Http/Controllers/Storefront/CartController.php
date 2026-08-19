@@ -46,8 +46,18 @@ class CartController extends Controller
             }
             return back()->withErrors(['variant_id' => 'Please select an available color.']);
         }
+        if ($product->is_sold_out) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'This product is currently sold out.'], 422);
+            }
+            return back()->withErrors(['product_id' => 'This product is currently sold out.']);
+        }
+
         $stock = $variant?->stock ?? $product->stock;
-        if (! $product->available_for_preorder && $qty > $stock) {
+        // A variant (or product without variants) with 0 stock is pre-orderable unless the product is sold out.
+        // Use the *selected* variant's stock for the check — not the product-level aggregate.
+        $variantIsPreorder = $product->is_sold_out ? false : ($stock <= 0);
+        if (! $variantIsPreorder && $qty > $stock) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['success' => false, 'message' => 'The requested quantity is not available.'], 422);
             }
