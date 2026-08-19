@@ -388,7 +388,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; padding-bottom:1.25rem; border-bottom:1px solid #F2DFE8;">
                     <div>
                         <h2 style="font-family:Georgia, serif; font-size:1.5rem; color:#6F2F50; margin:0 0 0.2rem;">
-                            Order ID: #{{ $order->id }}
+                            Order #{{ $order->order_number ?: $order->id }}
                         </h2>
                         <span style="font-size:0.88rem; color:#6E5260;">
                             Customer: <strong>{{ $order->customer_name }}</strong> · Placed {{ $order->created_at ? $order->created_at->format('M d, Y · g:i A') : 'Recently' }}

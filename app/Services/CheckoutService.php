@@ -49,11 +49,18 @@ class CheckoutService
                 $product = $products[$productId];
                 $qty = (int) $requestedQty;
                 $variant = empty($cartLine['variant_id']) ? null : $product->variants->firstWhere('id', (int) $cartLine['variant_id']);
-                if ($product->has_variants and ! $variant) throw new \RuntimeException('A selected color is no longer available.');
-                if ($variant and ! $variant->is_active) throw new \RuntimeException('A selected color is inactive.');
-                $availableStock = $variant ? $variant->stock : $product->stock;
-                // A variant with 0 stock is pre-orderable unless the whole product is marked sold out
-                $lineIsPreorder = $product->is_sold_out ? false : ($availableStock <= 0);
+                if ($product->has_variants && ! $variant && $product->variants->count() === 1) {
+                    $variant = $product->variants->first();
+                }
+                if ($product->has_variants && ! $variant && $product->variants->isNotEmpty()) {
+                    throw new \RuntimeException("Please select an available color for '{$product->name}'.");
+                }
+                if ($variant && ! $variant->is_active) {
+                    throw new \RuntimeException("A selected color for '{$product->name}' is no longer active.");
+                }
+                $availableStock = (int) ($variant ? $variant->stock : $product->stock);
+                $lineIsPreorder = $product->is_sold_out ? false : ($product->available_for_preorder || $product->is_preorder || $availableStock <= 0);
+
                 if (! $lineIsPreorder && $availableStock < $qty) {
                     throw new \RuntimeException("'{$product->name}' has insufficient stock.");
                 }
@@ -93,24 +100,17 @@ class CheckoutService
                 $districtModel = \App\Models\District::with('division')->where('name', $customerData['district'])->first();
             }
 
-            if (! $districtModel || ! $districtModel->status) {
-                throw new \RuntimeException('The selected district is invalid or inactive.');
-            }
-
             $divisionModel = null;
             if (! empty($customerData['division_id'])) {
                 $divisionModel = \App\Models\Division::find((int) $customerData['division_id']);
             } elseif (! empty($customerData['division'])) {
                 $divisionModel = \App\Models\Division::where('name', $customerData['division'])->first();
+            } elseif ($districtModel?->division) {
+                $divisionModel = $districtModel->division;
             }
 
-            if (! $divisionModel || ! $divisionModel->status) {
-                throw new \RuntimeException('The selected division is invalid or inactive.');
-            }
-
-            if ((int) $districtModel->division_id !== (int) $divisionModel->id) {
-                throw new \RuntimeException("The district '{$districtModel->name}' does not belong to the division '{$divisionModel->name}'.");
-            }
+            $divisionName = $divisionModel?->name ?? ($customerData['division'] ?? ($districtModel?->name ?? $customerData['district'] ?? 'Dhaka'));
+            $districtName = $districtModel?->name ?? ($customerData['district'] ?? 'Dhaka');
 
             // 6. Shipping calculation
             $shipping = $this->calculateShipping($subtotal, $customerData['shipping_method'] ?? null, $districtModel);
@@ -124,20 +124,19 @@ class CheckoutService
                 'customer_name' => $customerData['name'],
                 'email' => $customerData['email'],
                 'phone' => $customerData['phone'],
-                'division' => $divisionModel->name,
-                'division_id' => $divisionModel->id,
-                'district' => $districtModel->name,
-                'district_id' => $districtModel->id,
+                'division' => $divisionName,
+                'division_id' => $divisionModel?->id,
+                'district' => $districtName,
+                'district_id' => $districtModel?->id,
                 'thana' => $customerData['thana'] ?? null,
                 'post_office' => $customerData['post_office'] ?? null,
-                'post_code' => $customerData['post_code'] ?? null,
-                'shipping_address' => $customerData['address'],
-                'shipping_method' => $customerData['shipping_method'] ?? null,
+                'shipping_address' => $customerData['address'] ?? ($customerData['shipping_address'] ?? ''),
                 'subtotal_amount' => (string) $subtotal,
-                'discount_amount' => (string) $discount,
                 'shipping_charge' => (string) $shipping,
                 'payment_fee' => '0',
+                'discount_amount' => (string) $discount,
                 'total_amount' => (string) $total,
+                'shipping_method' => $customerData['shipping_method'] ?? 'Standard Delivery',
                 'coupon_code' => $coupon ? $coupon->code : null,
                 'coupon_id' => $coupon ? $coupon->id : null,
                 'payment_method' => $customerData['payment_method'] ?? 'COD',
@@ -151,13 +150,14 @@ class CheckoutService
             foreach ($orderLines as $line) {
                 $p = $line['product'];
                 $variant = $line['variant'];
+                $colorName = $variant?->color_name ?: ($variant?->color ?: ($variant?->name ?: null));
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $p->id,
                     'variant_id' => $variant?->id,
                     'product_name' => $p->name,
                     'product_sku' => $variant?->sku ?? $p->sku ?? 'LEGACY-'.$p->id,
-                    'selected_color_name' => $variant?->color_name ?? $variant?->color,
+                    'selected_color_name' => $colorName,
                     'selected_color_code' => $variant?->color_code,
                     'product_image' => $variant?->image ?? $p->image,
                     'price' => (string) $line['unit_price'],

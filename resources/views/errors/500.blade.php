@@ -5,11 +5,13 @@
         $gtmId = null;
         $storeName = 'EEsome';
         $logoPath = null;
+        $waNumber = null;
         try {
             $siteSettings = app(\App\Services\SiteSettingsRepository::class);
             $gtmId = $siteSettings->get('google_gtm_id') ?: config('tracking.google.gtm_id');
             $storeName = $siteSettings->get('store_name', config('app.name', 'EEsome'));
             $logoPath = $siteSettings->get('logo_path');
+            $waNumber = $siteSettings->get('contact_whatsapp', $siteSettings->get('whatsapp_number', $siteSettings->get('contact_phone', '')));
         } catch (\Throwable $e) {
             $gtmId = config('tracking.google.gtm_id');
         }
@@ -31,7 +33,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
-    <title>500 Server Error | {{ $storeName }}</title>
+    <title>Server Error | {{ $storeName }}</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,27 +72,16 @@
             color: var(--deep-rose);
         }
 
-        /* Minimal Luxury Header */
         .header {
             width: 100%;
             padding: 1.5rem 2.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            position: relative;
+            position: absolute;
+            top: 0;
+            left: 0;
             z-index: 20;
-        }
-
-        .footer-subtle {
-            position: relative;
-            margin-top: auto;
-            padding: 1.75rem 1rem 2rem;
-            width: 100%;
-            text-align: center;
-            font-size: 0.78rem;
-            color: #A49B9E;
-            letter-spacing: 0.05em;
-            z-index: 10;
         }
 
         .brand-logo {
@@ -132,14 +123,13 @@
             color: var(--deep-rose);
         }
 
-        /* Hero Container */
         .hero-container {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 4rem 1.5rem 2.5rem;
+            padding: 6rem 1.5rem 4rem;
             position: relative;
             z-index: 1;
             width: 100%;
@@ -148,7 +138,6 @@
             text-align: center;
         }
 
-        /* Background Subtle Decorative Elements */
         .bg-aura {
             position: absolute;
             width: 520px;
@@ -162,7 +151,6 @@
             z-index: -1;
         }
 
-        /* Hero Composition */
         .hero-composition {
             display: flex;
             align-items: center;
@@ -172,7 +160,6 @@
             position: relative;
         }
 
-        /* Label */
         .luxury-tag {
             font-size: 0.75rem;
             font-weight: 600;
@@ -183,8 +170,7 @@
             display: inline-block;
         }
 
-        /* 500 Display Number */
-        .number-404 {
+        .number-500 {
             font-family: 'Cormorant Garamond', Georgia, serif;
             font-size: clamp(6.5rem, 14vw, 11rem);
             font-weight: 400;
@@ -194,7 +180,42 @@
             user-select: none;
         }
 
-        /* Text Copy Section */
+        .bag-art-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .bag-svg-container {
+            width: 170px;
+            height: 170px;
+            position: relative;
+            animation: floatBag 5s ease-in-out infinite;
+        }
+
+        .bag-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .sparkle-star {
+            animation: sparklePulse 3s ease-in-out infinite;
+        }
+
+        .bag-shadow {
+            width: 110px;
+            height: 14px;
+            background: radial-gradient(ellipse at center, rgba(201, 88, 117, 0.18) 0%, rgba(255, 253, 252, 0) 75%);
+            border-radius: 50%;
+            margin-top: 0.75rem;
+            animation: shadowScale 5s ease-in-out infinite;
+        }
+
         .copy-section {
             max-width: 580px;
             margin: 0 auto;
@@ -217,12 +238,11 @@
             margin-bottom: 2.5rem;
         }
 
-        /* Action Buttons */
         .actions-group {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 1.75rem;
+            gap: 1.25rem;
             flex-wrap: wrap;
         }
 
@@ -237,7 +257,7 @@
             font-weight: 600;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            padding: 1rem 2.4rem;
+            padding: 1rem 2.2rem;
             border-radius: 8px;
             border: 1px solid var(--deep-rose);
             transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
@@ -249,6 +269,29 @@
             border-color: #B24662;
             transform: translateY(-3px);
             box-shadow: 0 10px 28px rgba(201, 88, 117, 0.32);
+        }
+
+        .btn-whatsapp {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            justify-content: center;
+            background-color: #25d366;
+            color: #FFFFFF;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 1rem 1.8rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 18px rgba(37, 211, 102, 0.2);
+        }
+
+        .btn-whatsapp:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 28px rgba(37, 211, 102, 0.35);
         }
 
         .btn-secondary {
@@ -283,46 +326,50 @@
             width: 100%;
         }
 
-        /* Mobile Responsiveness */
+        .footer-subtle {
+            position: relative;
+            margin-top: auto;
+            padding: 1.75rem 1rem 2rem;
+            width: 100%;
+            text-align: center;
+            font-size: 0.78rem;
+            color: #A49B9E;
+            letter-spacing: 0.05em;
+            z-index: 10;
+        }
+
+        @keyframes floatBag {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+
+        @keyframes shadowScale {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(0.72); opacity: 0.35; }
+        }
+
+        @keyframes sparklePulse {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
         @media (max-width: 768px) {
-            .header {
-                padding: 1.25rem 1.5rem;
-            }
-            .header-nav {
-                display: none;
-            }
-            .hero-composition {
-                flex-direction: column;
-                gap: 0.5rem;
-                margin-bottom: 1.5rem;
-            }
-            .number-404 {
-                font-size: 5.5rem;
-            }
-            .main-headline {
-                font-size: 1.75rem;
-            }
-            .actions-group {
-                flex-direction: column;
-                width: 100%;
-                gap: 1.25rem;
-            }
-            .btn-primary {
-                width: 100%;
-                padding: 1.1rem 1.8rem;
-            }
+            .header { padding: 1.25rem 1.5rem; }
+            .header-nav { display: none; }
+            .hero-composition { flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
+            .bag-svg-container { width: 140px; height: 140px; }
+            .number-500 { font-size: 5.5rem; }
+            .main-headline { font-size: 1.75rem; }
+            .actions-group { flex-direction: column; width: 100%; gap: 1rem; }
+            .btn-primary, .btn-whatsapp { width: 100%; }
         }
     </style>
 </head>
 <body>
     @if($gtmId)
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $gtmId }}"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $gtmId }}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     @endif
 
-    <!-- Minimal Header -->
     <header class="header">
         <a href="{{ route('home') }}" class="brand-logo" aria-label="{{ $storeName }}">
             @if($logoPath)
@@ -338,33 +385,47 @@
         </ul>
     </header>
 
-    <!-- Background Decoration -->
     <div class="bg-aura"></div>
 
-    <!-- Main Content -->
     <main class="hero-container">
-        <span class="luxury-tag">Server Encountered an Issue</span>
+        <span class="luxury-tag">Temporary Glitch</span>
 
         <div class="hero-composition">
-            <div class="number-404">500</div>
+            <div class="number-500">500</div>
+
+            <div class="bag-art-wrapper">
+                <div class="bag-svg-container">
+                    <svg class="bag-svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path class="sparkle-star" d="M32 40L34.5 47.5L42 50L34.5 52.5L32 60L29.5 52.5L22 50L29.5 47.5L32 40Z" fill="#F4B8C4" />
+                        <path d="M68 92V66C68 48.3269 82.3269 34 100 34C117.673 34 132 48.3269 132 66V92" stroke="#282426" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M48 92H152L144 162C143.5 166.5 139.7 170 135.1 170H64.9C60.3 170 56.5 166.5 56 162L48 92Z" fill="#FFFDFC" stroke="#282426" stroke-width="3" stroke-linejoin="round"/>
+                        <path d="M54 98H146L139.5 158C139.1 161.5 136.1 164 132.5 164H67.5C63.9 164 60.9 161.5 60.5 158L54 98Z" fill="#FCECEF" fill-opacity="0.6"/>
+                        <path d="M48 92C48 92 78 126 100 126C122 126 152 92 152 92" stroke="#282426" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <rect x="92" y="120" width="16" height="12" rx="3" fill="#E9869C" stroke="#282426" stroke-width="2"/>
+                    </svg>
+                </div>
+                <div class="bag-shadow"></div>
+            </div>
         </div>
 
-        <!-- Copy Text -->
         <div class="copy-section">
-            <h1 class="main-headline">Something went unexpectedly wrong.</h1>
+            <h1 class="main-headline">Something went wrong on our end.</h1>
             <p class="supporting-text">
-                Our servers experienced a temporary hitch while processing your request. Please try refreshing or return to our catalog.
+                We're already looking into it. Please refresh the page, head back to our collections, or reach out on WhatsApp for instant assistance.
             </p>
         </div>
 
-        <!-- Action Buttons -->
         <div class="actions-group">
-            <a href="{{ route('products.index') }}" class="btn-primary">Back to Shop</a>
-            <a href="{{ route('products.index') }}?sort=newest" class="btn-secondary">Explore New Arrivals</a>
+            <a href="{{ route('home') }}" class="btn-primary">Return to Home</a>
+            <a href="{{ route('products.index') }}" class="btn-secondary">Explore Handbags</a>
+            @if(!empty($waNumber))
+                <a href="https://wa.me/{{ preg_replace('/\D/', '', $waNumber) }}?text={{ urlencode('Hi, I experienced an issue while browsing EEsome.') }}" class="btn-whatsapp" target="_blank" rel="noopener noreferrer">
+                    Chat on WhatsApp
+                </a>
+            @endif
         </div>
     </main>
 
-    <!-- Footer Copyright -->
     <div class="footer-subtle">
         &copy; {{ date('Y') }} {{ $storeName }}. All rights reserved.
     </div>

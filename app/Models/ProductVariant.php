@@ -12,8 +12,20 @@ class ProductVariant extends Model
 
     public function getEffectivePriceAttribute(): string
     {
-        $regular = $this->regular_price ?? ((float) $this->product->price + (float) $this->price_adjustment);
-        return $this->sale_price !== null && (float) $this->sale_price < (float) $regular ? (string) $this->sale_price : (string) $regular;
+        $basePrice = $this->regular_price !== null
+            ? (float) $this->regular_price
+            : ((float) ($this->product?->price ?? 0) + (float) ($this->price_adjustment ?? 0));
+
+        if ($this->sale_price !== null && (float) $this->sale_price > 0 && (float) $this->sale_price < $basePrice) {
+            return (string) $this->sale_price;
+        }
+
+        return (string) $basePrice;
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        return trim($this->color_name ?: ($this->color ?: ($this->name ?: 'Default')));
     }
 
     public function getImagePathAttribute(): ?string

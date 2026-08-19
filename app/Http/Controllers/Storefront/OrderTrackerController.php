@@ -95,51 +95,51 @@ class OrderTrackerController extends Controller
         ]);
     }
 
-    private function searchOrderByOrderNumberAndPhone(string $orderNumber, string $phone): array
+    private function searchOrderByOrderNumberAndPhone(string $orderNumber, string $phone = ''): array
     {
-        if (empty($orderNumber) || empty($phone)) {
+        if (empty($orderNumber) && empty($phone)) {
             return [
                 'order' => null,
-                'error' => 'Please provide both your Order Code (e.g. ES-163HXULA) and Phone Number to track your order.',
+                'error' => "We couldn't find that order. Please check the details and try again.",
             ];
         }
 
         $cleanOrderNum = trim($orderNumber);
         $numericId = (int) preg_replace('/\D/', '', $cleanOrderNum);
-        $cleanPhoneDigits = preg_replace('/\D/', '', $phone);
-
-        if (strlen($cleanPhoneDigits) < 6) {
-            return [
-                'order' => null,
-                'error' => 'Please enter a valid Phone Number for verification.',
-            ];
-        }
+        $contact = trim($phone);
+        $cleanPhoneDigits = preg_replace('/\D/', '', $contact);
 
         $query = Order::with(['items.product.images', 'items.variant', 'statusHistories.changedBy']);
 
-        // Match Order Number or numeric ID
-        $query->where(function ($q) use ($cleanOrderNum, $numericId) {
-            $q->where('order_number', $cleanOrderNum)
-              ->orWhere('order_number', 'EES-' . ltrim($cleanOrderNum, '#'))
-              ->orWhere('order_number', 'ES-' . ltrim($cleanOrderNum, '#'));
+        if (! empty($cleanOrderNum)) {
+            $query->where(function ($q) use ($cleanOrderNum, $numericId) {
+                $q->where('order_number', $cleanOrderNum)
+                  ->orWhere('order_number', 'EES-' . ltrim($cleanOrderNum, '#'))
+                  ->orWhere('order_number', 'ES-' . ltrim($cleanOrderNum, '#'));
 
-            if ($numericId > 0) {
-                $q->orWhere('id', $numericId);
-            }
-        });
+                if ($numericId > 0) {
+                    $q->orWhere('id', $numericId);
+                }
+            });
+        }
 
-        // Match Phone Number
-        $query->where(function ($q) use ($phone, $cleanPhoneDigits) {
-            $q->where('phone', $phone)
-              ->orWhere('phone', 'like', "%{$cleanPhoneDigits}%");
-        });
+        if (! empty($contact)) {
+            $query->where(function ($q) use ($contact, $cleanPhoneDigits) {
+                $q->where('email', $contact)
+                  ->orWhere('phone', $contact);
+
+                if (strlen($cleanPhoneDigits) >= 6) {
+                    $q->orWhere('phone', 'like', "%{$cleanPhoneDigits}%");
+                }
+            });
+        }
 
         $order = $query->first();
 
         if (! $order) {
             return [
                 'order' => null,
-                'error' => "No order found matching Order Code '{$cleanOrderNum}' and Phone Number '{$phone}'. Please verify your details.",
+                'error' => "We couldn't find that order. Please check the details and try again.",
             ];
         }
 

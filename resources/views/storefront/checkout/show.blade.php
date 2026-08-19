@@ -38,7 +38,7 @@
 
 <div class="field" style="display:none"><label for="shipping_method">Delivery method</label><select id="shipping_method" name="shipping_method" required>@foreach($shippingMethods as $method)<option value="{{ $method->code }}" @selected(old('shipping_method')===$method->code)>{{ $method->name }}</option>@endforeach</select></div>
 
-<div class="field full"><label for="payment_method">Payment method</label><select id="payment_method" name="payment_method" required>@foreach($paymentMethods as $method)<option value="{{ $method->code }}" data-instructions="{{ $method->instructions }}" data-account-name="{{ $method->account_name }}" data-account-number="{{ $method->account_number }}" data-requires-tx="{{ $method->requires_transaction_id ? '1' : '0' }}" @selected(old('payment_method')===$method->code)>{{ $method->name }}</option>@endforeach</select></div>
+<div class="field full"><label for="payment_method">Payment method</label><select id="payment_method" name="payment_method" required>@foreach($paymentMethods as $method)<option value="{{ $method->code }}" data-name="{{ $method->name }}" data-instructions="{{ $method->instructions }}" data-account-name="{{ $method->account_name }}" data-account-number="{{ $method->account_number }}" data-requires-tx="{{ $method->requires_transaction_id ? '1' : '0' }}" @selected(old('payment_method')===$method->code)>{{ $method->name }}</option>@endforeach</select></div>
 
 <div id="trx-field" class="field full" style="margin-top:.5rem" hidden>
     <label for="transaction_id">Transaction ID / TrxID <span style="color:#be185d">*</span></label>
@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dAmt = document.getElementById('delivery-amount');
     const tAmt = document.getElementById('total-amount');
     const fs = document.getElementById('free-ship');
+    const checkoutForm = document.querySelector('form.checkout');
 
     const subtotal = parseFloat(fs.dataset.subtotal || '0');
     const currency = fs.dataset.currency || '৳';
@@ -239,6 +240,23 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => { phCopy.textContent = 'Copy'; phCopy.classList.remove('copied'); }, 1800);
         });
     });
+
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', (e) => {
+            const o = pSel.options[pSel.selectedIndex];
+            const requiresTx = o && o.dataset.requiresTx === '1';
+            if (requiresTx && trxInput && (!trxInput.value || !trxInput.value.trim())) {
+                e.preventDefault();
+                const pName = o.dataset.name || o.textContent.trim();
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Please enter your Transaction ID for ' + pName + '.', 'error');
+                }
+                trxInput.focus();
+                trxInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+        });
+    }
 
     pSel.addEventListener('change', up);
     up();

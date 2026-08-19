@@ -61,7 +61,7 @@ class CheckoutController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'required|string|max:30',
-            'division' => 'required|string|max:100',
+            'division' => 'nullable|string|max:100',
             'district' => 'required|string|max:100',
             'thana' => 'required|string|max:100',
             'post_office' => 'required|string|max:100',
@@ -74,28 +74,41 @@ class CheckoutController extends Controller
         ]);
 
         $paymentMethod = PaymentMethod::where('code', $data['payment_method'])->where('is_active', true)->firstOrFail();
-        if ($paymentMethod->requires_transaction_id && empty(trim((string) ($data['transaction_id'] ?? '')))) {
-            return back()->withInput()->withErrors(['transaction_id' => 'Transaction ID is required for ' . $paymentMethod->name . '.']);
+        if ($paymentMethod->requires_transaction_id) {
+            $request->validate([
+                'transaction_id' => 'required|string|min:3|max:100',
+            ], [
+                'transaction_id.required' => 'Transaction ID is required for ' . $paymentMethod->name . '.',
+                'transaction_id.min' => 'Please enter a valid Transaction ID.',
+            ]);
+            $data['transaction_id'] = trim((string) $request->input('transaction_id'));
+        } else {
+            $data['transaction_id'] = $request->filled('transaction_id') ? trim((string) $request->input('transaction_id')) : null;
         }
 
-        $division = Division::where('name', $data['division'])->where('status', true)->first();
-        if (! $division) {
-            return back()->withInput()->withErrors(['division' => 'The selected division is invalid.']);
+        $division = null;
+        $district = null;
+        if (! empty($data['division'])) {
+            $division = Division::where('name', $data['division'])->where('status', true)->first();
+            if ($division) {
+                $district = District::where('name', $data['district'])->where('division_id', $division->id)->where('status', true)->first();
+            }
         }
-
-        $district = District::where('name', $data['district'])->where('division_id', $division->id)->where('status', true)->first();
         if (! $district) {
-            return back()->withInput()->withErrors(['district' => 'The selected district is invalid or does not belong to the selected division.']);
+            $district = District::where('name', $data['district'])->where('status', true)->first();
+            if ($district && ! $division) {
+                $division = $district->division ?? Division::find($district->division_id);
+            }
         }
 
-        $data['division_id'] = $division->id;
-        $data['district_id'] = $district->id;
+        $data['division_id'] = $division?->id;
+        $data['district_id'] = $district?->id;
+        $data['division'] = $division?->name ?? ($data['division'] ?? $data['district']);
 
         $shippingMethod = ShippingMethod::where('code', $data['shipping_method'])->where('is_active', true)->firstOrFail();
         if ($data['payment_method'] === 'COD' && ! $shippingMethod->cod_available) {
             return back()->withInput()->withErrors(['payment_method' => 'Cash on delivery is not available for this delivery method.']);
         }
-
         if (Auth::check()) {
             $rawItems = $this->cartService->getDbCart(Auth::id());
             $cartMap = $rawItems->map(fn ($item) => ['product_id' => $item->product_id, 'variant_id' => $item->variant_id, 'quantity' => $item->quantity])->all();

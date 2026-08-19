@@ -114,21 +114,25 @@
         .nav-cart-badge { position: absolute; top: -8px; right: -8px; background: var(--brand-600); color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
         .mobile-bottom-nav { display: none; }
 
-        /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ WhatsApp Button ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+        /* ── WhatsApp Button ── */
         .whatsapp-btn { position: fixed; bottom: calc(1rem + env(safe-area-inset-bottom)); right: 1rem; z-index: 200; background: #25d366; color: #fff; border-radius: 50%; width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 4px 20px rgba(37,211,102,0.4); transition: transform .2s, box-shadow .2s; }
         .whatsapp-btn:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(37,211,102,0.5); }
         .whatsapp-btn::before { content: 'Chat with us'; position: absolute; right: calc(100% + .65rem); padding: .45rem .7rem; border-radius: 8px; background: #17121a; color: #fff; font-size: .75rem; font-weight: 600; white-space: nowrap; opacity: 0; transform: translateX(6px); pointer-events: none; transition: opacity .2s, transform .2s; }
         .whatsapp-btn:hover::before, .whatsapp-btn:focus-visible::before { opacity: 1; transform: translateX(0); }
 
-        /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Alerts ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+        /* ── Alerts & Toast Notifications ── */
         .alert { padding: .75rem 1.25rem; border-radius: 10px; margin-bottom: 1rem; font-size: .9rem; }
         .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
         .alert-error   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-        .toast-success { position: fixed; z-index: 500; top: 88px; right: 1.25rem; display: flex; align-items: center; gap: .75rem; max-width: min(390px, calc(100vw - 2rem)); padding: .9rem 1rem; border: 1px solid rgba(255,255,255,.32); border-radius: 14px; background: rgba(22,101,52,.94); color: #fff; box-shadow: 0 14px 35px rgba(0,0,0,.24); backdrop-filter: blur(14px); transition: opacity .25s, transform .25s; }
-        .toast-success.is-leaving { opacity: 0; transform: translateY(-10px); }
-        .toast-success button { margin-left: auto; border: 0; background: transparent; color: #fff; font-size: 1.15rem; cursor: pointer; }
+        .toast-success, .toast-error, .toast-warning { position: fixed; z-index: 9999; top: 88px; right: 1.25rem; display: flex; align-items: center; gap: .75rem; max-width: min(420px, calc(100vw - 2rem)); padding: .9rem 1.1rem; border-radius: 14px; color: #fff; box-shadow: 0 14px 35px rgba(0,0,0,.28); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: opacity .25s, transform .25s; }
+        .toast-success { border: 1px solid rgba(255,255,255,.32); background: rgba(22,101,52,.95); }
+        .toast-error   { border: 1px solid rgba(255,255,255,.32); background: rgba(185,28,28,.95); }
+        .toast-warning { border: 1px solid rgba(255,255,255,.32); background: rgba(180,83,9,.95); }
+        .toast-success.is-leaving, .toast-error.is-leaving, .toast-warning.is-leaving { opacity: 0; transform: translateY(-10px); }
+        .toast-success button, .toast-error button, .toast-warning button { margin-left: auto; border: 0; background: transparent; color: #fff; font-size: 1.25rem; line-height: 1; cursor: pointer; padding: 0 .2rem; opacity: .85; }
+        .toast-success button:hover, .toast-error button:hover, .toast-warning button:hover { opacity: 1; }
 
-        /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Container ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+        /* ── Container ── */
         .container { width: min(calc(100% - 40px), 1200px); margin-inline: auto; }
         .section-gap { padding: 4rem 0; }
 
@@ -734,22 +738,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     };
 
     window.showToast = function(message, type = 'success') {
-        let toast = document.getElementById('success-toast');
+        let toast = document.getElementById('global-toast');
         if (!toast) {
-            const container = document.querySelector('.container') || document.body;
             toast = document.createElement('div');
-            toast.id = 'success-toast';
-            toast.className = type === 'error' ? 'alert alert-error' : 'toast-success';
+            toast.id = 'global-toast';
             toast.setAttribute('role', 'status');
             toast.setAttribute('aria-live', 'polite');
-            container.prepend(toast);
+            document.body.appendChild(toast);
         } else {
             toast.classList.remove('is-leaving');
-            toast.className = type === 'error' ? 'alert alert-error' : 'toast-success';
         }
-        toast.innerHTML = type === 'error'
-            ? `<span>${message}</span>`
-            : `<span>✓</span><span>${message}</span><button type="button" aria-label="Dismiss notification">×</button>`;
+        const toastClass = type === 'error' ? 'toast-error' : (type === 'warning' ? 'toast-warning' : 'toast-success');
+        const icon = type === 'error' ? '✕' : (type === 'warning' ? '⚠' : '✓');
+        toast.className = toastClass;
+        toast.innerHTML = `<span style="font-weight:bold;font-size:1.1rem;line-height:1">${icon}</span><span style="font-size:0.92rem;font-weight:600">${message}</span><button type="button" aria-label="Dismiss notification">×</button>`;
 
         toast.querySelector('button')?.addEventListener('click', () => {
             toast.classList.add('is-leaving');
@@ -759,7 +761,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         window._toastTimer = setTimeout(() => {
             toast.classList.add('is-leaving');
             setTimeout(() => toast.remove(), 260);
-        }, 3500);
+        }, 4000);
     };
 
     window.openVariantModal = function(form, submitter, variantSelect) {
@@ -769,13 +771,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         sourceSelect = variantSelect;
         selectedVariantId = null;
 
+        const isBuyNow = submitter && submitter.name === 'buy_now';
+        const defaultActionText = isBuyNow ? 'Proceed to Checkout' : 'Add to Cart';
+
         productLabel.textContent = form.dataset.productName || 'Select Color Variant';
-        feedback.textContent = 'Please select a color variant to continue.';
+        feedback.textContent = isBuyNow 
+            ? 'Select a color variant to proceed directly to checkout.' 
+            : 'Select a color variant to add to your cart.';
         confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Confirm & Continue';
+        confirmBtn.textContent = defaultActionText;
 
         grid.innerHTML = '';
-        const options = [...variantSelect.options].filter(opt => opt.value !== '');
+        const options = variantSelect ? [...variantSelect.options].filter(opt => opt.value !== '') : [];
         const defaultPlaceholder = form.dataset.productImage || "{{ asset('images/handbag-placeholder.svg') }}";
         
         options.forEach(opt => {
@@ -785,30 +792,63 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const imgUrl = opt.dataset.image || opt.getAttribute('data-image') || defaultPlaceholder;
             const price = opt.dataset.price || opt.getAttribute('data-price') || '';
             const sku = opt.dataset.sku || opt.getAttribute('data-sku') || '';
+            const stockAttr = opt.dataset.stock || opt.getAttribute('data-stock');
+            const stock = stockAttr !== null && stockAttr !== undefined ? parseInt(stockAttr, 10) : 1;
             const isDisabled = opt.disabled;
 
             const card = document.createElement('div');
             card.className = 'variant-card' + (isDisabled ? ' is-disabled' : '');
             card.dataset.value = val;
+            card.setAttribute('role', 'radio');
+            card.setAttribute('aria-checked', 'false');
+            card.tabIndex = isDisabled ? -1 : 0;
             
             let colorDotHtml = colorCode ? `<span class="variant-card__color-dot" style="background-color:${colorCode}"></span>` : '';
             let thumbHtml = `<img class="variant-card__thumb" src="${imgUrl}" onerror="this.onerror=null;this.src='${defaultPlaceholder}'" alt="${colorName}">`;
             let metaHtml = sku ? `SKU: ${sku}` : '';
-            if (isDisabled) metaHtml += (metaHtml ? ' • ' : '') + 'Out of Stock';
+            if (stock <= 0) {
+                metaHtml += (metaHtml ? ' • ' : '') + '<span style="color:#b45309;font-weight:600">Pre-order · 25–35 days</span>';
+            } else {
+                metaHtml += (metaHtml ? ' • ' : '') + `<span style="color:#15803d;font-weight:600">In Stock (${stock})</span>`;
+            }
 
             card.innerHTML = `${thumbHtml}<div class="variant-card__info"><div class="variant-card__name">${colorDotHtml} <span>${colorName}</span></div><div class="variant-card__meta">${metaHtml}</div></div>${price ? `<div class="variant-card__price">${price}</div>` : ''}<div class="variant-card__check">✓</div>`;
 
-            if (!isDisabled) {
-                card.addEventListener('click', () => {
-                    grid.querySelectorAll('.variant-card').forEach(c => c.classList.remove('is-selected'));
-                    card.classList.add('is-selected');
-                    selectedVariantId = val;
-                    confirmBtn.disabled = false;
-                    feedback.textContent = `Selected color: ${colorName}`;
+            const selectThisCard = () => {
+                if (isDisabled) return;
+                grid.querySelectorAll('.variant-card').forEach(c => {
+                    c.classList.remove('is-selected');
+                    c.setAttribute('aria-checked', 'false');
                 });
-            }
+                card.classList.add('is-selected');
+                card.setAttribute('aria-checked', 'true');
+                selectedVariantId = val;
+                confirmBtn.disabled = false;
+                feedback.innerHTML = `Selected color: <strong>${colorName}</strong> ${price ? `— <strong style="color:var(--brand-700)">${price}</strong>` : ''}`;
+                confirmBtn.textContent = isBuyNow 
+                    ? (stock <= 0 ? 'Pre-order & Direct Checkout' : 'Proceed to Checkout') 
+                    : 'Add to Cart';
+            };
+
+            card.addEventListener('click', selectThisCard);
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectThisCard();
+                }
+            });
+            card.addEventListener('dblclick', () => {
+                selectThisCard();
+                confirmBtn.click();
+            });
+
             grid.appendChild(card);
         });
+
+        // If only 1 option available, pre-select it
+        if (options.length === 1 && grid.firstElementChild) {
+            grid.firstElementChild.click();
+        }
 
         try { dialog.showModal(); } catch(e) {}
         document.body.style.overflow = 'hidden';
@@ -827,9 +867,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (!isCartStore || form.method.toUpperCase() !== 'POST') return;
 
         const submitter = event.submitter;
-        const isBuyNow = submitter && submitter.name === 'buy_now';
+        const isBuyNow = (submitter && submitter.name === 'buy_now') || form.querySelector('input[name="buy_now"][value="1"]');
         const variantSelect = form.querySelector('.js-card-variant');
-        const needsVariant = variantSelect && !variantSelect.value;
+        const hasVariantSelect = !!variantSelect;
+        const hasSelectedVariant = hasVariantSelect && !!variantSelect.value;
+        const needsVariant = hasVariantSelect && !hasSelectedVariant;
 
         if (needsVariant) {
             event.preventDefault();
@@ -839,8 +881,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             return;
         }
 
-        if (isBuyNow) return;
+        // Direct checkout on Buy / Pre-order: Allow native form POST redirect to /checkout
+        if (isBuyNow) {
+            return;
+        }
 
+        // AJAX Add to Cart workflow
         event.preventDefault();
         const submitBtn = submitter || form.querySelector('button[type="submit"]');
         const originalText = submitBtn ? submitBtn.innerHTML : '';
@@ -852,39 +898,109 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const clientEventId = 'atc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
             if (!formData.has('event_id')) formData.append('event_id', clientEventId);
 
-            const response = await fetch(form.action, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
+            const response = await fetch(form.action, { 
+                method: 'POST', 
+                body: formData, 
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest', 
+                    'Accept': 'application/json' 
+                } 
+            });
             const data = await response.json();
 
             if (response.ok && data.success) {
                 window.updateCartBadge(data.cart_count);
                 window.showToast(data.message || 'Successfully added to cart.');
                 if (typeof window.fbq === 'function') {
-                    window.fbq('track', 'AddToCart', { content_name: data.product_name, content_ids: data.content_id ? [String(data.content_id)] : [], content_type: 'product', value: Number(data.value || 0), currency: data.currency || 'BDT' }, { eventID: data.event_id || clientEventId });
+                    window.fbq('track', 'AddToCart', { 
+                        content_name: data.product_name, 
+                        content_ids: data.content_id ? [String(data.content_id)] : [], 
+                        content_type: 'product', 
+                        value: Number(data.value || 0), 
+                        currency: data.currency || 'BDT' 
+                    }, { eventID: data.event_id || clientEventId });
                 }
-                if (submitBtn) { submitBtn.innerHTML = '✓ Added!'; setTimeout(() => { submitBtn.innerHTML = originalText; }, 1500); }
-            } else { window.showToast(data.message || 'Could not add item to cart.', 'error'); }
-        } catch (err) { window.showToast('Something went wrong. Please try again.', 'error'); } finally {
+                if (submitBtn) { 
+                    submitBtn.innerHTML = '✓ Added!'; 
+                    setTimeout(() => { submitBtn.innerHTML = originalText; }, 1500); 
+                }
+            } else { 
+                window.showToast(data.message || 'Could not add item to cart.', 'error'); 
+            }
+        } catch (err) { 
+            window.showToast('Something went wrong. Please try again.', 'error'); 
+        } finally {
             if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = ''; }
         }
     });
 
     confirmBtn?.addEventListener('click', () => {
-        if (!selectedVariantId) { feedback.textContent = 'Please select a color variant first.'; return; }
+        if (!selectedVariantId) { 
+            feedback.textContent = 'Please select a color variant first.'; 
+            return; 
+        }
+
+        // Apply selected variant to form
         if (sourceSelect) {
             if (sourceSelect.tagName === 'SELECT') {
                 let opt = sourceSelect.querySelector(`option[value="${CSS.escape(selectedVariantId)}"]`);
-                if (!opt) { opt = new Option(selectedVariantId, selectedVariantId, true, true); sourceSelect.add(opt); }
-                opt.disabled = false; opt.selected = true;
+                if (!opt) { 
+                    opt = new Option(selectedVariantId, selectedVariantId, true, true); 
+                    sourceSelect.add(opt); 
+                }
+                opt.disabled = false; 
+                opt.selected = true;
             }
             sourceSelect.value = selectedVariantId;
         }
-        const matchingPill = document.querySelector(`.js-variant-item[data-variant-id="${CSS.escape(selectedVariantId)}"]`);
-        if (matchingPill && typeof window.handleVariantClick === 'function') { try { window.handleVariantClick(matchingPill); } catch(e) {} }
-        try { dialog.close(); } catch(e) {}
+
         if (pendingForm) {
-            if (pendingButton && typeof pendingForm.requestSubmit === 'function') {
-                try { pendingForm.requestSubmit(pendingButton); } catch(e) { pendingForm.requestSubmit(); }
-            } else if (typeof pendingForm.requestSubmit === 'function') { pendingForm.requestSubmit(); } else { pendingForm.submit(); }
+            let hiddenVarInput = pendingForm.querySelector('input[name="variant_id"]');
+            if (!hiddenVarInput && !sourceSelect) {
+                hiddenVarInput = document.createElement('input');
+                hiddenVarInput.type = 'hidden';
+                hiddenVarInput.name = 'variant_id';
+                pendingForm.appendChild(hiddenVarInput);
+            }
+            if (hiddenVarInput) {
+                hiddenVarInput.value = selectedVariantId;
+            }
+        }
+
+        const matchingPill = document.querySelector(`.js-variant-item[data-variant-id="${CSS.escape(selectedVariantId)}"]`);
+        if (matchingPill && typeof window.handleVariantClick === 'function') { 
+            try { window.handleVariantClick(matchingPill); } catch(e) {} 
+        }
+
+        try { dialog.close(); } catch(e) {}
+
+        if (pendingForm) {
+            const isBuyNow = pendingButton && pendingButton.name === 'buy_now';
+            if (isBuyNow) {
+                let buyInput = pendingForm.querySelector('input[name="buy_now"]');
+                if (!buyInput) {
+                    buyInput = document.createElement('input');
+                    buyInput.type = 'hidden';
+                    buyInput.name = 'buy_now';
+                    buyInput.value = '1';
+                    pendingForm.appendChild(buyInput);
+                } else {
+                    buyInput.value = '1';
+                }
+                pendingForm.submit();
+            } else {
+                const existingBuyInput = pendingForm.querySelector('input[name="buy_now"]');
+                if (existingBuyInput && existingBuyInput.type === 'hidden') {
+                    existingBuyInput.remove();
+                }
+                if (pendingButton && typeof pendingForm.requestSubmit === 'function') {
+                    try { pendingForm.requestSubmit(pendingButton); } catch(e) { pendingForm.requestSubmit(); }
+                } else if (typeof pendingForm.requestSubmit === 'function') { 
+                    pendingForm.requestSubmit(); 
+                } else { 
+                    pendingForm.submit(); 
+                }
+            }
         }
     });
 

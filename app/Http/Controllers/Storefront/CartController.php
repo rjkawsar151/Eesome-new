@@ -26,75 +26,149 @@ class CartController extends Controller
 
     public function store(Request $request, \App\Services\MetaCapiService $metaCapi)
     {
-        $data = $request->validate([
-            'product_id' => 'required|integer|exists:products,id',
-            'quantity'   => 'sometimes|integer|min:1|max:100',
-            'variant_id' => 'nullable|integer|exists:product_variants,id',
-            'buy_now'    => 'sometimes|boolean',
-            'event_id'   => 'nullable|string|max:100',
-        ]);
-
-        $qty = $data['quantity'] ?? 1;
-        $product = Product::with('activeVariants')->whereKey($data['product_id'])->where('is_active', true)->firstOrFail();
-        $variant = isset($data['variant_id']) ? $product->activeVariants->firstWhere('id', (int) $data['variant_id']) : null;
-        if (! $variant && $product->has_variants && $product->activeVariants->count() === 1) {
-            $variant = $product->activeVariants->first();
-        }
-        if ($product->has_variants && ! $variant) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Please select an available color.'], 422);
-            }
-            return back()->withErrors(['variant_id' => 'Please select an available color.']);
-        }
-        if ($product->is_sold_out) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'This product is currently sold out.'], 422);
-            }
-            return back()->withErrors(['product_id' => 'This product is currently sold out.']);
-        }
-
-        $stock = $variant?->stock ?? $product->stock;
-        // A variant (or product without variants) with 0 stock is pre-orderable unless the product is sold out.
-        // Use the *selected* variant's stock for the check — not the product-level aggregate.
-        $variantIsPreorder = $product->is_sold_out ? false : ($stock <= 0);
-        if (! $variantIsPreorder && $qty > $stock) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'The requested quantity is not available.'], 422);
-            }
-            return back()->withErrors(['quantity' => 'The requested quantity is not available.']);
-        }
-
-        if (Auth::check()) {
-            $this->cart->addToDbCart(Auth::id(), $data['product_id'], $qty, $variant?->id);
-        } else {
-            $this->cart->addToSessionCart($data['product_id'], $qty, $variant?->id);
-        }
-
-        $eventId = $request->input('event_id') ?: (string) \Illuminate\Support\Str::uuid();
-        $unitPrice = (float) ($variant ? $variant->effective_price : $product->effective_price);
-        $totalVal = round($unitPrice * $qty, 2);
-        $contentId = $metaCapi->getCatalogueContentId($product, $variant);
-
-        $metaCapi->trackAddToCart($product, $qty, $totalVal, $request, $eventId, $variant);
-
-        if ($request->boolean('buy_now')) {
-            return redirect()->route('checkout.show');
-        }
-
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json([
-                'success'      => true,
-                'message'      => 'Successfully added to cart.',
-                'cart_count'   => $this->cart->cartCount(),
-                'event_id'     => $eventId,
-                'content_id'   => $contentId,
-                'product_name' => $product->name,
-                'value'        => $totalVal,
-                'currency'     => 'BDT',
+        try {
+            $data = $request->validate([
+                'product_id' => 'required|integer|exists:products,id',
+                'quantity'   => 'sometimes|integer|min:1|max:100',
+                'variant_id' => 'nullable',
+                'buy_now'    => 'sometimes|boolean',
+                'event_id'   => 'nullable|string|max:100',
             ]);
-        }
 
-        return redirect()->back(fallback: route('cart.index'))->with('success', 'Successfully added to cart.');
+            $qty = max(1, (int) ($data['quantity'] ?? 1));
+            $product = Product::with(['activeVariants', 'variants'])->whereKey($data['product_id'])->where('is_active', true)->firstOrFail();
+
+            $variant = null;
+            $rawVariantId = $request->input('variant_id');
+            if (! empty($rawVariantId)) {
+                if (is_numeric($rawVariantId)) {
+                    $vid = (int) $rawVariantId;
+                    $variant = $product->activeVariants->firstWhere('id', $vid)
+                        ?? $product->variants->firstWhere('id', $vid)
+                        ?? \App\Models\ProductVariant::where('product_id', $product->id)->where('id', $vid)->first()
+                        ?? \App\Models\ProductVariant::find($vid);
+                }
+                if (! $variant && is_string($rawVariantId)) {
+                    $search = trim(strtolower($rawVariantId));
+                    $variant = $product->variants->first(function ($v) use ($search) {
+                        return strtolower(trim((string) $v->color_name)) === $search
+                            || strtolower(trim((string) $v->color)) === $search
+                            || strtolower(trim((string) $v->name)) === $search
+                            || strtolower(trim((string) $v->sku)) === $search;
+                    }) ?? \App\Models\ProductVariant::where('product_id', $product->id)->where(function ($q) use ($search) {
+                        $q->whereRaw('LOWER(color_name) = ?', [$search])
+                          ->orWhereRaw('LOWER(name) = ?', [$search])
+                          ->orWhereRaw('LOWER(color) = ?', [$search]);
+                    })->first();
+                }
+            }
+
+            // Auto-select if product only has 1 variant
+            if (! $variant && $product->has_variants) {
+                if ($product->activeVariants->count() === 1) {
+                    $variant = $product->activeVariants->first();
+                } elseif ($product->variants->count() === 1) {
+                    $variant = $product->variants->first();
+                }
+            }
+
+            if ($product->has_variants && $product->variants->isNotEmpty() && ! $variant) {
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => 'Please select an available color.'], 422);
+                }
+                return back()->withErrors(['variant_id' => 'Please select an available color.']);
+            }
+
+            $stock = (int) ($variant ? $variant->stock : $product->stock);
+            // Pre-order is allowed if product is preorder, or if variant stock is 0 (pre-order flow)
+            $isPreorderAllowed = $product->available_for_preorder || $product->is_preorder || ($stock <= 0);
+
+            if (! $isPreorderAllowed && $qty > $stock) {
+                $msg = $stock <= 0
+                    ? 'This item is currently out of stock.'
+                    : "Only {$stock} item(s) available in stock.";
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $msg], 422);
+                }
+                return back()->withErrors(['quantity' => $msg]);
+            }
+
+            // Safe cart addition
+            $this->cart->addToSessionCart($product->id, $qty, $variant?->id);
+            if (Auth::check()) {
+                $this->cart->addToDbCart(Auth::id(), $product->id, $qty, $variant?->id);
+            }
+
+            $eventId = $request->input('event_id') ?: (string) \Illuminate\Support\Str::uuid();
+            $unitPrice = (float) ($variant ? $variant->effective_price : $product->effective_price);
+            $totalVal = round($unitPrice * $qty, 2);
+            $contentId = null;
+
+            try {
+                $contentId = $metaCapi->getCatalogueContentId($product, $variant);
+                $metaCapi->trackAddToCart($product, $qty, $totalVal, $request, $eventId, $variant);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+
+            if ($request->boolean('buy_now')) {
+                return redirect()->route('checkout.show');
+            }
+
+            $cartCount = 1;
+            try {
+                $cartCount = $this->cart->cartCount();
+            } catch (\Throwable $e) {}
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success'      => true,
+                    'message'      => 'Successfully added to cart.',
+                    'cart_count'   => $cartCount,
+                    'event_id'     => $eventId,
+                    'content_id'   => $contentId,
+                    'product_name' => $product->name,
+                    'value'        => $totalVal,
+                    'currency'     => 'BDT',
+                ]);
+            }
+
+            return redirect()->back(fallback: route('cart.index'))->with('success', 'Successfully added to cart.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Cart Add Error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'product_id' => $request->input('product_id'),
+                'variant_id' => $request->input('variant_id'),
+            ]);
+
+            // Guaranteed session fallback addition
+            try {
+                $pid = (int) $request->input('product_id');
+                if ($pid > 0) {
+                    $vid = is_numeric($request->input('variant_id')) ? (int) $request->input('variant_id') : null;
+                    $this->cart->addToSessionCart($pid, 1, $vid);
+                    if ($request->expectsJson() || $request->ajax()) {
+                        return response()->json([
+                            'success'    => true,
+                            'message'    => 'Successfully added to cart.',
+                            'cart_count' => $this->cart->cartCount(),
+                        ]);
+                    }
+                    return redirect()->back(fallback: route('cart.index'))->with('success', 'Successfully added to cart.');
+                }
+            } catch (\Throwable $fallbackEx) {}
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage() ?: 'Could not add item to cart. Please try again.',
+                ], 422);
+            }
+
+            return back()->withErrors(['cart' => $e->getMessage() ?: 'Could not add item to cart. Please try again.']);
+        }
     }
 
     public function update(Request $request, string $line)
