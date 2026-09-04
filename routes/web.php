@@ -137,6 +137,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin', 'admin.acti
     Route::get('/inventory', [AdminInventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/{product}/adjust', [AdminInventoryController::class, 'adjust'])->name('inventory.adjust');
     Route::resource('navigation-items', AdminNavigationItemController::class)->except('show');
+    Route::get('/media/{medium}/usage', [AdminMediaAssetController::class, 'usage'])->name('media.usage');
     Route::resource('media', AdminMediaAssetController::class)->only(['index', 'store', 'destroy'])->parameters(['media' => 'medium']);
 
     // Orders

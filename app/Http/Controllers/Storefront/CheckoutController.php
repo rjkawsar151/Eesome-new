@@ -7,7 +7,6 @@ use App\Models\DeliverySetting;
 use App\Models\District;
 use App\Models\Division;
 use App\Models\PaymentMethod;
-use App\Models\ShippingMethod;
 use App\Services\CartService;
 use App\Services\CheckoutService;
 use Illuminate\Http\Request;
@@ -24,16 +23,15 @@ class CheckoutController extends Controller
         if ((is_array($items) && empty($items)) || ($items instanceof \Illuminate\Support\Collection && $items->isEmpty())) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
-        $shippingMethods = ShippingMethod::where('is_active', true)->orderBy('sort_order')->get();
         $paymentMethods = PaymentMethod::where('is_active', true)->orderBy('sort_order')->get();
-        if ($shippingMethods->isEmpty() || $paymentMethods->isEmpty()) {
+        if ($paymentMethods->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Checkout is temporarily unavailable. Please contact us.');
         }
 
         $divisions = Division::where('status', true)->orderBy('sort_order')->orderBy('name')->get();
         $deliverySetting = DeliverySetting::getSettings();
 
-        return view('storefront.checkout.show', compact('items', 'shippingMethods', 'paymentMethods', 'divisions', 'deliverySetting'));
+        return view('storefront.checkout.show', compact('items', 'paymentMethods', 'divisions', 'deliverySetting'));
     }
 
     public function getDistricts(Request $request)
@@ -67,7 +65,7 @@ class CheckoutController extends Controller
             'post_office' => 'required|string|max:100',
             'post_code' => 'required|string|max:20',
             'address' => 'required|string|max:500',
-            'shipping_method' => ['required', 'string', Rule::exists('shipping_methods', 'code')->where('is_active', true)],
+            'shipping_method' => 'nullable|string|max:100',
             'payment_method' => ['required', 'string', Rule::exists('payment_methods', 'code')->where('is_active', true)],
             'transaction_id' => 'nullable|string|max:100',
             'coupon_code' => 'nullable|string|max:100',
@@ -104,11 +102,6 @@ class CheckoutController extends Controller
         $data['division_id'] = $division?->id;
         $data['district_id'] = $district?->id;
         $data['division'] = $division?->name ?? ($data['division'] ?? $data['district']);
-
-        $shippingMethod = ShippingMethod::where('code', $data['shipping_method'])->where('is_active', true)->firstOrFail();
-        if ($data['payment_method'] === 'COD' && ! $shippingMethod->cod_available) {
-            return back()->withInput()->withErrors(['payment_method' => 'Cash on delivery is not available for this delivery method.']);
-        }
         if (Auth::check()) {
             $rawItems = $this->cartService->getDbCart(Auth::id());
             $cartMap = $rawItems->map(fn ($item) => ['product_id' => $item->product_id, 'variant_id' => $item->variant_id, 'quantity' => $item->quantity])->all();

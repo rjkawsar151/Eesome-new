@@ -36,8 +36,6 @@
 
 <div class="field full"><label for="address">Shipping address</label><textarea id="address" name="address" required>{{ old('address') }}</textarea></div>
 
-<div class="field" style="display:none"><label for="shipping_method">Delivery method</label><select id="shipping_method" name="shipping_method" required>@foreach($shippingMethods as $method)<option value="{{ $method->code }}" @selected(old('shipping_method')===$method->code)>{{ $method->name }}</option>@endforeach</select></div>
-
 <div class="field full"><label for="payment_method">Payment method</label><select id="payment_method" name="payment_method" required>@foreach($paymentMethods as $method)<option value="{{ $method->code }}" data-name="{{ $method->name }}" data-instructions="{{ $method->instructions }}" data-account-name="{{ $method->account_name }}" data-account-number="{{ $method->account_number }}" data-requires-tx="{{ $method->requires_transaction_id ? '1' : '0' }}" @selected(old('payment_method')===$method->code)>{{ $method->name }}</option>@endforeach</select></div>
 
 <div id="trx-field" class="field full" style="margin-top:.5rem" hidden>

@@ -3,11 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\DeliverySetting;
+use App\Models\District;
+use App\Models\Division;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
-use App\Models\ShippingMethod;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -270,16 +272,6 @@ class StorefrontEnhancementsTest extends TestCase
             'is_active' => true,
         ]);
 
-        $shipping = ShippingMethod::create([
-            'name' => 'Inside Dhaka',
-            'code' => 'INSIDE_DHAKA',
-            'base_charge' => 60,
-            'charge_type' => 'fixed',
-            'cod_available' => true,
-            'is_active' => true,
-            'sort_order' => 1,
-        ]);
-
         $bkash = PaymentMethod::create([
             'name' => 'bKash Merchant',
             'code' => 'BKASH',
@@ -304,7 +296,6 @@ class StorefrontEnhancementsTest extends TestCase
             'post_office' => 'Gulshan',
             'post_code' => '1212',
             'address' => 'House 1, Road 1',
-            'shipping_method' => $shipping->code,
             'payment_method' => $bkash->code,
             // 'transaction_id' is missing
         ]);
@@ -320,7 +311,6 @@ class StorefrontEnhancementsTest extends TestCase
             'post_office' => 'Gulshan',
             'post_code' => '1212',
             'address' => 'House 1, Road 1',
-            'shipping_method' => $shipping->code,
             'payment_method' => $bkash->code,
             'transaction_id' => 'BKASH_TX_987654',
         ]);
@@ -345,18 +335,6 @@ class StorefrontEnhancementsTest extends TestCase
             'stock' => 5,
             'is_active' => true,
         ]);
-
-        $shipping = ShippingMethod::firstOrCreate(
-            ['code' => 'INSIDE_DHAKA_COD'],
-            [
-                'name' => 'Inside Dhaka',
-                'base_charge' => 60,
-                'charge_type' => 'fixed',
-                'cod_available' => true,
-                'is_active' => true,
-                'sort_order' => 1,
-            ]
-        );
 
         $cod = PaymentMethod::where('code', 'COD')->first();
         if (!$cod) {
@@ -383,7 +361,6 @@ class StorefrontEnhancementsTest extends TestCase
             'post_office' => 'Gulshan',
             'post_code' => '1212',
             'address' => 'House 1, Road 1',
-            'shipping_method' => $shipping->code,
             'payment_method' => $cod->code,
         ]);
 
@@ -391,6 +368,122 @@ class StorefrontEnhancementsTest extends TestCase
         $this->assertDatabaseHas('orders', [
             'payment_method' => 'COD',
             'transaction_id' => null,
+        ]);
+    }
+
+    public function test_checkout_calculates_delivery_charge_using_district_settings(): void
+    {
+        Notification::fake();
+        $division = Division::create(['name' => 'Chattogram', 'status' => true, 'sort_order' => 1]);
+        $district = District::create([
+            'division_id' => $division->id,
+            'name' => 'Cox\'s Bazar',
+            'delivery_charge' => 130.00,
+            'status' => true,
+            'sort_order' => 1,
+        ]);
+
+        DeliverySetting::updateOrCreate(['id' => 1], [
+            'free_delivery_enabled' => true,
+            'free_delivery_threshold' => 2000.00,
+        ]);
+
+        $category = Category::create(['name' => 'Bags', 'slug' => 'bags-cox', 'is_active' => true]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Tote',
+            'slug' => 'tote-cox',
+            'sku' => 'TOTE-COX',
+            'price' => 500,
+            'stock' => 10,
+            'is_active' => true,
+        ]);
+
+        $cod = PaymentMethod::firstOrCreate(
+            ['code' => 'COD'],
+            ['name' => 'COD', 'type' => 'manual', 'requires_transaction_id' => false, 'is_active' => true, 'sort_order' => 1]
+        );
+
+        $this->post('/cart', ['product_id' => $product->id, 'quantity' => 1]);
+
+        $response = $this->post('/checkout', [
+            'name' => 'Fatima',
+            'email' => 'fatima@test.com',
+            'phone' => '01700000000',
+            'division' => 'Chattogram',
+            'district' => 'Cox\'s Bazar',
+            'thana' => 'Sadar',
+            'post_office' => 'Sadar',
+            'post_code' => '4700',
+            'address' => 'Sea Beach Road',
+            'payment_method' => 'COD',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('orders', [
+            'customer_name' => 'Fatima',
+            'district' => 'Cox\'s Bazar',
+            'subtotal_amount' => '500.00',
+            'shipping_charge' => '130.00',
+            'total_amount' => '630.00',
+        ]);
+    }
+
+    public function test_checkout_applies_free_delivery_when_subtotal_meets_threshold(): void
+    {
+        Notification::fake();
+        $division = Division::create(['name' => 'Dhaka', 'status' => true, 'sort_order' => 1]);
+        $district = District::create([
+            'division_id' => $division->id,
+            'name' => 'Dhaka',
+            'delivery_charge' => 80.00,
+            'status' => true,
+            'sort_order' => 1,
+        ]);
+
+        DeliverySetting::updateOrCreate(['id' => 1], [
+            'free_delivery_enabled' => true,
+            'free_delivery_threshold' => 2000.00,
+        ]);
+
+        $category = Category::create(['name' => 'Dresses', 'slug' => 'dresses', 'is_active' => true]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Silk Dress',
+            'slug' => 'silk-dress',
+            'sku' => 'SILK-01',
+            'price' => 2500,
+            'stock' => 5,
+            'is_active' => true,
+        ]);
+
+        $cod = PaymentMethod::firstOrCreate(
+            ['code' => 'COD'],
+            ['name' => 'COD', 'type' => 'manual', 'requires_transaction_id' => false, 'is_active' => true, 'sort_order' => 1]
+        );
+
+        $this->post('/cart', ['product_id' => $product->id, 'quantity' => 1]);
+
+        $response = $this->post('/checkout', [
+            'name' => 'Amina',
+            'email' => 'amina@test.com',
+            'phone' => '01800000000',
+            'division' => 'Dhaka',
+            'district' => 'Dhaka',
+            'thana' => 'Dhanmondi',
+            'post_office' => 'Dhanmondi',
+            'post_code' => '1209',
+            'address' => 'Road 27, Dhanmondi',
+            'payment_method' => 'COD',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('orders', [
+            'customer_name' => 'Amina',
+            'district' => 'Dhaka',
+            'subtotal_amount' => '2500.00',
+            'shipping_charge' => '0.00',
+            'total_amount' => '2500.00',
         ]);
     }
 

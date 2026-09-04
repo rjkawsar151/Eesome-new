@@ -14,9 +14,11 @@ use Illuminate\Support\Str;
 
 class CheckoutService
 {
-    public function calculateShipping(float $subtotal, ?string $shippingMethod = null, ?\App\Models\District $district = null): float
+    public function calculateShipping(float $subtotal, mixed $shippingMethodOrDistrict = null, ?\App\Models\District $district = null): float
     {
-        return app(ShippingCalculator::class)->calculate($subtotal, $shippingMethod, $district);
+        $targetDistrict = $shippingMethodOrDistrict instanceof \App\Models\District ? $shippingMethodOrDistrict : $district;
+
+        return app(ShippingCalculator::class)->calculate($subtotal, $targetDistrict);
     }
 
     public function placeOrder(array $customerData, array $cartLines, ?string $couponCode = null): Order
@@ -113,7 +115,7 @@ class CheckoutService
             $districtName = $districtModel?->name ?? ($customerData['district'] ?? 'Dhaka');
 
             // 6. Shipping calculation
-            $shipping = $this->calculateShipping($subtotal, $customerData['shipping_method'] ?? null, $districtModel);
+            $shipping = $this->calculateShipping($subtotal, $districtModel);
             $total = round($subtotal - $discount + $shipping, 2);
 
             // 7. Create order
