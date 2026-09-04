@@ -214,10 +214,26 @@ class CartService
     {
         try {
             if (Auth::check()) {
-                $dbCount = (int) CartItem::where('user_id', Auth::id())->sum('quantity');
-                if ($dbCount > 0) return $dbCount;
+                return (int) CartItem::where('user_id', Auth::id())->sum('quantity');
             }
-        } catch (\Throwable $e) {}
-        return (int) array_sum(array_column($this->getSessionCart(), 'quantity'));
+
+            $raw = $this->getSessionCart();
+            if (empty($raw)) {
+                return 0;
+            }
+
+            $count = 0;
+            foreach ($raw as $key => $item) {
+                if (is_array($item)) {
+                    $count += max(0, (int) ($item['quantity'] ?? 1));
+                } elseif (is_numeric($item)) {
+                    $count += max(0, (int) $item);
+                }
+            }
+
+            return $count;
+        } catch (\Throwable $e) {
+            return 0;
+        }
     }
 }

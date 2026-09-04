@@ -94,9 +94,10 @@ class CartController extends Controller
             }
 
             // Safe cart addition
-            $this->cart->addToSessionCart($product->id, $qty, $variant?->id);
             if (Auth::check()) {
                 $this->cart->addToDbCart(Auth::id(), $product->id, $qty, $variant?->id);
+            } else {
+                $this->cart->addToSessionCart($product->id, $qty, $variant?->id);
             }
 
             $eventId = $request->input('event_id') ?: (string) \Illuminate\Support\Str::uuid();
@@ -143,12 +144,16 @@ class CartController extends Controller
                 'variant_id' => $request->input('variant_id'),
             ]);
 
-            // Guaranteed session fallback addition
+            // Guaranteed fallback addition
             try {
                 $pid = (int) $request->input('product_id');
                 if ($pid > 0) {
                     $vid = is_numeric($request->input('variant_id')) ? (int) $request->input('variant_id') : null;
-                    $this->cart->addToSessionCart($pid, 1, $vid);
+                    if (Auth::check()) {
+                        $this->cart->addToDbCart(Auth::id(), $pid, 1, $vid);
+                    } else {
+                        $this->cart->addToSessionCart($pid, 1, $vid);
+                    }
                     if ($request->expectsJson() || $request->ajax()) {
                         return response()->json([
                             'success'    => true,
