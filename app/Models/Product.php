@@ -92,11 +92,7 @@ class Product extends Model
             return '<p>A carefully selected handbag from the EEsome collection.</p>';
         }
 
-        $description = preg_replace('#<(script|style)\b[^>]*>.*?</\1>#is', '', $description);
-        $description = strip_tags($description, '<p><br><div><span><strong><b><em><i><ul><ol><li>');
-        $description = preg_replace('/<(p|br|div|span|strong|b|em|i|ul|ol|li)\b[^>]*>/i', '<$1>', $description);
-
-        return trim($description);
+        return app(\App\Services\SafeHtml::class)->sanitize($description);
     }
 
     public function getBadgeInfoAttribute(): ?array

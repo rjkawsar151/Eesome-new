@@ -55,9 +55,18 @@
 .featured-card-name { font-size: .82rem; font-weight: 600; margin-bottom: .25rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .featured-card-price { font-size: .85rem; color: var(--brand-700); font-weight: 700; }
 
-/* ── Product Grid ── */
-.product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-@media (min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; } }
+/* ── Product Grid ("Our Collection") ── */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Mobile (< 768px): 2 items per row */
+    gap: 16px;
+}
+@media (min-width: 768px) {
+    .product-grid {
+        grid-template-columns: repeat(4, 1fr); /* Desktop (≥ 768px): 4 items per row */
+        gap: 24px;
+    }
+}
 .product-card { background: #fff; border-radius: 20px; overflow: hidden; border: 1px solid #f0e4eb; transition: box-shadow .25s, transform .25s; position: relative; display: block; text-decoration: none; color: var(--text-primary); }
 .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(219,39,119,0.12); }
 .product-card:focus-within { outline: 3px solid var(--brand-400); outline-offset: 2px; }
@@ -286,7 +295,6 @@
                                 <button class="btn-cart btn-disabled" style="flex:1">Sold Out</button>
                             @endif
                         </div>
-                    </div>
                 </div>
             @endforeach
             @if($allProducts->isEmpty())

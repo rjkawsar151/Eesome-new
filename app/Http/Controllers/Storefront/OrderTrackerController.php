@@ -16,41 +16,52 @@ class OrderTrackerController extends Controller
         $fromEmailToken = false;
         $orderNumber = trim((string) $request->query('order_number', $request->query('query', '')));
         $phone = trim((string) $request->query('phone', $request->query('email_or_phone', '')));
+        $token = trim((string) $request->query('token', ''));
 
-        // 1. Check for signed URL or email token
-        if ($request->hasValidSignature() || $request->filled('token')) {
-            $orderId = $request->query('order') ?: $request->query('id');
-            $token = $request->query('token');
+        // 1. Check for signed URL or valid email token
+        if ($request->hasValidSignature() || ! empty($token)) {
+            $orderId = $request->query('order') ?: ($request->query('id') ?: $orderNumber);
 
-            if ($orderId) {
+            if ($request->hasValidSignature() && $orderId) {
                 $order = Order::with(['items.product.images', 'items.variant', 'statusHistories.changedBy'])
                     ->where('id', $orderId)
                     ->orWhere('order_number', $orderId)
                     ->first();
-            }
+                if ($order) {
+                    $fromEmailToken = true;
+                }
+            } elseif (! empty($token)) {
+                // If order identifier is provided, directly verify token for that order
+                if ($orderId) {
+                    $candidate = Order::with(['items.product.images', 'items.variant', 'statusHistories.changedBy'])
+                        ->where('id', $orderId)
+                        ->orWhere('order_number', $orderId)
+                        ->first();
+                    if ($candidate) {
+                        $expectedHash = hash_hmac('sha256', $candidate->id . '|' . $candidate->order_number, config('app.key'));
+                        if (hash_equals($expectedHash, $token)) {
+                            $order = $candidate;
+                            $fromEmailToken = true;
+                        }
+                    }
+                }
 
-            if (! $order && $token) {
-                $order = Order::with(['items.product.images', 'items.variant', 'statusHistories.changedBy'])
-                    ->where('order_number', $token)
-                    ->orWhere('id', $token)
-                    ->first();
-
+                // If not found yet, search recent candidate orders for HMAC match
                 if (! $order) {
-                    $candidates = Order::latest()->take(300)->get();
+                    $candidates = Order::latest('id')->take(300)->get();
                     foreach ($candidates as $c) {
                         $expectedHash = hash_hmac('sha256', $c->id . '|' . $c->order_number, config('app.key'));
-                        if (hash_equals($expectedHash, (string) $token)) {
+                        if (hash_equals($expectedHash, $token)) {
                             $order = $c->load(['items.product.images', 'items.variant', 'statusHistories.changedBy']);
+                            $fromEmailToken = true;
                             break;
                         }
                     }
                 }
             }
 
-            if ($order) {
-                $fromEmailToken = true;
-            } else {
-                $error = 'This tracking link is no longer valid or has expired.';
+            if (! $order) {
+                $error = 'This tracking link is invalid or has expired.';
             }
         } elseif (! empty($orderNumber) || ! empty($phone)) {
             $result = $this->searchOrderByOrderNumberAndPhone($orderNumber, $phone);
@@ -97,42 +108,40 @@ class OrderTrackerController extends Controller
 
     private function searchOrderByOrderNumberAndPhone(string $orderNumber, string $phone = ''): array
     {
-        if (empty($orderNumber) && empty($phone)) {
+        $cleanOrderNum = trim($orderNumber);
+        $contact = trim($phone);
+
+        // Security: require BOTH order number and phone to prevent sequential ID enumeration
+        if (empty($cleanOrderNum) || empty($contact)) {
             return [
                 'order' => null,
-                'error' => "We couldn't find that order. Please check the details and try again.",
+                'error' => "We couldn't find that order. Please enter both your Order Code and Phone Number to track your order.",
             ];
         }
 
-        $cleanOrderNum = trim($orderNumber);
         $numericId = (int) preg_replace('/\D/', '', $cleanOrderNum);
-        $contact = trim($phone);
         $cleanPhoneDigits = preg_replace('/\D/', '', $contact);
 
         $query = Order::with(['items.product.images', 'items.variant', 'statusHistories.changedBy']);
 
-        if (! empty($cleanOrderNum)) {
-            $query->where(function ($q) use ($cleanOrderNum, $numericId) {
-                $q->where('order_number', $cleanOrderNum)
-                  ->orWhere('order_number', 'EES-' . ltrim($cleanOrderNum, '#'))
-                  ->orWhere('order_number', 'ES-' . ltrim($cleanOrderNum, '#'));
+        $query->where(function ($q) use ($cleanOrderNum, $numericId) {
+            $q->where('order_number', $cleanOrderNum)
+              ->orWhere('order_number', 'EES-' . ltrim($cleanOrderNum, '#'))
+              ->orWhere('order_number', 'ES-' . ltrim($cleanOrderNum, '#'));
 
-                if ($numericId > 0) {
-                    $q->orWhere('id', $numericId);
-                }
-            });
-        }
+            if ($numericId > 0) {
+                $q->orWhere('id', $numericId);
+            }
+        });
 
-        if (! empty($contact)) {
-            $query->where(function ($q) use ($contact, $cleanPhoneDigits) {
-                $q->where('email', $contact)
-                  ->orWhere('phone', $contact);
+        $query->where(function ($q) use ($contact, $cleanPhoneDigits) {
+            $q->where('email', $contact)
+              ->orWhere('phone', $contact);
 
-                if (strlen($cleanPhoneDigits) >= 6) {
-                    $q->orWhere('phone', 'like', "%{$cleanPhoneDigits}%");
-                }
-            });
-        }
+            if (strlen($cleanPhoneDigits) >= 6) {
+                $q->orWhere('phone', 'like', "%{$cleanPhoneDigits}%");
+            }
+        });
 
         $order = $query->first();
 
@@ -149,3 +158,4 @@ class OrderTrackerController extends Controller
         ];
     }
 }
+

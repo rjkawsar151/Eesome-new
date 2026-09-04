@@ -44,6 +44,10 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        if ($data['role'] === 'super admin' && ! auth()->user()->isSuperAdmin()) {
+            return back()->withErrors(['role' => 'Only Super Admins can create Super Admin accounts.'])->withInput();
+        }
+
         User::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -69,6 +73,10 @@ class UserController extends Controller
             'role' => 'required|in:customer,user,manager,content editor,admin,super admin',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
+
+        if (($data['role'] === 'super admin' || $user->isSuperAdmin()) && ! auth()->user()->isSuperAdmin()) {
+            return back()->withErrors(['role' => 'Only Super Admins can manage Super Admin accounts.'])->withInput();
+        }
 
         if ($user->id === auth()->id() && $user->isSuperAdmin() && $data['role'] !== 'super admin') {
             return back()->withErrors(['role' => 'You cannot remove your own Super Admin access.']);
@@ -103,6 +111,10 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        if ($user->isSuperAdmin() && ! auth()->user()->isSuperAdmin()) {
+            return back()->with('error', 'Only Super Admins can delete Super Admin accounts.');
+        }
+
         if ($user->isSuperAdmin() && User::where('role', 'super admin')->count() <= 1) {
             return back()->with('error', 'Cannot delete the final Super Admin.');
         }
@@ -128,6 +140,9 @@ class UserController extends Controller
             ->where('id', '!=', auth()->id())
             ->get()
             ->filter(function ($user) {
+                if ($user->isSuperAdmin() && ! auth()->user()->isSuperAdmin()) {
+                    return false;
+                }
                 if ($user->role === 'super admin' && User::where('role', 'super admin')->count() <= 1) {
                     return false;
                 }

@@ -53,7 +53,7 @@ Route::get('/storage/{path}', PublicStorageImageController::class)
     ->where('path', '(?:blog|branding|categories|media|products|reviews|variants)/[A-Za-z0-9._/-]+')
     ->name('public-storage-images.show');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/suggestions', [ProductController::class, 'suggestions'])->name('products.suggestions');
+Route::get('/products/suggestions', [ProductController::class, 'suggestions'])->middleware('throttle:30,1')->name('products.suggestions');
 Route::post('/products/{product}/reviews', [ProductReviewController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('products.reviews.store');
@@ -63,19 +63,19 @@ Route::post('/products/{product}/wishlist', [WishlistController::class, 'toggle'
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
 // Order Tracking routes
-Route::get('/track-order', [OrderTrackerController::class, 'index'])->middleware('throttle:10,1')->name('orders.track');
-Route::post('/track-order', [OrderTrackerController::class, 'search'])->middleware('throttle:6,1')->name('orders.track.search');
+Route::get('/track-order', [OrderTrackerController::class, 'index'])->middleware('throttle:15,1')->name('orders.track');
+Route::post('/track-order', [OrderTrackerController::class, 'search'])->middleware('throttle:10,1')->name('orders.track.search');
 
 // Cart routes (guest + auth)
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+Route::post('/cart', [CartController::class, 'store'])->middleware('throttle:30,1')->name('cart.store');
 Route::patch('/cart/{line}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{line}', [CartController::class, 'destroy'])->name('cart.destroy');
 
 // Checkout routes
 Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
 Route::get('/checkout/districts', [CheckoutController::class, 'getDistricts'])->name('checkout.districts');
-Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store');
 Route::get('/checkout/success/{orderNumber}', [CheckoutController::class, 'success'])->name('checkout.success');
 
 /*
