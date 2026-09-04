@@ -14,31 +14,35 @@ class ProductImageResolver
             return asset(self::PLACEHOLDER);
         }
 
+        $normalized = ltrim(str_replace('\\', '/', $imagePath), '/');
+
         // Remote URL — return directly (temporary transition)
-        if (str_starts_with($imagePath, 'http://') || str_starts_with($imagePath, 'https://')) {
-            return $imagePath;
+        if (str_starts_with($normalized, 'http://') || str_starts_with($normalized, 'https://')) {
+            return $normalized;
         }
 
         // Storage-managed path
-        if (str_starts_with($imagePath, 'storage/')) {
-            return asset($imagePath);
+        if (str_starts_with($normalized, 'storage/')) {
+            return asset($normalized);
         }
 
-        // Imported catalog images live in Uploads/products/products and are
-        // exposed by a constrained storefront route.
-        if (str_starts_with(str_replace('\\', '/', $imagePath), 'uploads/products/')) {
+        // Imported catalog images live in Uploads/products
+        if (str_starts_with(strtolower($normalized), 'uploads/products/') || str_starts_with(strtolower($normalized), 'uploads/')) {
             return route('legacy-product-images.show', [
-                'filename' => basename(str_replace('\\', '/', $imagePath)),
+                'filename' => basename($normalized),
             ]);
         }
 
-        // Already has products/ prefix — legacy relative path
-        if (str_starts_with($imagePath, 'products/') || str_starts_with($imagePath, 'images/')) {
-            return asset('storage/' . $imagePath);
+        // Check if legacy product image exists on disk by filename
+        $filename = basename($normalized);
+        if (is_file(base_path('Uploads/products/' . $filename)) || is_file(base_path('Uploads/products/products/' . $filename)) || is_file(base_path('uploads/products/' . $filename))) {
+            return route('legacy-product-images.show', [
+                'filename' => $filename,
+            ]);
         }
 
         // Fall back: treat as storage path
-        return asset('storage/' . $imagePath);
+        return asset('storage/' . $normalized);
     }
 
     public function placeholder(): string

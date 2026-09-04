@@ -129,7 +129,22 @@ class MediaAssetController extends Controller
             return back()->with('error', $errorMessage);
         }
 
+        // Delete from public storage
         app(OptimizedImageStorage::class)->delete($medium->path);
+
+        // Also delete from legacy directories if present
+        $filename = basename($medium->path);
+        foreach ([
+            base_path('Uploads/products/' . $filename),
+            base_path('Uploads/products/products/' . $filename),
+            base_path('uploads/products/' . $filename),
+            public_path('uploads/products/' . $filename),
+        ] as $legacyPath) {
+            if (File::exists($legacyPath)) {
+                @unlink($legacyPath);
+            }
+        }
+
         $medium->delete();
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -170,21 +185,30 @@ class MediaAssetController extends Controller
                 }
             }
 
-            // 2. Scan public/uploads/products or legacy uploads if present
-            $uploadsPath = public_path('uploads/products');
-            if (File::isDirectory($uploadsPath)) {
-                $uploadFiles = File::allFiles($uploadsPath);
-                foreach ($uploadFiles as $file) {
-                    $ext = strtolower($file->getExtension());
-                    if (in_array($ext, $validExtensions, true)) {
-                        $relPath = 'uploads/products/' . $file->getFilename();
-                        $discoveredPaths[$relPath] = [
-                            'disk' => 'public',
-                            'path' => $relPath,
-                            'original_name' => $file->getFilename(),
-                            'mime_type' => 'image/' . ($ext === 'jpg' ? 'jpeg' : ($ext === 'svg' ? 'svg+xml' : $ext)),
-                            'size' => $file->getSize(),
-                        ];
+            // 2. Scan Uploads/products or public/uploads/products if present
+            $legacyDirs = [
+                base_path('Uploads/products'),
+                base_path('Uploads/products/products'),
+                base_path('uploads/products'),
+                base_path('uploads/products/products'),
+                public_path('uploads/products'),
+                public_path('Uploads/products'),
+            ];
+            foreach ($legacyDirs as $dir) {
+                if (File::isDirectory($dir)) {
+                    $uploadFiles = File::allFiles($dir);
+                    foreach ($uploadFiles as $file) {
+                        $ext = strtolower($file->getExtension());
+                        if (in_array($ext, $validExtensions, true)) {
+                            $relPath = 'uploads/products/' . $file->getFilename();
+                            $discoveredPaths[$relPath] = [
+                                'disk' => 'public',
+                                'path' => $relPath,
+                                'original_name' => $file->getFilename(),
+                                'mime_type' => 'image/' . ($ext === 'jpg' ? 'jpeg' : ($ext === 'svg' ? 'svg+xml' : $ext)),
+                                'size' => $file->getSize(),
+                            ];
+                        }
                     }
                 }
             }
@@ -209,7 +233,17 @@ class MediaAssetController extends Controller
                     $normalized = substr($normalized, 8);
                 }
                 if (! isset($discoveredPaths[$normalized])) {
-                    $size = Storage::disk('public')->exists($normalized) ? Storage::disk('public')->size($normalized) : 0;
+                    $size = 0;
+                    $filename = basename($normalized);
+                    if (Storage::disk('public')->exists($normalized)) {
+                        $size = Storage::disk('public')->size($normalized);
+                    } elseif (is_file(base_path('Uploads/products/' . $filename))) {
+                        $size = filesize(base_path('Uploads/products/' . $filename));
+                    } elseif (is_file(base_path('Uploads/products/products/' . $filename))) {
+                        $size = filesize(base_path('Uploads/products/products/' . $filename));
+                    } elseif (is_file(public_path('uploads/products/' . $filename))) {
+                        $size = filesize(public_path('uploads/products/' . $filename));
+                    }
                     $ext = strtolower(pathinfo($normalized, PATHINFO_EXTENSION)) ?: 'webp';
                     $discoveredPaths[$normalized] = [
                         'disk' => 'public',

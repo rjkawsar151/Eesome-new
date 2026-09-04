@@ -21,16 +21,7 @@ class MediaAsset extends Model
 
     public function getUrlAttribute(): string
     {
-        $cleanPath = ltrim(str_replace('\\', '/', $this->path), '/');
-        if (str_starts_with($cleanPath, 'storage/')) {
-            $cleanPath = substr($cleanPath, 8);
-        }
-
-        if (str_starts_with($cleanPath, 'http://') || str_starts_with($cleanPath, 'https://')) {
-            return $cleanPath;
-        }
-
-        return asset('storage/' . $cleanPath);
+        return app(\App\Services\ProductImageResolver::class)->resolve($this->path);
     }
 
     public function getFormattedSizeAttribute(): string

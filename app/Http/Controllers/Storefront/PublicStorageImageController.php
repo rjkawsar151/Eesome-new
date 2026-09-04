@@ -16,6 +16,7 @@ class PublicStorageImageController extends Controller
         'products/',
         'reviews/',
         'variants/',
+        'uploads/',
     ];
 
     public function __invoke(string $path): Response

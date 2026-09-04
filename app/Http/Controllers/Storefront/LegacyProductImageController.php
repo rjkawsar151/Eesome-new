@@ -19,6 +19,12 @@ class LegacyProductImageController extends Controller
         foreach ([
             base_path('Uploads/products'),
             base_path('Uploads/products/products'),
+            base_path('uploads/products'),
+            base_path('uploads/products/products'),
+            public_path('uploads/products'),
+            public_path('Uploads/products'),
+            storage_path('app/public/products'),
+            storage_path('app/public/uploads/products'),
         ] as $directory) {
             $imageDirectory = realpath($directory);
             if ($imageDirectory === false) {
